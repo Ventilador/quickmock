@@ -1,3 +1,4 @@
+var PARSE_BINDING_REGEX = /([\=\@\&])(.+)?/;
 var controller = (function(angular) {
     var $parse, self = this;
     angular.injector(['ng']).invoke(['$parse', function(parse) {
@@ -10,17 +11,20 @@ var controller = (function(angular) {
     };
 
     function parseBindings(bindings, scope) {
-        function assignBindins(destination, value, key, mode) {
+        function assignBindings(destination, scope, key, mode) {
             mode = mode || '=';
+            const result = PARSE_BINDING_REGEX.exec(mode);
+            mode = result[1];
+            let sourceKey = result[2] || key;
             switch (mode) {
                 case '=':
-                    destination[key] = value;
+                    destination[key] = scope[sourceKey];
                     break;
                 case '&':
-                    destination[key] = $parse(value)(scope);
+                    destination[key] = $parse(scope[sourceKey])(scope);
                     break;
                 case '@':
-                    destination[key] = (value || '').toString();
+                    destination[key] = (scope[sourceKey] || '').toString();
                     break;
                 default:
                     throw 'Could not apply bindings';
@@ -34,7 +38,7 @@ var controller = (function(angular) {
         } else if (angular.isObject(bindings)) {
             for (var key in bindings) {
                 if (bindings.hasOwnProperty(key)) {
-                    assignBindins(toReturn, scope[key], key, bindings[key]);
+                    assignBindings(toReturn, scope, key, bindings[key]);
                 }
             }
             return toReturn;
@@ -42,7 +46,7 @@ var controller = (function(angular) {
             bindings = makeArray(bindings);
             for (var index = 0; index < bindings.length; index++) {
                 const key = bindings[index];
-                assignBindins(toReturn, scope[key], key);
+                assignBindings(toReturn, scope, key);
             }
             return toReturn;
         }
@@ -67,8 +71,15 @@ var controller = (function(angular) {
                 $scope: scopeHelper.create(scope)
             }
             const constructor = $controller(controllerName, locals, true, scopeControllerName);
-            extend(constructor.instance, parseBindings(bindings, scope));
-            return constructor();
+            constructor.provideBindings = function(b) {
+                b = b || bindings;
+                extend(constructor.instance, parseBindings(bindings, scope));
+                return constructor;
+            };
+            if (bindings) {
+                constructor.provideBindings();
+            }
+            return constructor;
         };
         return {
             create: createController

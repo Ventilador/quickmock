@@ -24,10 +24,14 @@ function makeArray(item) {
 }
 
 function extend() {
+    let remove$ = arguments[arguments.length - 1] === true;
+
     function $$extend(destination, source) {
         for (var key in source) {
-            if (source.hasOwnProperty(key) && !destination.hasOwnProperty(key)) {
-                destination[key] = source[key];
+            if (remove$ || !key.startsWith('$')) {
+                if (source.hasOwnProperty(key) && !destination.hasOwnProperty(key)) {
+                    destination[key] = source[key];
+                }
             }
         }
         return destination;
@@ -56,10 +60,10 @@ var scopeHelper = (function() {
         }
         return parent;
     }
-    return {
+    const toReturn = {
         create: function(scope) {
             scope = scope || {};
-            if (scope && getRootFromScope(scope) === getRootFromScope(rootScope)) {
+            if (toReturn.isScope(scope)) {
                 return scope;
             }
             for (var key in scope) {
@@ -76,9 +80,12 @@ var scopeHelper = (function() {
                 return extend.apply(undefined, [rootScope.$new(true)].concat(scope));
             }
         },
+        isScope: function(object) {
+            return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
+        },
         $rootScope: rootScope
-
     };
+    return toReturn;
 })();
 
 function sanitizeModules() {
@@ -94,3 +101,41 @@ function sanitizeModules() {
     }
     return modules;
 }
+
+var HashMap = (function() {
+    let counter = 0;
+
+    function hashKey(value) {
+        var type = typeof value;
+        var uid;
+        if (type === 'function' ||
+            (type === 'object' && value !== null)) {
+            uid = value.$$hashKey;
+            if (typeof uid === 'function') {
+                uid = value.$$hashKey();
+            } else if (uid === undefined) {
+                uid = value.$$hashKey = counter++;
+            }
+        } else {
+            uid = value;
+        }
+        return type + ':' + uid;
+    }
+
+    function HashMap() {}
+    HashMap.prototype = {
+        put: function(key, value) {
+            this[hashKey(key)] = value;
+        },
+        get: function(key) {
+            return this[hashKey(key)];
+        },
+        remove: function(key) {
+            key = hashKey(key);
+            var value = this[key];
+            delete this[key];
+            return value;
+        }
+    };
+    return HashMap;
+})();
