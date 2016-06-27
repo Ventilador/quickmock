@@ -1,12 +1,14 @@
 var controllerHandler = (function() {
-    let myModules, ctrlName, pScope, cScope, cName, bindToController,
+    var internal = false;
+    let myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController,
         watchers = {},
         pendingWatchers = [];
     const $parse = angular.injector(['ng']).get('$parse');
+    const $rootScope = angular.injector(['ng']).get('$rootScope');
 
     function clean() {
         myModules = [];
-        ctrlName = pScope = scopeControllerName = bindToController = undefined;
+        ctrlName = pScope = cLocals = cScope = scopeControllerName = bindToController = undefined;
         watchers = {};
         pendingWatchers.length = 0;
     }
@@ -46,58 +48,94 @@ var controllerHandler = (function() {
         if (!ctrlName) {
             throw 'Please provide the controller\'s name';
         }
-        pScope = pScope || $controllerHandler.$rootScope;
+        pScope = pScope || $rootScope;
         if (!cScope) {
             cScope = pScope.$new();;
+        } {
+            const tempScope = scopeHelper.isScope(cScope);
+            if (tempScope !== false) {
+                cScope = tempScope;
+            }
         }
-        cScope = scopeHelper.create(cScope);
-        const controllerConstructor = constructor.create(ctrlName, cScope, bindToController, cName);
+
+        function $digest(onObject) {
+            if (angular.isFunction(onObject.$apply)) {
+                onObject.$apply();
+            }
+        }
+
+
         const toReturn = {
             controllerInstance: undefined,
-            controllerConstructor: controllerConstructor,
+            controllerConstructor: undefined,
             parentScope: pScope,
             controllerScope: cScope,
             bindings: bindToController,
             usedModules: myModules.slice(),
+            InternalSpies: {
+                Scope: {},
+                Controller: {}
+            },
             scopeControllerName: cName,
-            create: function(bindings) {
-                bindings = bindings || toReturn.bindings;
-                toReturn.controllerInstance = controllerConstructor.provideBindings(bindings)();
+            $apply: function() {
+                if (this.controllerScope) {
+                    $digest(this.controllerScope)
+                }
+            },
+            $rootApply: function() {
+                $rootScope.$apply();
+            },
+            providerName: ctrlName,
+            controllerToScopeSpies: {},
+            create: function(bindings, scope) {
+                this.parentScope = scope ? scopeHelper.create(scope) : scopeHelper.create(this.parentScope);
+                this.controllerScope = this.parentScope.$new();
+                this.bindings = this.bindings || bindings;
+                this.controllerConstructor = constructor.create(this.providerName, this.controllerScope, this.bindings, this.scopeControllerName, cLocals);
+                this.controllerInstance = this.controllerConstructor();
                 let watcher;
                 while (watcher = pendingWatchers.shift()) {
-                    toReturn.watch.apply(undefined, watcher);
+                    this.watch.apply(this, watcher);
                 }
-                for (var key in bindings) {
-                    if (bindings.hasOwnProperty(key)) {
-                        let result = PARSE_BINDING_REGEX.exec(bindings[key]),
+                for (var key in this.bindings) {
+                    if (this.bindings.hasOwnProperty(key)) {
+                        let result = PARSE_BINDING_REGEX.exec(this.bindings[key]),
                             ctrlkey = key,
                             scopeKey = result[2] || key,
                             expression = $parse(ctrlkey),
-                            assign = $parse(scopeKey).assign;
+                            assign = $parse(scopeKey).assign,
+                            spyKey = [scopeKey, ':', ctrlkey].join('');
                         if (result[1] === '=') {
-                            const destroyer = toReturn.watch(expression, {}, function(oldValue, newValue) {
-                                assign(toReturn.controllerScope, newValue);
-                            }, function() {
-                                return toReturn.controllerInstance
+                            if (!$controllerHandler.isInternal()) {
+                                this.InternalSpies.Scope[spyKey] = decorateSpy(function(oldValue, newValue) {
+                                    assign(toReturn.parentScope, newValue);
+                                });
+                                this.InternalSpies.Controller[spyKey] = decorateSpy(function(oldValue, newValue) {
+                                    expression.assign(toReturn.controllerInstance, newValue);
+                                });
+                            }
+                            const destroyer = this.watch(expression, {}, this.InternalSpies.Scope[spyKey], function() {
+                                return this.controllerInstance
                             }, 'internal');
-                            toReturn.controllerScope.$on('$destroy', function() {
+                            this.parentScope.$on('$destroy', function() {
                                 destroyer();
                                 console.log('destroyed');
                             });
                         }
                     }
                 }
-                return toReturn.controllerInstance;
+                return this.controllerInstance;
             },
             watch: function(expression, locals, callback, object, watchType) {
-                object = object();
-                const tempWatcher = addWatch((scopeHelper.isScope(object) || toReturn.controllerScope).$watch(function() {
+                object = object.call(this);
+                const tempWatcher = addWatch((scopeHelper.isScope(object) || this.controllerScope).$watch(function() {
                     return expression(object, locals)
-                }, callback));
+                }, callback), watchType);
                 return tempWatcher;
             },
             watchController: function(expression, locals, callback, spy) {
-                let assign; //,scopeExpression = cleanExpressionForAssignment(expression, toReturn.ctrlName, toReturn.bindings);
+                let assign,
+                    expressionText = angular.isString(expression) ? expression : getFunctionName(expression);
                 if (angular.isString(expression)) {
                     expression = $parse(expression);
                 }
@@ -108,25 +146,27 @@ var controllerHandler = (function() {
                 if (!angular.isFunction(callback)) {
                     throw 'Callback is not a function';
                 }
+                const startingTime = new Date().getTime();
+                let endTime;
 
                 function decorateCallback() {
                     if (angular.isFunction(spy)) {
                         spy.apply(spy, arguments);
                     }
+
                     callback.apply(callback, arguments);
-                    // if (angular.isObject(scopeExpression)) {
-                    //     scopeExpression = cleanExpressionForAssignment(scopeExpression.value, toReturn.scopeControllerName, toReturn.bindings);
-                    // }
-                    // $parse(scopeExpression).assign(toReturn.controllerScope, arguments[1]);
+                    endTime = new Date().getTime();
                 }
-                const data = [expression, locals, decorateCallback, function() {
-                    return toReturn.controllerInstance
+
+                this.controllerToScopeSpies[expressionText] = decorateSpy(decorateCallback);
+                const data = [expression, locals, this.controllerToScopeSpies[expressionText], function() {
+                    return this.controllerInstance
                 }, 'controller']
-                if (!toReturn.controllerInstance) {
+                if (!this.controllerInstance) {
                     pendingWatchers.push(data);
-                    return toReturn;
+                    return this;
                 }
-                return Function.call(toReturn.watch, data);
+                return Function.call(this.watch, data);
             }
         };
         clean();
@@ -138,10 +178,16 @@ var controllerHandler = (function() {
     };
     $controllerHandler.clean = clean;
     $controllerHandler.setScope = function(newScope) {
-        cScope = newScope;
+        pScope = newScope;
         return $controllerHandler;
     };
+    $controllerHandler.setLocals = function(locals) {
+        cLocals = locals;
+        return $controllerHandler;
+    };
+
     $controllerHandler.$rootScope = scopeHelper.$rootScope;
+    
     $controllerHandler.addModules = function(modules) {
         function pushArray(array) {
             Array.prototype.push.apply(myModules, array);
@@ -157,15 +203,24 @@ var controllerHandler = (function() {
         }
         return $controllerHandler;
     };
+    $controllerHandler.isInternal = function(flag) {
+        if (angular.isUndefined(flag)) {
+            return internal;
+        }
+        internal = !!flag;
+        return function() {
+            internal = !flag;
+        }
+    };
     $controllerHandler.new = function(controllerName, scopeControllersName, parentScope, childScope) {
         ctrlName = controllerName;
-        if (!angular.isString(scopeControllersName)) {
+        if (scopeControllersName && !angular.isString(scopeControllersName)) {
             pScope = scopeHelper.isScope(scopeControllersName);
             cScope = scopeHelper.isScope(parentScope) || cScope;
             cName = 'controller';
         } else {
-            pScope = scopeHelper.isScope(parentScope);
-            cScope = scopeHelper.isScope(childScope);
+            pScope = scopeHelper.create(parentScope || pScope);
+            cScope = scopeHelper.create(childScope || pScope.$new());
             cName = scopeControllersName;
         }
         return $controllerHandler();

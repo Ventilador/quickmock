@@ -75,13 +75,27 @@ describe('controller', function() {
                     expect(controller().boundProperty).toBe('Something modified');
                 });
                 it('should support bindToController as an object for "&"', function() {
-                    const controller = controllerCreator.create('withBindings', {
+                    let controller = controllerCreator.create('emptyController', {
                         boundProperty: 'otherProperty.join("")',
                         otherProperty: [1, 2, 3]
                     }, {
                         boundProperty: '&'
                     });
-                    expect(controller().boundProperty).toBe('123 modified');
+                    controller = controller();
+                    expect(controller.boundProperty()).toBe('123');
+
+                });
+                it('expressions should allow locals', function() {
+                    let controller = controllerCreator.create('emptyController', {
+                        boundProperty: 'otherProperty.join("")',
+                        otherProperty: [1, 2, 3]
+                    }, {
+                        boundProperty: '&'
+                    });
+                    controller = controller();
+                    expect(controller.boundProperty({
+                        otherProperty: ['a', 'b', 'c']
+                    })).toBe('abc');
                 });
             });
         });

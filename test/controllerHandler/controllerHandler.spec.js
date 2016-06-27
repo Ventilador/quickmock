@@ -54,7 +54,7 @@ describe('controllerHandler', function() {
             }).not.toThrow();
             expect(controllerObj.controllerInstance.equalsResult).toBe(scope.equals);
             expect(controllerObj.controllerInstance.byTextResult).toBe(scope.byText);
-            expect(controllerObj.controllerInstance.expressionResult).toBe(scope.byText.toUpperCase());
+            expect(controllerObj.controllerInstance.expressionResult()).toBe(scope.byText.toUpperCase());
         });
         describe('Watchers', function() {
             let scope, controllerObj;
@@ -83,12 +83,29 @@ describe('controllerHandler', function() {
                     })
                     .new('withInjections');
                 let args;
-                const controller = controllerObj.create();
+                const controller = controllerObj.watchController('controller.boundProperty', function() {
+                    args = arguments;
+                }).create();
                 expect(controller.boundProperty).toBe('lala');
                 controller.boundProperty = 'lolo';
                 controllerObj.controllerScope.$apply();
                 expect(controllerObj.controllerScope.boundProperty).toBe('lolo');
+                expect(controllerObj.controllerToScopeSpies['controller.boundProperty']).toHaveBeenCalled();
+                console.log(controllerObj);
+                window.controllerObj = controllerObj;
                 controllerObj.controllerScope.$destroy();
+            });
+            it('should give the parent more control', function() {
+                scope.boundProperty = 'lala';
+                controllerObj = controllerHandler.setScope(scope).bindWith({
+                        boundProperty: '='
+                    })
+                    .new('withInjections');
+                const controller = controllerObj.create();
+                controllerObj.parentScope.boundProperty = 'parent';
+                controller.boundProperty = 'child';
+                controllerObj.$rootApply();
+                expect(controller.boundProperty).toBe('parent');
             });
         });
     });

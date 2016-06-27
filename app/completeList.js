@@ -8,3 +8,4 @@ angular.module('test', ['ng'])
     .controller('withBindings', [function() {
         this.boundProperty = this.boundProperty + ' modified';
     }]);
+configureMocks();

@@ -1,7 +1,14 @@
 (function(angular) {
 
     var opts, mockPrefix;
-
+    var controllerDefaults = function(flag) {
+        return {
+            bindToController: true,
+            scope: {},
+            controllerAs: 'controller',
+            isDefault: flag
+        }
+    };
     quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
     quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
     quickmock.MUTE_LOGS = false;
@@ -76,8 +83,16 @@
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    var $controller = injector.get('$controller');
-                    return $controller(opts.providerName, mocks);
+                    const toReturn = controllerHandler
+                        .addModules(opts.mockModules.concat(opts.moduleName))
+                        .bindWith(opts.controller.bindToController)
+                        .setScope(opts.controller.scope)
+                        .setLocals(mocks)
+                        .new(opts.providerName);
+                    if (opts.controller.isDefault) {
+                        return toReturn();
+                    }
+                    return toReturn;
                 case 'filter':
                     var $filter = injector.get('$filter');
                     return $filter(opts.providerName);
@@ -178,6 +193,7 @@
         }
         options.mockModules = options.mockModules || [];
         options.mocks = options.mocks || {};
+        options.controller = extend(options.controller, controllerDefaults(angular.isDefined(options.controller)));
         return options;
     }
 

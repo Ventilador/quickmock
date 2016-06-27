@@ -1,4 +1,4 @@
-var PARSE_BINDING_REGEX = /([\=\@\&])(.+)?/;
+var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
 var controller = (function(angular) {
     var $parse, self = this;
     angular.injector(['ng']).invoke(['$parse', function(parse) {
@@ -21,7 +21,9 @@ var controller = (function(angular) {
                     destination[key] = scope[sourceKey];
                     break;
                 case '&':
-                    destination[key] = $parse(scope[sourceKey])(scope);
+                    destination[key] = function(locals) {
+                        return $parse(scope[sourceKey])(scope, locals);
+                    };
                     break;
                 case '@':
                     destination[key] = (scope[sourceKey] || '').toString();
@@ -30,10 +32,15 @@ var controller = (function(angular) {
                     throw 'Could not apply bindings';
             }
         }
-        const toReturn = scope;
+        const toReturn = {};
         if (!bindings) {
             return {};
         } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
+            for (var key in scope) {
+                if (scope.hasOwnProperty(key) && !key.startsWith('$')) {
+                    assignBindings(toReturn, scope, key, '=');
+                }
+            }
             return toReturn;
         } else if (angular.isObject(bindings)) {
             for (var key in bindings) {
@@ -64,16 +71,18 @@ var controller = (function(angular) {
                 }
             ]);
 
-        function createController(controllerName, scope, bindings, scopeControllerName) {
+        function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
             scope = scope || {};
             scopeControllerName = scopeControllerName || 'controller';
-            const locals = {
+            const locals = extend({
                 $scope: scopeHelper.create(scope)
-            }
+            }, extendedLocals, true);
+
             const constructor = $controller(controllerName, locals, true, scopeControllerName);
-            constructor.provideBindings = function(b) {
+            constructor.provideBindings = function(b, locals) {
+                locals = locals || scope;
                 b = b || bindings;
-                extend(constructor.instance, parseBindings(bindings, scope));
+                extend(constructor.instance, parseBindings(bindings, locals));
                 return constructor;
             };
             if (bindings) {

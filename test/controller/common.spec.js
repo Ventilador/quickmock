@@ -5,6 +5,9 @@
       return toReturn;
   })();
   describe('Util logic', function() {
+      beforeEach(function() {
+          const $rootScope = scopeHelper.$rootScope;
+      });
       describe('array-like', function() {
           it('should return true for array-like objects', function() {
               expect(isArrayLike(arguments)).toBe(true);

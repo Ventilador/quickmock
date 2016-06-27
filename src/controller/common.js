@@ -9,6 +9,21 @@ function isArrayLike(item) {
         Object.prototype.toString.call(item) === '[object Arguments]';
 }
 
+function decorateSpy(callback, context) {
+    const startTime = new Date().getTime();
+    let endTime;
+    const toReturn = spyOn({
+        a: function() {
+            callback.apply(callback, arguments);
+            endTime = new Date().getTime();
+        }
+    }, 'a').and.callThrough();
+    toReturn.took = function() {
+        return startTime - endTime;
+    };
+    return toReturn;
+}
+
 function makeArray(item) {
     if (angular.isString(item)) {
         if (arguments.length > 1) {
@@ -37,7 +52,7 @@ function extend() {
         return destination;
     }
     const values = Array.prototype.slice.apply(arguments);
-    const destination = values.shift();
+    const destination = values.shift() || {};
     let current;
     while (current = values.shift()) {
         $$extend(destination, current);
@@ -87,6 +102,14 @@ var scopeHelper = (function() {
     };
     return toReturn;
 })();
+
+function getFunctionName(myFunction) {
+    const toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];
+    if (toReturn === '' || toReturn === 'anon') {
+        return new Date().getTime().toString();
+    }
+    return toReturn;
+}
 
 function sanitizeModules() {
     modules = makeArray.apply(undefined, arguments);
