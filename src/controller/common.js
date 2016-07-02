@@ -1,3 +1,9 @@
+/* Should return true 
+ * for objects that wouldn't fail doing
+ * Array.prototype.slice.apply(myObj);
+ * which returns a new array (reference-wise)
+ * Probably needs more specs
+ */ 
 function isArrayLike(item) {
     return Array.isArray(item) ||
         (!!item &&
@@ -8,6 +14,7 @@ function isArrayLike(item) {
         ) ||
         Object.prototype.toString.call(item) === '[object Arguments]';
 }
+
 
 function decorateSpy(callback, context) {
     const startTime = new Date().getTime();

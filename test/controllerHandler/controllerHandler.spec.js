@@ -104,7 +104,7 @@ describe('controllerHandler', function() {
                 const controller = controllerObj.create();
                 controllerObj.parentScope.boundProperty = 'parent';
                 controller.boundProperty = 'child';
-                controllerObj.$rootApply();
+                controllerObj.$apply();
                 expect(controller.boundProperty).toBe('parent');
             });
         });

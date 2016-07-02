@@ -5,12 +5,7 @@ var controller = (function(angular) {
         $parse = parse;
     }]);
 
-    function $$controller(moduleNames) {
-        var self = this;
-        return {};
-    };
-
-    function parseBindings(bindings, scope) {
+    this.parseBindings = function parseBindings(bindings, scope) {
         function assignBindings(destination, scope, key, mode) {
             mode = mode || '=';
             const result = PARSE_BINDING_REGEX.exec(mode);
@@ -31,6 +26,7 @@ var controller = (function(angular) {
                 default:
                     throw 'Could not apply bindings';
             }
+            return destination;
         }
         const toReturn = {};
         if (!bindings) {
@@ -38,7 +34,7 @@ var controller = (function(angular) {
         } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
             for (var key in scope) {
                 if (scope.hasOwnProperty(key) && !key.startsWith('$')) {
-                    assignBindings(toReturn, scope, key, '=');
+                    assignBindings(toReturn, scope, key);
                 }
             }
             return toReturn;
@@ -74,9 +70,12 @@ var controller = (function(angular) {
         function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
             scope = scope || {};
             scopeControllerName = scopeControllerName || 'controller';
+            if (extendedLocals && extendedLocals.$scope) {
+                delete extendedLocals.$scope;
+            }
             const locals = extend({
                 $scope: scopeHelper.create(scope)
-            }, extendedLocals, true);
+            }, extendedLocals);
 
             const constructor = $controller(controllerName, locals, true, scopeControllerName);
             constructor.provideBindings = function(b, locals) {

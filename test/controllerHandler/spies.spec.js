@@ -11,7 +11,7 @@ describe('controllerSpies', function() {
             a: uniqueObject,
             b: 'b',
             c: 'a'
-        }).new();
+        }).new('emptyController');
     });
     it('should create spies for each Bounded property', function() {
         const controller = controllerConstructor.create();
