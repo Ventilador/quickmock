@@ -3,7 +3,7 @@
  * Array.prototype.slice.apply(myObj);
  * which returns a new array (reference-wise)
  * Probably needs more specs
- */ 
+ */
 function isArrayLike(item) {
     return Array.isArray(item) ||
         (!!item &&
@@ -26,7 +26,7 @@ function decorateSpy(callback, context) {
         }
     }, 'a').and.callThrough();
     toReturn.took = function() {
-        return startTime - endTime;
+        return endTime - startTime;
     };
     return toReturn;
 }
