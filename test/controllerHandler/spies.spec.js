@@ -15,7 +15,7 @@ describe('controllerSpies', function() {
     });
     it('should create spies for each Bounded property', function() {
         const controller = controllerConstructor.create();
-        const mySpy = controllerConstructor.InternalSpies.Scope.a;
+        const mySpy = controllerConstructor.InternalSpies.Scope['a:a'];
         expect(mySpy).toBeDefined();
         controller.a = undefined;
         expect(mySpy).not.toHaveBeenCalled();
@@ -24,10 +24,9 @@ describe('controllerSpies', function() {
         expect(typeof mySpy.took() === 'number').toBe(true);
         expect(mySpy.took()).toBe(mySpy.took());
         expect(mySpy.took() > 0).toBe(true);
-        expect(mySpy.took() < 200).toBe(true);
-        expect(mySpy.callCount).toBe(1);
+        expect(mySpy.calls.count()).toBe(1);
         controllerConstructor.$apply();
-        expect(mySpy.callCount).toBe(1);
-        
+        expect(mySpy.calls.count()).toBe(1);
+
     });
 });
