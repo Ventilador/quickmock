@@ -23,10 +23,8 @@ describe('controllerSpies', function() {
         expect(mySpy).toHaveBeenCalled();
         expect(typeof mySpy.took() === 'number').toBe(true);
         expect(mySpy.took()).toBe(mySpy.took());
-        expect(mySpy.took() > 0).toBe(true);
         expect(mySpy.calls.count()).toBe(1);
         controllerConstructor.$apply();
         expect(mySpy.calls.count()).toBe(1);
-
     });
 });

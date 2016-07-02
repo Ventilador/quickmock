@@ -16,7 +16,10 @@ function isArrayLike(item) {
 }
 
 
-function decorateSpy(callback, context) {
+function createSpy(callback) {
+    if (!callback) {
+        callback = angular.noop;
+    }
     const startTime = new Date().getTime();
     let endTime;
     const toReturn = spyOn({
@@ -46,7 +49,7 @@ function makeArray(item) {
 }
 
 function extend() {
-    let remove$ = arguments[arguments.length - 1] === true;
+    let remove$ = arguments[arguments.length - 1] === false;
 
     function $$extend(destination, source) {
         for (var key in source) {

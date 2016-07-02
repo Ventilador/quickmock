@@ -32,9 +32,9 @@ var controllerHandler = (function() {
         if (!ctrlName) {
             throw 'Please provide the controller\'s name';
         }
-        pScope = pScope || $rootScope.$new();
+        pScope = scopeHelper.create(pScope || {});
         if (!cScope) {
-            cScope = pScope.$new();;
+            cScope = pScope.$new();
         } {
             const tempScope = scopeHelper.isScope(cScope);
             if (tempScope !== false) {

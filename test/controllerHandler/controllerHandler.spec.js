@@ -88,15 +88,23 @@ describe('controllerHandler', function() {
                 }).create();
                 expect(controller.boundProperty).toBe('lala');
                 controller.boundProperty = 'lolo';
-                controllerObj.controllerScope.$apply();
-                expect(controllerObj.controllerScope.boundProperty).toBe('lolo');
+                controllerObj.$apply();
+                expect(controllerObj.parentScope.boundProperty).toBe('lolo');
                 expect(controllerObj.controllerToScopeSpies['controller.boundProperty']).toHaveBeenCalled();
-                console.log(controllerObj);
-                window.controllerObj = controllerObj;
-                controllerObj.controllerScope.$destroy();
+                controllerObj.parentScope.$destroy();
             });
-            it('should give the parent more control', function() {
+            it('should reflec changes on the scope into the controller', function() {
                 scope.boundProperty = 'lala';
+                controllerObj = controllerHandler.setScope(scope).bindWith({
+                        boundProperty: '='
+                    })
+                    .new('withInjections');
+                const controller = controllerObj.create();
+                controllerObj.parentScope.boundProperty = 'parent';
+                controllerObj.$apply();
+                expect(controller.boundProperty).toBe('parent');
+            });
+            it('should give the parent scope privilege over the controller', function() {
                 controllerObj = controllerHandler.setScope(scope).bindWith({
                         boundProperty: '='
                     })
@@ -106,6 +114,7 @@ describe('controllerHandler', function() {
                 controller.boundProperty = 'child';
                 controllerObj.$apply();
                 expect(controller.boundProperty).toBe('parent');
+                expect(controllerObj.parentScope.boundProperty).toBe('parent');
             });
         });
     });
