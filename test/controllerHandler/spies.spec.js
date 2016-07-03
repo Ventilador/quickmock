@@ -3,6 +3,9 @@ describe('controllerSpies', function() {
     let controllerConstructor;
     beforeEach(function() {
         controllerHandler.clean();
+        if (controllerConstructor) {
+            controllerConstructor.$destroy();
+        }
         controllerConstructor = controllerHandler.addModules('test').bindWith({
             a: '=',
             b: '@',

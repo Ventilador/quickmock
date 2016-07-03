@@ -29,7 +29,6 @@ var controller = (function(angular) {
                         }
                         lastValue = parentValue;
                         return lastValue;
-
                     };
                     scope.$watch(parentValueWatch);
                     var unwatch = scope.$watch(parentValueWatch);
@@ -45,9 +44,12 @@ var controller = (function(angular) {
                     if (result) {
                         const parentGet = $parse(result[1]);
                         const childGet = $parse(childKey);
+                        let parentValue, lastValue = parentValue = parentGet(scope);
                         const parentValueWatch = function() {
-                            let parentValue = parentGet(scope);
-                            childGet.assign(destination, parentValue);
+                            parentValue = parentGet(scope);
+                            if (parentValue !== lastValue) {
+                                childGet.assign(destination, lastValue = parentValue);
+                            }
                             return lastValue;
                         };
                         scope.$watch(parentValueWatch);
@@ -62,30 +64,23 @@ var controller = (function(angular) {
             }
             return destination;
         }
-        const toReturn = scopeHelper.create(isolateScope || {});
+        const destination = scopeHelper.create(isolateScope || scope.$new());
         if (!bindings) {
             return {};
         } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
             for (var key in scope) {
-                if (scope.hasOwnProperty(key) && !key.startsWith('$')) {
-                    assignBindings(toReturn, scope, key);
+                if (scope.hasOwnProperty(key) && !key.startsWith('$') && key !== controllerAs) {
+                    assignBindings(destination, scope, key);
                 }
             }
-            return toReturn;
+            return destination;
         } else if (angular.isObject(bindings)) {
             for (var key in bindings) {
                 if (bindings.hasOwnProperty(key)) {
-                    assignBindings(toReturn, scope, key, bindings[key]);
+                    assignBindings(destination, scope, key, bindings[key]);
                 }
             }
-            return toReturn;
-        } else if (isArrayLike(bindings)) {
-            bindings = makeArray(bindings);
-            for (var index = 0; index < bindings.length; index++) {
-                const key = bindings[index];
-                assignBindings(toReturn, scope, key);
-            }
-            return toReturn;
+            return destination;
         }
         throw 'Could not parse bindings';
 
@@ -112,6 +107,7 @@ var controller = (function(angular) {
             constructor.provideBindings = function(b, myLocals) {
                 locals = myLocals || locals;
                 b = b || bindings;
+
                 extend(constructor.instance, parseBindings(bindings, scope, locals.$scope, scopeControllerName));
                 return constructor;
             };

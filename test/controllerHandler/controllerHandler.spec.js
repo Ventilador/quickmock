@@ -68,7 +68,7 @@ describe('controllerHandler', function() {
                     })
                     .new('emptyController');
                 let args;
-                const controller = controllerObj.watchController('controller.boundProperty', function() {
+                const controller = controllerObj.watch('controller.boundProperty', function() {
                     args = arguments;
                 }).create();
                 expect(controller.boundProperty).toBe('lala');
@@ -83,14 +83,13 @@ describe('controllerHandler', function() {
                     })
                     .new('withInjections');
                 let args;
-                const controller = controllerObj.watchController('controller.boundProperty', function() {
+                const controller = controllerObj.watch('controller.boundProperty', function() {
                     args = arguments;
                 }).create();
                 expect(controller.boundProperty).toBe('lala');
                 controller.boundProperty = 'lolo';
                 controllerObj.$apply();
                 expect(controllerObj.parentScope.boundProperty).toBe('lolo');
-                expect(controllerObj.controllerToScopeSpies['controller.boundProperty']).toHaveBeenCalled();
                 controllerObj.parentScope.$destroy();
             });
             it('should reflec changes on the scope into the controller', function() {
@@ -116,6 +115,22 @@ describe('controllerHandler', function() {
                 expect(controller.boundProperty).toBe('parent');
                 expect(controllerObj.parentScope.boundProperty).toBe('parent');
             });
+        });
+    });
+    describe('destroying a controller', function() {
+        let controllerObj;
+        beforeEach(function() {
+            controllerHandler.clean();
+            controllerHandler.addModules('test')
+        });
+        it('should allow destroying the object', function() {
+            expect(function() {
+                controllerObj = controllerHandler.new('emptyController');
+            }).not.toThrow();
+            const controller = controllerObj.create(false);
+            const parentScope = controllerObj.parentScope;
+            const controllerScope = controllerObj.controllerScope;
+            controllerObj.$destroy();
         });
     });
 });

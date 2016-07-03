@@ -7,6 +7,7 @@ var controllerHandler = (function() {
     function clean() {
         myModules = [];
         ctrlName = pScope = cLocals = cScope = scopeControllerName = bindToController = undefined;
+        return $controllerHandler;
     }
 
     function cleanExpressionForAssignment(expression, controllerName, bindings) {
@@ -50,6 +51,7 @@ var controllerHandler = (function() {
         bindToController = bindings;
         return $controllerHandler;
     };
+    $controllerHandler.controllerType = $_CONTROLLER;
     $controllerHandler.clean = clean;
     $controllerHandler.setScope = function(newScope) {
         pScope = newScope;
@@ -99,5 +101,10 @@ var controllerHandler = (function() {
         }
         return $controllerHandler();
     }
+    $controllerHandler.newService = function(controllerName, controllerAs, parentScope, bindings) {
+        const toReturn = $controllerHandler.new(controllerName, controllerAs, parentScope);
+        toReturn.bindings = bindings;
+        return toReturn;
+    };
     return $controllerHandler;
 })();

@@ -1,22 +1,36 @@
-describe('quickmock', function() {
-    let controllerMocker;
+describe('controller', function() {
+    let controllerMocker, spy;
     beforeEach(function() {
+        spy = jasmine.createSpy('magicClick')
         controllerMocker = quickmock({
-            providerName: 'withInjections',
+            providerName: 'emptyController',
             moduleName: 'test',
-            mockModules: ['SampleMocks']
+            mockModules: [],
+            controller: {
+                parentScope: {
+                    somethingToCall: spy
+                },
+                bindToController: {
+                    somethingToCall: '='
+                },
+                controllerAs: 'ctrl'
+            }
         });
     });
-    it('should have defined a controllerMocker', function() {
-        expect(controllerMocker).toBeDefined();
+    it('should allow me to perform clicks', function() {
+        expect(controllerMocker.ngClick).toEqual(jasmine.any(Function));
+        const myClick = controllerMocker.ngClick('ctrl.somethingToCall(aObj, bObj)'),
+            reference1 = function() {},
+            reference2 = function() {},
+            locals = {
+                aObj: reference1,
+                bObj: reference2
+            };
+        myClick(locals);
+        expect(spy).toHaveBeenCalledWith(reference1, reference2);
     });
-
-    it('should allow creating a controller', function() {
-        const controller = controllerMocker.create(true, {
-            a: 'lala'
-        });
-        expect(controller).toBeDefined();
-        console.log(controller);
-    });
-
 });
+
+
+
+

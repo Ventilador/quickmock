@@ -1,5 +1,6 @@
 var $_CONTROLLER = (function() {
     const $parse = angular.injector(['ng']).get('$parse');
+    let ngClick;
 
     function assertNotDefined(obj, args) {
         let key;
@@ -14,6 +15,25 @@ var $_CONTROLLER = (function() {
             'bindings',
             'controllerScope'
         ]);
+    }
+
+    function clean(object) {
+        if (isArrayLike(object)) {
+            for (var index = object.length - 1; index >= 0; index--) {
+                if (object.hasOwnProperty(index)) {
+                    Array.prototype.splice.apply(object, [index, 1]);
+                };
+            }
+        } else if (angular.isObject(object)) {
+            for (var key in object) {
+                if (object.hasOwnProperty(key)) {
+                    if (!key.startsWith('$')) {
+                        clean(object[key]);
+                    }
+                    delete object[key];
+                }
+            }
+        }
     }
 
     function _$_CONTROLLER(ctrlName, pScope, bindings, modules, cName, cLocals) {
@@ -40,8 +60,13 @@ var $_CONTROLLER = (function() {
         $apply: function() {
             this.$rootScope.$apply();
         },
-        controllerToScopeSpies: {},
+        $destroy: function() {
+            delete this.$rootScope;
+            this.parentScope.$destroy();
+            clean(this);
+        },
         create: function(bindings) {
+            this.bindings = angular.isDefined(bindings) && bindings !== null ? bindings : this.bindings;
             assert_$_CONTROLLER(this);
             this.controllerConstructor =
                 controller.$get(this.usedModules)
@@ -66,48 +91,19 @@ var $_CONTROLLER = (function() {
                     }
                 }
             }
+            this.create = undefined;
             return this.controllerInstance;
         },
         watch: function(expression, callback, object) {
-            object = angular.isFunction(object) ? object.call(this) : object;
-            const scope = scopeHelper.isScope(object) || this.controllerScope;
-            const fn = scope === object ? expression : $parse(expression);
-            return scope.$watch(fn, callback);
-        },
-        watchController: function(expression, locals, callback, spy) {
-            let assign,
-                expressionText = angular.isString(expression) ? expression : getFunctionName(expression);
-            if (angular.isString(expression)) {
-                expression = $parse(expression);
-            }
-            if (angular.isFunction(locals)) {
-                callback = locals;
-                locals = {};
-            }
-            if (!angular.isFunction(callback)) {
-                throw 'Callback is not a function';
-            }
-            const startingTime = new Date().getTime();
-            let endTime;
-
-            function decorateCallback() {
-                if (angular.isFunction(spy)) {
-                    spy.apply(spy, arguments);
-                }
-
-                callback.apply(callback, arguments);
-                endTime = new Date().getTime();
-            }
-
-            this.controllerToScopeSpies[expressionText] = createSpy(decorateCallback);
-            const data = [expression, locals, this.controllerToScopeSpies[expressionText], function() {
-                return this.controllerInstance
-            }, 'controller']
             if (!this.controllerInstance) {
-                this.pendingWatchers.push(data);
+                this.pendingWatchers.push(arguments);
                 return this;
             }
-            return Function.call(this.watch, data);
+            return this.controllerScope.$watch(expression, callback);
+        },
+        ngClick: function(expression) {
+            ngClick = ngClick || directiveProvider.$get('ngClick');
+            return ngClick.compile(expression, this);
         }
     }
     return _$_CONTROLLER;

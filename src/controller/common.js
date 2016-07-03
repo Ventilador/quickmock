@@ -108,7 +108,10 @@ var scopeHelper = (function() {
         isScope: function(object) {
             return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
         },
-        $rootScope: rootScope
+        $rootScope: rootScope,
+        isController: function(object) {
+            return object instanceof controllerHandler.controllerType;
+        }
     };
     return toReturn;
 })();
