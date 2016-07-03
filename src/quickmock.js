@@ -4,9 +4,9 @@
     var controllerDefaults = function(flag) {
         return {
             bindToController: true,
-            scope: {},
+            parentScope: {},
             controllerAs: 'controller',
-            isDefault: flag
+            isDefault: !flag
         }
     };
     quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
@@ -86,11 +86,12 @@
                     const toReturn = controllerHandler
                         .addModules(opts.mockModules.concat(opts.moduleName))
                         .bindWith(opts.controller.bindToController)
-                        .setScope(opts.controller.scope)
+                        .setScope(opts.controller.parentScope)
                         .setLocals(mocks)
-                        .new(opts.providerName);
+                        .new(opts.providerName, opts.controller.controllerAs);
+                    toReturn.create();
                     if (opts.controller.isDefault) {
-                        return toReturn();
+                        return toReturn.controllerInstance;
                     }
                     return toReturn;
                 case 'filter':

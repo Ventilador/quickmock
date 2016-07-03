@@ -1,3 +1,9 @@
+/* Should return true 
+ * for objects that wouldn't fail doing
+ * Array.prototype.slice.apply(myObj);
+ * which returns a new array (reference-wise)
+ * Probably needs more specs
+ */
 function isArrayLike(item) {
     return Array.isArray(item) ||
         (!!item &&
@@ -9,7 +15,11 @@ function isArrayLike(item) {
         Object.prototype.toString.call(item) === '[object Arguments]';
 }
 
-function decorateSpy(callback, context) {
+
+function createSpy(callback) {
+    if (!callback) {
+        callback = angular.noop;
+    }
     const startTime = new Date().getTime();
     let endTime;
     const toReturn = spyOn({
@@ -19,7 +29,7 @@ function decorateSpy(callback, context) {
         }
     }, 'a').and.callThrough();
     toReturn.took = function() {
-        return startTime - endTime;
+        return endTime - startTime;
     };
     return toReturn;
 }
@@ -39,7 +49,7 @@ function makeArray(item) {
 }
 
 function extend() {
-    let remove$ = arguments[arguments.length - 1] === true;
+    let remove$ = arguments[arguments.length - 1] === false;
 
     function $$extend(destination, source) {
         for (var key in source) {
@@ -98,7 +108,10 @@ var scopeHelper = (function() {
         isScope: function(object) {
             return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
         },
-        $rootScope: rootScope
+        $rootScope: rootScope,
+        isController: function(object) {
+            return object instanceof controllerHandler.controllerType;
+        }
     };
     return toReturn;
 })();

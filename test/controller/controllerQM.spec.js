@@ -27,13 +27,13 @@ describe('controller', function() {
         });
         it('should set a property in the scope for the controller', function() {
             const scope = scopeHelper.$rootScope.$new();
-            const controller1 = controllerCreator.create('withBindings', scope, false);
-            expect(scope.controller).toBe(controller1());
+            const controller1 = controllerCreator.create('withBindings', scope, false)();
+            expect(scope.$$childHead.controller).toBe(controller1);
         });
         it('should set a property in the scope for the controller with the given name', function() {
             const scope = scopeHelper.$rootScope.$new();
-            const controller1 = controllerCreator.create('withBindings', scope, false, 'myController');
-            expect(scope.myController).toBe(controller1());
+            const controller1 = controllerCreator.create('withBindings', scope, false, 'myController')();
+            expect(scope.$$childHead.myController).toBe(controller1);
         });
         describe('bindings', function() {
             it('should support "true" and "=" as bindToController', function() {

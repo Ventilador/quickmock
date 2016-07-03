@@ -97,5 +97,16 @@
               expect(returnedScope.a).toBe(toPass.a);
               expect(returnedScope.b).toBe(toPass.b);
           });
+          it('should know when an object is a controller Constructor', function() {
+              controllerHandler.clean();
+              const controllerObj = controllerHandler.setScope({
+                  boundProperty: 'something'
+              }).bindWith({
+                  boundProperty: '='
+              }).new('withBindings');
+
+              expect(scopeHelper.isController(controllerObj)).toBe(true);
+              controllerObj.$destroy();
+          });
       });
   });
