@@ -1,3 +1,16 @@
+describe('quickmock', function() {
+    let controllerMocker;
+    beforeEach(function() {
+        controllerMocker = quickmock({
+            providerName: 'withInjections',
+            moduleName: 'test',
+            mockModules: ['SampleMocks']
+        });
+    });
+    it('should have defined a controllerMocker', function() {
+        expect(controllerMocker).toBeDefined();
+    });
+});
 describe('controller', function() {
     let controllerMocker, spy;
     beforeEach(function() {
@@ -30,7 +43,3 @@ describe('controller', function() {
         expect(spy).toHaveBeenCalledWith(reference1, reference2);
     });
 });
-
-
-
-
