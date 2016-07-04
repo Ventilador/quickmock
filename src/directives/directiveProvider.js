@@ -2,29 +2,21 @@ var directiveProvider = (function() {
     const directives = new Map(),
         toReturn = {},
         $parse = angular.injector(['ng']).get('$parse'),
+        $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate'),
         SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g,
         internals = {
             ngIf: ngIfDirective(),
             ngClick: ngClickDirective($parse),
+            ngBind: ngBindDirective($parse),
+            ngDisabled: ngIfDirective(),
+            translate: ngTranslateDirective($translate, $parse),
             ngRepeat: {
                 regex: '<div></div>',
                 compile: function($element) {}
             },
-            ngDisabled: {
-                regex: '<div></div>',
-                compile: function($element) {}
-            },
-            ngBind: {
-                regex: '<div></div>',
-                compile: function($element) {}
-            },
-
             ngModel: {
                 regex: '<input type"text"/>',
                 compile: function($element) {}
-            },
-            translate: {
-
             },
             translateValue: {
 
