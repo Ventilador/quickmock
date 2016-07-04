@@ -29,4 +29,44 @@ describe('directiveProvider', function() {
             expect(directiveProvider.$get(item)).toBeDefined(item);
         });
     });
+
+    describe('puts and uses', function() {
+        let spy;
+        beforeEach(function() {
+            spy = jasmine.createSpy();
+            spy.and.returnValue(spy);
+            directiveProvider.$clean();
+        });
+        it('should allow adding directives', function() {
+            expect(function() {
+                directiveProvider.$put('my-directive', spy);
+            }).not.toThrow();
+            expect(spy).toHaveBeenCalled();
+            expect(directiveProvider.$get('my-directive')).toBe(spy);
+            expect(directiveProvider.$get('my:directive')).toBe(spy);
+            expect(directiveProvider.$get('myDirective')).toBe(spy);
+            expect(spy.calls.count()).toBe(1);
+        });
+        it('should not allow overwriting, but preserve first versions', function() {
+            directiveProvider.$put('my-directive', spy);
+            expect(function() {
+                directiveProvider.$put('my-directive', function() {});
+            }).toThrow();
+            expect(directiveProvider.$get('my-directive')).toBe(spy);
+        });
+        it('allow me to overwrite with a third parameter in a function that return true', function() {
+            directiveProvider.$put('my-directive', spy);
+            const anotherSpy = jasmine.createSpy();
+            anotherSpy.and.returnValue(anotherSpy);
+            expect(function() {
+                directiveProvider.$put('my-directive', anotherSpy, function() {
+                    return true;
+                });
+            }).not.toThrow();
+            expect(directiveProvider.$get('my-directive')).not.toBe(spy);
+            expect(directiveProvider.$get('my-directive')).toBe(anotherSpy);
+            expect(spy.calls.count()).toBe(1);
+            expect(anotherSpy.calls.count()).toBe(1);
+        });
+    });
 });

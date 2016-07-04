@@ -39,8 +39,27 @@ var directiveProvider = (function() {
                 return internals[directiveName];
             }
         }
-        const directiveData = directives.get(directiveName);
-        return directiveData && directiveData();
+        return directives.get(directiveName);
+    };
+    toReturn.$put = function $put(directiveName, directiveConstructor) {
+        if (!angular.isFunction(directiveConstructor)) {
+            throw 'directiveConstructor is not a function';
+        }
+        if (angular.isString(directiveName)) {
+            directiveName = toCamelCase(directiveName);
+        }
+        if (directives.has(directiveName)) {
+            if (arguments.length === 3 && angular.isFunction(arguments[2]) && arguments[2]() === true) {
+                directives.set(directiveName, directiveConstructor());
+                console.log(['directive', directiveName, 'has been overwritten'].join(' '));
+                return;
+            }
+            throw 'Cannot overwrite ' + directiveName + '.\nForgeting to clean much';
+        }
+        directives.set(directiveName, directiveConstructor());
+    };
+    toReturn.$clean = function() {
+        directives.clear();
     }
     return toReturn;
 })();

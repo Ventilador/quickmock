@@ -102,8 +102,17 @@ var $_CONTROLLER = (function() {
             return this.controllerScope.$watch(expression, callback);
         },
         ngClick: function(expression) {
-            ngClick = ngClick || directiveProvider.$get('ngClick');
-            return ngClick.compile(expression, this);
+            return this.createDirective('ng-click', expression);
+        },
+        createDirective: function(name, expression) {
+            const directive = directiveProvider.$get(name);
+            const args = [expression, this];
+            if (arguments.length > 2) {
+                for (var index = 2; index < arguments.length; index++) {
+                    args.push(arguments[index]);
+                }
+            }
+            return directive.compile.apply(undefined, args);
         }
     }
     return _$_CONTROLLER;

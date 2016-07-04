@@ -35,17 +35,14 @@ function createSpy(callback) {
 }
 
 function makeArray(item) {
-    if (angular.isString(item)) {
-        if (arguments.length > 1) {
-            return makeArray(arguments);
-        }
-        return [item];
-    } else if (isArrayLike(item)) {
-        return Array.prototype.slice.apply(item);
+    if (arguments.length > 1) {
+        return makeArray(arguments);
     } else if (angular.isUndefined(item)) {
         return [];
+    } else if (isArrayLike(item)) {
+        return Array.prototype.slice.apply(item);
     }
-    throw 'moduleNames format invalid, please provide a single string or an array-like object';
+    return [item];
 }
 
 function extend() {
@@ -137,41 +134,3 @@ function sanitizeModules() {
     }
     return modules;
 }
-
-var HashMap = (function() {
-    let counter = 0;
-
-    function hashKey(value) {
-        var type = typeof value;
-        var uid;
-        if (type === 'function' ||
-            (type === 'object' && value !== null)) {
-            uid = value.$$hashKey;
-            if (typeof uid === 'function') {
-                uid = value.$$hashKey();
-            } else if (uid === undefined) {
-                uid = value.$$hashKey = counter++;
-            }
-        } else {
-            uid = value;
-        }
-        return type + ':' + uid;
-    }
-
-    function HashMap() {}
-    HashMap.prototype = {
-        put: function(key, value) {
-            this[hashKey(key)] = value;
-        },
-        get: function(key) {
-            return this[hashKey(key)];
-        },
-        remove: function(key) {
-            key = hashKey(key);
-            var value = this[key];
-            delete this[key];
-            return value;
-        }
-    };
-    return HashMap;
-})();
