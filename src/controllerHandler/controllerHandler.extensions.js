@@ -106,13 +106,16 @@ var $_CONTROLLER = (function() {
         },
         createDirective: function(name, expression) {
             const directive = directiveProvider.$get(name);
-            const args = [expression, this];
+            const args = [this, expression];
             if (arguments.length > 2) {
                 for (var index = 2; index < arguments.length; index++) {
                     args.push(arguments[index]);
                 }
             }
             return directive.compile.apply(undefined, args);
+        },
+        compileHTML: function(htmlText) {
+            return new directiveHandler(this, htmlText);
         }
     }
     return _$_CONTROLLER;

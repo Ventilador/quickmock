@@ -6,7 +6,7 @@ describe('ngClick', function() {
         controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
             mySpy: spy
         }, true);
-        myClick = ngClick.compile('ctrl.mySpy(param1, param2)', controllerService);
+        myClick = ngClick.compile(controllerService, 'ctrl.mySpy(param1, param2)');
     });
     it('should have defined myIf', function() {
         expect(myClick).toBeDefined();
