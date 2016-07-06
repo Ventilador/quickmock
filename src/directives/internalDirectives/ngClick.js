@@ -1,12 +1,13 @@
 function ngClickDirective($parse) {
     return {
         regex: /ng-click="(.*)"/,
-        compile: function(expression, controllerService) {
+        compile: function(controllerService, expression) {
             if (angular.isString(expression)) {
                 expression = $parse(expression);
             }
             if (scopeHelper.isController(controllerService)) {
                 controllerService.create && controllerService.create();
+
                 function click(scope, locals) {
                     if (arguments.length == 1) {
                         locals = scope || {};
@@ -22,6 +23,7 @@ function ngClickDirective($parse) {
                 return click;
             }
             throw 'Error in ngClick';
-        }
+        },
+        ApplyToChildren: true
     }
 }

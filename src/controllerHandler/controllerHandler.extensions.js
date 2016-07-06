@@ -104,15 +104,13 @@ var $_CONTROLLER = (function() {
         ngClick: function(expression) {
             return this.createDirective('ng-click', expression);
         },
-        createDirective: function(name, expression) {
-            const directive = directiveProvider.$get(name);
-            const args = [expression, this];
-            if (arguments.length > 2) {
-                for (var index = 2; index < arguments.length; index++) {
-                    args.push(arguments[index]);
-                }
-            }
-            return directive.compile.apply(undefined, args);
+        createDirective: function(name, expression, args) {
+            const directive = directiveProvider.$get(arguments[0]);
+            arguments[0] = this;
+            return directive.compile.apply(undefined, arguments);
+        },
+        compileHTML: function(htmlText) {
+            return new directiveHandler(this, htmlText);
         }
     }
     return _$_CONTROLLER;

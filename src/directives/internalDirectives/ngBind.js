@@ -1,6 +1,6 @@
 function ngBindDirective($parse) {
     return {
-        compile: function(expression, controllerService) {
+        compile: function(controllerService, expression) {
             const subscriptors = [];
             let lastValue;
             if (scopeHelper.isController(controllerService)) {
@@ -41,7 +41,7 @@ function ngBindDirective($parse) {
                 }
                 return toReturn;
             }
-            throw 'Error in ngIf';
+            throw 'Error in ngBind';
         }
     }
 }

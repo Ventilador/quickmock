@@ -7,7 +7,7 @@
          controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {}, true);
          controllerService.create();
          controller = controllerService.controllerInstance;
-         myBind = ngBind.compile(expression, controllerService);
+         myBind = ngBind.compile(controllerService, expression);
      });
      it('should be defined', function() {
          expect(myBind).toBeDefined();
