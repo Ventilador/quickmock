@@ -1,4 +1,27 @@
 var directiveHandler = (function() {
+    let proto = angular.element.prototype || angular.element.__proto__;
+    proto.ngFind = function(selector) {
+        let values = {
+            length: 0
+        };
+        for (let index = 0; index < this.length; index++) {
+            values[values.length++] = this[index].querySelector(selector) || '';
+        }
+        return angular.element(join(values));
+    }
+    proto.click = function(locals) {
+        if (this.length) {
+            const click = this.data('ng-click');
+            return click && click(locals);
+        }
+    }
+    proto.text = function() {
+        if (this.length) {
+            const click = this.data('ng-bind');
+            return click && click.apply(undefined, arguments);
+        }
+    }
+
     function getExpression(current, attribute) {
         let expression = current[0] && current[0].attributes.getNamedItem('ng-click');
         if (expression !== undefined && expression !== null) {
@@ -48,22 +71,7 @@ var directiveHandler = (function() {
             return current;
         }
         compile(current, controllerService);
-        let proto = current.prototype || current.__proto__;
-        proto.ngFind = function(selector) {
-            let values = {
-                length: 0
-            };
-            for (let index = 0; index < this.length; index++) {
-                values[values.length++] = this[index].querySelector(selector) || '';
-            }
-            return angular.element(join(values));
-        }
-        proto.click = function(locals) {
-            if (this.length) {
-                const click = this.data('ng-click');
-                click && click(locals);
-            }
-        }
+
         return current;
     }
 
