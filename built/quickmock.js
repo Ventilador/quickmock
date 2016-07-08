@@ -1,12 +1,26 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _quickmockMockHelper = require('./quickmock.mockHelper.js');
+
+var _quickmockMockHelper2 = _interopRequireDefault(_quickmockMockHelper);
+
+var _common = require('./controller/common.js');
+
+var _controllerHandler = require('./controllerHandler/controllerHandler.js');
+
+var _controllerHandler2 = _interopRequireDefault(_controllerHandler);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 console.log('QM');
-import helper from './quickmock.mockHelper.js';
-import {
-    extend
-} from './controller/common.js';
-import controllerHandler from './controllerHandler/controllerHandler.js';
-var mocker = (function(angular) {
+
+var mocker = function (angular) {
     var opts, mockPrefix;
-    var controllerDefaults = function(flag) {
+    var controllerDefaults = function controllerDefaults(flag) {
         return {
             bindToController: true,
             parentScope: {},
@@ -14,7 +28,7 @@ var mocker = (function(angular) {
             isDefault: !flag
         };
     };
-    quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
+    quickmock.MOCK_PREFIX = mockPrefix = quickmock.MOCK_PREFIX || '___';
     quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
     quickmock.MUTE_LOGS = false;
 
@@ -32,7 +46,7 @@ var mocker = (function(angular) {
             mocks = {},
             provider = {};
 
-        angular.forEach(allModules || [], function(modName) {
+        angular.forEach(allModules || [], function (modName) {
             invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
         });
 
@@ -43,7 +57,7 @@ var mocker = (function(angular) {
         if (providerType) {
             // Loop through invokeQueue, find this provider's dependencies and prefix
             // them so Angular will inject the mocked versions
-            angular.forEach(invokeQueue, function(providerData) {
+            angular.forEach(invokeQueue, function (providerData) {
                 var currProviderName = providerData[2][0];
                 if (currProviderName === opts.providerName) {
                     var currProviderDeps = providerData[2][1];
@@ -68,14 +82,13 @@ var mocker = (function(angular) {
             }
         }
 
-        angular.forEach(invokeQueue, function(providerData) {
+        angular.forEach(invokeQueue, function (providerData) {
             // Remove any prefixed dependencies that persisted from a previous call,
             // and check for any non-annotated services
             sanitizeProvider(providerData, injector);
         });
 
         return provider;
-
 
         function setupInitializer() {
             provider = initProvider();
@@ -89,13 +102,7 @@ var mocker = (function(angular) {
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    const toReturn = controllerHandler
-                        .clean()
-                        .addModules(allModules)
-                        .bindWith(opts.controller.bindToController)
-                        .setScope(opts.controller.parentScope)
-                        .setLocals(mocks)
-                        .new(opts.providerName, opts.controller.controllerAs);
+                    var toReturn = _controllerHandler2.default.clean().addModules(opts.mockModules.concat(opts.moduleName)).bindWith(opts.controller.bindToController).setScope(opts.controller.parentScope).setLocals(mocks).new(opts.providerName, opts.controller.controllerAs);
                     toReturn.create();
                     if (opts.controller.isDefault) {
                         return toReturn.controllerInstance;
@@ -201,12 +208,12 @@ var mocker = (function(angular) {
         }
         options.mockModules = options.mockModules || [];
         options.mocks = options.mocks || {};
-        options.controller = extend(options.controller, controllerDefaults(angular.isDefined(options.controller)));
+        options.controller = (0, _common.extend)(options.controller, controllerDefaults(angular.isDefined(options.controller)));
         return options;
     }
 
     function spyOnProviderMethods(provider) {
-        angular.forEach(provider, function(property, propertyName) {
+        angular.forEach(provider, function (property, propertyName) {
             if (angular.isFunction(property)) {
                 if (window.jasmine && window.spyOn && !property.calls) {
                     var spy = spyOn(provider, propertyName);
@@ -244,7 +251,7 @@ var mocker = (function(angular) {
     }
 
     function prefixProviderDependencies(providerName, invokeQueue, unprefix) {
-        angular.forEach(invokeQueue, function(providerData) {
+        angular.forEach(invokeQueue, function (providerData) {
             if (providerData[2][0] === providerName && providerData[2][0].indexOf(mockPrefix) === -1) {
                 var currProviderDeps = providerData[2][1];
                 if (angular.isArray(currProviderDeps)) {
@@ -268,12 +275,12 @@ var mocker = (function(angular) {
             tagName = htmlAttrs.$tag,
             htmlContent = htmlAttrs.$content;
         html = '<' + tagName + ' ';
-        angular.forEach(htmlAttrs, function(val, attr) {
+        angular.forEach(htmlAttrs, function (val, attr) {
             if (attr !== '$content' && attr !== '$tag') {
-                html += snake_case(attr) + (val ? ('="' + val + '" ') : ' ');
+                html += snake_case(attr) + (val ? '="' + val + '" ' : ' ');
             }
         });
-        html += htmlContent ? ('>' + htmlContent) : '>';
+        html += htmlContent ? '>' + htmlContent : '>';
         html += '</' + tagName + '>';
         return html;
     }
@@ -288,13 +295,12 @@ var mocker = (function(angular) {
 
     function snake_case(name, separator) {
         separator = separator || '-';
-        return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+        return name.replace(SNAKE_CASE_REGEXP, function (letter, pos) {
             return (pos ? separator : '') + letter.toLowerCase();
         });
     }
 
     return quickmock;
-
-})(angular);
-helper(mocker);
-export default mocker;
+}(angular);
+(0, _quickmockMockHelper2.default)(mocker);
+exports.default = mocker;

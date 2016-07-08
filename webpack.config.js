@@ -1,7 +1,6 @@
-
 module.exports = {
     entry: {
-        'src': "./src/quickmock.js",
+        'src': "./src/index.loader.js",
         'test': "./test/index.loader.js"
     },
     output: {
@@ -15,8 +14,8 @@ module.exports = {
             exclude: /(node_modules|bower_components)/,
             loader: 'babel?presets[]=es2015'
         }, {
-            test: /\.js$/, 
-            exclude: /node_modules/, 
+            test: /\.js$/,
+            exclude: /node_modules/,
             loader: "jshint-loader"
         }]
     }

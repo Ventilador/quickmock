@@ -2,7 +2,7 @@ console.log('controllerQM.js');
 import {
     extend,
     scopeHelper,
-    sanitizeModules,
+    makeArray,
     PARSE_BINDING_REGEX,
     isExpression
 
@@ -11,7 +11,7 @@ import {
 var $parse = angular.injector(['ng']).get('$parse');
 
 class controller {
-    static parseBindings(bindings, scope, isolateScope, controllerAs) {
+    static parseBindings(bindings, scope, isolateScope, controllerAs, locals) {
         const assignBindings = (destination, scope, key, mode) => {
             mode = mode || '=';
             const result = PARSE_BINDING_REGEX.exec(mode);
@@ -71,6 +71,13 @@ class controller {
             }
             return destination;
         };
+        const overwriteWithLocals = (destination) => {
+            for (var key in locals) {
+                if (locals.hasOwnProperty(key) && key !== controllerAs && key !== '$scope') {
+                    destination[key] = locals[key];
+                }
+            }
+        };
         const destination = scopeHelper.create(isolateScope || scope.$new());
         if (!bindings) {
             return {};
@@ -80,6 +87,7 @@ class controller {
                     assignBindings(destination, scope, key);
                 }
             }
+            overwriteWithLocals(destination);
             return destination;
         } else if (angular.isObject(bindings)) {
             for (let key in bindings) {
@@ -87,6 +95,7 @@ class controller {
                     assignBindings(destination, scope, key, bindings[key]);
                 }
             }
+            overwriteWithLocals(destination);
             return destination;
         }
         throw 'Could not parse bindings';
@@ -94,7 +103,7 @@ class controller {
 
     static $get(moduleNames) {
         let $controller;
-        angular.injector(sanitizeModules(moduleNames)).invoke(
+        angular.injector(makeArray(moduleNames)).invoke(
             ['$controller',
                 (controller) => {
                     $controller = controller;
@@ -113,7 +122,7 @@ class controller {
                 locals = myLocals || locals;
                 b = b || bindings;
 
-                extend(constructor.instance, controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName));
+                extend(constructor.instance, controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName, locals));
                 return constructor;
             };
             if (bindings) {

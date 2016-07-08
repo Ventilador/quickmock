@@ -3,8 +3,9 @@ export default function Config() {
         .controller('emptyController', [function() {
             this.name = 'emptyController';
         }])
-        .controller('withInjections', ['$q', function($q) {
+        .controller('withInjections', ['$q', '$timeout', function($q, t) {
             this.q = $q;
+            this.t = t;
         }])
         .controller('withBindings', [function() {
             this.boundProperty = this.boundProperty + ' modified';
@@ -23,5 +24,11 @@ export default function Config() {
                 BUTTON_LANG_DE: 'deutsch'
             });
             $translateProvider.preferredLanguage('en');
+        }])
+        .mockService('$q', [function() {
+            return jasmine.createSpy();
+        }])
+        .mockService('$timeout', ['$timeout', function() {
+            return jasmine.createSpy('___$timeout');
         }]);
 }

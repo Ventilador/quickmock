@@ -1,20 +1,29 @@
+import quickmock from './../src/quickmock.js';
 describe('quickmock', function() {
     let controllerMocker;
     beforeEach(function() {
         controllerMocker = quickmock({
             providerName: 'withInjections',
             moduleName: 'test',
-            mockModules: ['SampleMocks']
+            mockModules: []
         });
     });
     it('should have defined a controllerMocker', function() {
         expect(controllerMocker).toBeDefined();
     });
+    it('should have modified angular modules', function() {
+        expect(quickmock.mockHelper).toBeDefined();
+    });
+    it('should inject mocked object first, then real', function() {
+        expect(controllerMocker.t.and.identity()).toBe('___$timeout');
+        controllerMocker.t();
+        expect(controllerMocker.t).toHaveBeenCalled();
+    });
 });
 describe('controller', function() {
     let controllerMocker, spy;
     beforeEach(function() {
-        spy = jasmine.createSpy('magicClick')
+        spy = jasmine.createSpy('magicClick');
         controllerMocker = quickmock({
             providerName: 'emptyController',
             moduleName: 'test',

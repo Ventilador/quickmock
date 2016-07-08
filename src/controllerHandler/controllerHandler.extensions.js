@@ -1,8 +1,6 @@
 console.log('controllerHandler.extension.js');
 
-import {
-    directiveProvider
-} from './../directives/directiveProvider.js';
+import directiveProvider from './../directives/directiveProvider.js';
 import {
     directiveHandler
 } from './../directives/directiveHandler.js';
@@ -53,6 +51,12 @@ export class $_CONTROLLER {
     create(bindings) {
         this.bindings = angular.isDefined(bindings) && bindings !== null ? bindings : this.bindings;
         assert_$_CONTROLLER(this);
+        for (let key in this.locals) {
+            const index = this.usedModules.indexOf(key);
+            if (index !== -1) {
+                this.usedModules.splice(index, 1);
+            }
+        }
         this.controllerConstructor =
             controller.$get(this.usedModules)
             .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);

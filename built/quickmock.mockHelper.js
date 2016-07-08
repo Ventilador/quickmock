@@ -1,7 +1,12 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 console.log('QM.helper');
 
 function loadHelper(mocker) {
-    (function(quickmock) {
+    (function (quickmock) {
         var hasBeenMocked = {},
             origModuleFunc = angular.module;
         quickmock.originalModules = angular.module;
@@ -13,7 +18,7 @@ function loadHelper(mocker) {
 
         function decorateAngularModuleObject(modObj) {
             var methods = getDecoratedMethods(modObj);
-            angular.forEach(methods, function(method, methodName) {
+            angular.forEach(methods, function (method, methodName) {
                 modObj[methodName] = method;
             });
             return modObj;
@@ -65,7 +70,6 @@ function loadHelper(mocker) {
                 }
             };
         }
-
     })(mocker);
 }
-export default loadHelper;
+exports.default = loadHelper;

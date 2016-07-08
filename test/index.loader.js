@@ -9,5 +9,6 @@ require('./directives/ngIf.spec.js');
 require('./directives/ngBind.spec.js');
 require('./directives/ngClick.spec.js');
 require('./directives/ngTranslate.spec.js');
+require('./quickmock.spec.js');
 import config from './../app/completeList.js';
 config();
