@@ -1,29 +1,30 @@
-function ngClickDirective($parse) {
+console.log('ng.click.js');
+export function ngClickDirective($parse) {
     return {
         regex: /ng-click="(.*)"/,
-        compile: function(controllerService, expression) {
+        compile: (controllerService, expression) => {
             if (angular.isString(expression)) {
                 expression = $parse(expression);
             }
-            if (scopeHelper.isController(controllerService)) {
-                controllerService.create && controllerService.create();
-
-                function click(scope, locals) {
-                    if (arguments.length == 1) {
-                        locals = scope || {};
-                        scope = controllerService.controllerScope;
-                    } else {
-                        scope = scope || controllerService.controllerScope;
-                        locals = locals || {};
-                    }
-                    var result = expression(scope, locals);
-                    controllerService.$apply();
-                    return result;
-                }
-                return click;
+            if (controllerService.create) {
+                controllerService.create();
             }
-            throw 'Error in ngClick';
+
+            var click = (scope, locals) => {
+                if (arguments.length === 1) {
+                    locals = scope || {};
+                    scope = controllerService.controllerScope;
+                } else {
+                    scope = scope || controllerService.controllerScope;
+                    locals = locals || {};
+                }
+                const result = expression(scope, locals);
+                controllerService.$apply();
+                return result;
+            };
+            return click;
         },
         ApplyToChildren: true
-    }
+    };
 }
+console.log('ng.click.js end');

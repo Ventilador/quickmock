@@ -1,26 +1,31 @@
-var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
-var isExpression = /^{{.*}}$/;
-var controller = (function(angular) {
-    var $parse, self = this;
-    angular.injector(['ng']).invoke(['$parse', function(parse) {
-        $parse = parse;
-    }]);
+console.log('controllerQM.js');
+import {
+    extend,
+    scopeHelper,
+    sanitizeModules,
+    PARSE_BINDING_REGEX,
+    isExpression
 
-    this.parseBindings = function parseBindings(bindings, scope, isolateScope, controllerAs) {
-        function assignBindings(destination, scope, key, mode) {
+} from './common.js';
+
+var $parse = angular.injector(['ng']).get('$parse');
+
+class controller {
+    static parseBindings(bindings, scope, isolateScope, controllerAs) {
+        const assignBindings = (destination, scope, key, mode) => {
             mode = mode || '=';
-            var result = PARSE_BINDING_REGEX.exec(mode);
+            const result = PARSE_BINDING_REGEX.exec(mode);
             mode = result[1];
-            var parentKey = result[2] || key;
-            var childKey = controllerAs + '.' + key;
+            const parentKey = result[2] || key;
+            const childKey = controllerAs + '.' + key;
             switch (mode) {
                 case '=':
-                    var parentGet = $parse(parentKey);
-                    var childGet = $parse(childKey);
-                    var lastValue;
+                    const parentGet = $parse(parentKey);
+                    const childGet = $parse(childKey);
+                    let lastValue;
                     childGet.assign(destination, lastValue = parentGet(scope));
-                    var parentValueWatch = function() {
-                        var parentValue = parentGet(scope);
+                    const parentValueWatch = () => {
+                        let parentValue = parentGet(scope);
                         if (parentValue !== lastValue) {
                             childGet.assign(destination, parentValue);
                         } else {
@@ -35,17 +40,19 @@ var controller = (function(angular) {
                     destination.$on('$destroy', unwatch);
                     break;
                 case '&':
-                    destination[key] = function(locals) {
+                    destination[key] = (locals) => {
                         return $parse(scope[parentKey])(scope, locals);
                     };
                     break;
                 case '@':
-                    var result = isExpression.exec(scope[parentKey]);
-                    if (result) {
-                        var parentGet = $parse(result[1]);
-                        var childGet = $parse(childKey);
-                        var parentValue, lastValue = parentValue = parentGet(scope);
-                        var parentValueWatch = function() {
+
+                    let isExp = isExpression.exec(scope[parentKey]);
+                    if (isExp) {
+                        const parentGet = $parse(isExp[1]);
+                        const childGet = $parse(childKey);
+                        let parentValue = parentGet(scope);
+                        let lastValue = parentValue;
+                        const parentValueWatch = () => {
                             parentValue = parentGet(scope);
                             if (parentValue !== lastValue) {
                                 childGet.assign(destination, lastValue = parentValue);
@@ -53,7 +60,7 @@ var controller = (function(angular) {
                             return lastValue;
                         };
                         scope.$watch(parentValueWatch);
-                        var unwatch = scope.$watch(parentValueWatch);
+                        const unwatch = scope.$watch(parentValueWatch);
                         destination.$on('$destroy', unwatch);
                     } else {
                         destination[key] = (scope[parentKey] || '').toString();
@@ -63,8 +70,8 @@ var controller = (function(angular) {
                     throw 'Could not apply bindings';
             }
             return destination;
-        }
-        var destination = scopeHelper.create(isolateScope || scope.$new());
+        };
+        const destination = scopeHelper.create(isolateScope || scope.$new());
         if (!bindings) {
             return {};
         } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
@@ -75,7 +82,7 @@ var controller = (function(angular) {
             }
             return destination;
         } else if (angular.isObject(bindings)) {
-            for (var key in bindings) {
+            for (let key in bindings) {
                 if (bindings.hasOwnProperty(key)) {
                     assignBindings(destination, scope, key, bindings[key]);
                 }
@@ -83,15 +90,13 @@ var controller = (function(angular) {
             return destination;
         }
         throw 'Could not parse bindings';
-
     }
 
-
-    this.$get = function(moduleNames) {
-        var $controller, $rootScope = scopeHelper.$rootScope;
+    static $get(moduleNames) {
+        let $controller;
         angular.injector(sanitizeModules(moduleNames)).invoke(
             ['$controller',
-                function(controller) {
+                (controller) => {
                     $controller = controller;
                 }
             ]);
@@ -99,26 +104,27 @@ var controller = (function(angular) {
         function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
             scope = scopeHelper.create(scope);
             scopeControllerName = scopeControllerName || 'controller';
-            var locals = extend(extendedLocals || {}, {
+            let locals = extend(extendedLocals || {}, {
                 $scope: scopeHelper.create(scope).$new()
             }, false);
 
-            var constructor = $controller(controllerName, locals, true, scopeControllerName);
-            constructor.provideBindings = function(b, myLocals) {
+            const constructor = $controller(controllerName, locals, true, scopeControllerName);
+            constructor.provideBindings = (b, myLocals) => {
                 locals = myLocals || locals;
                 b = b || bindings;
 
-                extend(constructor.instance, parseBindings(bindings, scope, locals.$scope, scopeControllerName));
+                extend(constructor.instance, controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName));
                 return constructor;
             };
             if (bindings) {
                 constructor.provideBindings();
             }
             return constructor;
-        };
+        }
         return {
             create: createController
         };
-    };
-    return this;
-})(angular);
+    }
+}
+export default controller;
+console.log('controllerQM.js end');

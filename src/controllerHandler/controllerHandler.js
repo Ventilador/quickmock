@@ -1,32 +1,23 @@
-var controllerHandler = (function() {
-    var internal = false;
-    var myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
+import {
+    makeArray,
+    isArrayLike,
+    scopeHelper
+} from './../controller/common.js';
+import {
+    $_CONTROLLER
+} from './controllerHandler.extensions.js';
 
-    var $rootScope = angular.injector(['ng']).get('$rootScope');
+var controllerHandler = (function() {
+    console.log('controllerHandler.js');
+    var internal = false;
+    let myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
+
 
     function clean() {
         myModules = [];
-        ctrlName = pScope = cLocals = cScope = scopeControllerName = bindToController = undefined;
+        ctrlName = pScope = cLocals = cScope = bindToController = undefined;
         return $controllerHandler;
     }
-
-    function cleanExpressionForAssignment(expression, controllerName, bindings) {
-        if (!controllerName) {
-            return {
-                value: expression
-            }
-        }
-        expression = expression.replace(controllerName + '.', '');
-        for (var key in bindings) {
-            if (bindings.hasOwnProperty(key)) {
-                if (expression.indexOf(key) !== -1) {
-                    expression = expression.replace(key, PARSE_BINDING_REGEX.exec(bindings[key])[2] || key);
-                    return expression;
-                }
-            }
-        }
-    }
-
 
     function $controllerHandler() {
 
@@ -37,13 +28,13 @@ var controllerHandler = (function() {
         if (!cScope) {
             cScope = pScope.$new();
         } {
-            var tempScope = scopeHelper.isScope(cScope);
+            const tempScope = scopeHelper.isScope(cScope);
             if (tempScope !== false) {
                 cScope = tempScope;
             }
         }
 
-        var toReturn = new $_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
+        const toReturn = new $_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
         clean();
         return toReturn;
     }
@@ -86,7 +77,7 @@ var controllerHandler = (function() {
         internal = !!flag;
         return function() {
             internal = !flag;
-        }
+        };
     };
     $controllerHandler.new = function(controllerName, scopeControllersName, parentScope, childScope) {
         ctrlName = controllerName;
@@ -100,11 +91,13 @@ var controllerHandler = (function() {
             cName = scopeControllersName;
         }
         return $controllerHandler();
-    }
+    };
     $controllerHandler.newService = function(controllerName, controllerAs, parentScope, bindings) {
-        var toReturn = $controllerHandler.new(controllerName, controllerAs, parentScope);
+        const toReturn = $controllerHandler.new(controllerName, controllerAs, parentScope);
         toReturn.bindings = bindings;
         return toReturn;
     };
+    console.log('controllerHandler.js end');
     return $controllerHandler;
 })();
+export default controllerHandler;

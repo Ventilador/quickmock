@@ -1,34 +1,37 @@
+import directiveProvider from './directiveProvider.js';
 var directiveHandler = (function() {
-    var proto = angular.element.prototype || angular.element.__proto__;
+    console.log('directiveHandler');
+
+    let proto = angular.element.prototype || angular.element.__proto__;
     proto.ngFind = function(selector) {
-        var values = {
+        let values = {
             length: 0
         };
-        for (var index = 0; index < this.length; index++) {
+        for (let index = 0; index < this.length; index++) {
             values[values.length++] = this[index].querySelector(selector) || '';
         }
         return angular.element(join(values));
-    }
+    };
     proto.click = function(locals) {
         if (this.length) {
-            var click = this.data('ng-click');
+            const click = this.data('ng-click');
             return click && click(locals);
         }
-    }
+    };
     proto.text = function() {
         if (this.length) {
-            var click = this.data('ng-bind');
+            const click = this.data('ng-bind');
             return click && click.apply(undefined, arguments);
         }
-    }
+    };
 
-    function getExpression(current, attribute) {
-        var expression = current[0] && current[0].attributes.getNamedItem('ng-click');
-        if (expression !== undefined && expression !== null) {
-            expression = expression.value;
-            return expression;
-        }
-    }
+    // function getExpression(current) {
+    //     let expression = current[0] && current[0].attributes.getNamedItem('ng-click');
+    //     if (expression !== undefined && expression !== null) {
+    //         expression = expression.value;
+    //         return expression;
+    //     }
+    // }
 
     function join(obj) {
         return Array.prototype.concat.apply([], obj);
@@ -37,20 +40,21 @@ var directiveHandler = (function() {
     function applyDirectivesToNodes(object, attributeName, compiledDirective) {
         object = angular.element(object);
         object.data(attributeName, compiledDirective);
-        var childrens = object.children();
-        for (var ii = 0; ii < childrens.length; ii++) {
+        const childrens = object.children();
+        for (let ii = 0; ii < childrens.length; ii++) {
             applyDirectivesToNodes(childrens[ii], attributeName, compiledDirective);
         }
     }
 
     function compile(obj, controllerService) {
         obj = angular.element(obj);
-        for (var ii = 0; ii < obj[0].attributes.length; ii++) {
-            var directiveName = obj[0].attributes[ii].name;
-            var expression = obj[0].attributes[ii].value;
-            var directive;
+
+        for (let ii = 0; ii < obj[0].attributes.length; ii++) {
+            const directiveName = obj[0].attributes[ii].name;
+            const expression = obj[0].attributes[ii].value;
+            let directive;
             if (directive = directiveProvider.$get(directiveName)) {
-                var compiledDirective = directive.compile(controllerService, expression);
+                const compiledDirective = directive.compile(controllerService, expression);
                 if (directive.ApplyToChildren) {
                     applyDirectivesToNodes(obj, directiveName, compiledDirective);
                 } else {
@@ -59,14 +63,15 @@ var directiveHandler = (function() {
             }
 
         }
-        var childrens = obj.children();
-        for (var ii = 0; ii < childrens.length; ii++) {
+
+        const childrens = obj.children();
+        for (let ii = 0; ii < childrens.length; ii++) {
             compile(childrens[ii], controllerService);
         }
     }
 
     function control(controllerService, obj) {
-        var current = angular.element(obj);
+        let current = angular.element(obj);
         if (!current || !controllerService) {
             return current;
         }
@@ -75,5 +80,7 @@ var directiveHandler = (function() {
         return current;
     }
 
+    console.log('directiveHandler end');
     return control;
 })();
+export default directiveHandler;

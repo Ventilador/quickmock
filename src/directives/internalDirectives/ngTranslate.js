@@ -1,26 +1,28 @@
-function ngTranslateDirective($translate, $parse) {
+console.log('ng.translate.js');
+import {
+    isExpression
+} from './../../controller/common.js';
+
+export function ngTranslateDirective($translate) {
     return {
         compile: function(expression, controllerService) {
-            var subscriptors = [];
-            var lastValue;
-            if (scopeHelper.isController(controllerService)) {
-                controllerService.create && controllerService.create();
-                var getter = $parse(expression);
-
-                function toReturn() {
-
-                }
-                toReturn.changeLanguage = function() {
-                    $translate.use(newLanguage);
-                    controllerService.$apply();
-                }
-                return toReturn;
-
+            if (controllerService.create) {
+                controllerService.create();
             }
-            throw 'Could not parse the expression';
+            // const getter = $parse(expression);
+
+            var toReturn = function() {
+
+            };
+            toReturn.changeLanguage = function(newLanguage) {
+                $translate.use(newLanguage);
+                controllerService.$apply();
+            };
+            return toReturn;
+
         },
         isExpression: function(myText) {
-            return isExpression.test(expression);
+            return isExpression.test(myText);
         },
         translate: function(text) {
             return $translate.instant(text);
@@ -31,3 +33,5 @@ function ngTranslateDirective($translate, $parse) {
 
     };
 }
+
+console.log('ng.translate.js end');

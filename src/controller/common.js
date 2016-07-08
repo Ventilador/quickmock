@@ -1,10 +1,13 @@
+console.log('common.js');
+export var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
+export var isExpression = /^{{.*}}$/;
 /* Should return true 
  * for objects that wouldn't fail doing
  * Array.prototype.slice.apply(myObj);
  * which returns a new array (reference-wise)
  * Probably needs more specs
  */
-function isArrayLike(item) {
+export function isArrayLike(item) {
     return Array.isArray(item) ||
         (!!item &&
             typeof item === "object" &&
@@ -15,26 +18,62 @@ function isArrayLike(item) {
         Object.prototype.toString.call(item) === '[object Arguments]';
 }
 
+export function assertNotDefined(obj, args) {
 
-function createSpy(callback) {
+    let key;
+    while (key = args.shift()) {
+        if (typeof obj[key] === 'undefined' || obj[key] === null) {
+            throw ['"', key, '" property cannot be null'].join("");
+        }
+    }
+}
+
+export function assert_$_CONTROLLER(obj) {
+    assertNotDefined(obj, [
+        'parentScope',
+        'bindings',
+        'controllerScope'
+    ]);
+}
+
+export function clean(object) {
+    if (isArrayLike(object)) {
+        for (var index = object.length - 1; index >= 0; index--) {
+            if (object.hasOwnProperty(index)) {
+                Array.prototype.splice.apply(object, [index, 1]);
+            }
+        }
+    } else if (angular.isObject(object)) {
+        for (var key in object) {
+            if (object.hasOwnProperty(key)) {
+                if (!key.startsWith('$')) {
+                    clean(object[key]);
+                }
+                delete object[key];
+            }
+        }
+    }
+}
+
+export function createSpy(callback) {
     if (!callback) {
         callback = angular.noop;
     }
-    var startTime = new Date().getTime();
-    var endTime;
-    var toReturn = spyOn({
-        a: function() {
+    const startTime = new Date().getTime();
+    let endTime;
+    const toReturn = spyOn({
+        a: () => {
             callback.apply(callback, arguments);
             endTime = new Date().getTime();
         }
     }, 'a').and.callThrough();
-    toReturn.took = function() {
+    toReturn.took = () => {
         return endTime - startTime;
     };
     return toReturn;
 }
 
-function makeArray(item) {
+export function makeArray(item) {
     if (arguments.length > 1) {
         return makeArray(arguments);
     } else if (angular.isUndefined(item)) {
@@ -45,8 +84,8 @@ function makeArray(item) {
     return [item];
 }
 
-function extend() {
-    var remove$ = arguments[arguments.length - 1] === false;
+export function extend() {
+    let remove$ = arguments[arguments.length - 1] === false;
 
     function $$extend(destination, source) {
         for (var key in source) {
@@ -58,72 +97,69 @@ function extend() {
         }
         return destination;
     }
-    var values = Array.prototype.slice.apply(arguments);
-    var destination = values.shift() || {};
-    var current;
+
+    const values = Array.prototype.slice.apply(arguments);
+    const destination = values.shift() || {};
+    let current;
     while (current = values.shift()) {
         $$extend(destination, current);
     }
     return destination;
 }
+const rootScope = angular.injector(['ng']).get('$rootScope');
 
-var scopeHelper = (function() {
-    var rootScope = angular.injector(['ng']).get('$rootScope');
-
-    function getRootFromScope(scope) {
-        if (scope.$root) {
-            return scope.$root;
-        }
-        var parent;
-        while (parent = scope.$parent) {
-            if (parent.$root) {
-                return parent.$root;
-            }
-        }
-        return parent;
+function getRootFromScope(scope) {
+    if (scope.$root) {
+        return scope.$root;
     }
-    var toReturn = {
-        create: function(scope) {
-            scope = scope || {};
-            if (toReturn.isScope(scope)) {
-                return scope;
-            }
-            for (var key in scope) {
-                if (scope.hasOwnProperty(key) && key.startsWith('$')) {
-                    delete scope[key];
-                }
-            }
 
-            if (angular.isObject(scope)) {
-                return extend(rootScope.$new(true), scope);
-            }
-            if (isArrayLike(scope)) {
-                scope = makeArray(scope);
-                return extend.apply(undefined, [rootScope.$new(true)].concat(scope));
-            }
-        },
-        isScope: function(object) {
-            return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
-        },
-        $rootScope: rootScope,
-        isController: function(object) {
-            return object instanceof controllerHandler.controllerType;
+    let parent;
+    while (parent = scope.$parent) {
+        if (parent.$root) {
+            return parent.$root;
         }
-    };
-    return toReturn;
-})();
+    }
+    return parent;
+}
 
-function getFunctionName(myFunction) {
-    var toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];
+export class scopeHelper {
+    static create(scope) {
+        scope = scope || {};
+        if (this.isScope(scope)) {
+            return scope;
+        }
+        for (var key in scope) {
+            if (scope.hasOwnProperty(key) && key.startsWith('$')) {
+                delete scope[key];
+            }
+        }
+
+        if (angular.isObject(scope)) {
+            return extend(rootScope.$new(true), scope);
+        }
+        if (isArrayLike(scope)) {
+            scope = makeArray(scope);
+            return extend.apply(undefined, [rootScope.$new(true)].concat(scope));
+        }
+    }
+    static isScope(object) {
+        return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
+    }
+}
+scopeHelper.$rootScope = rootScope;
+
+export function getFunctionName(myFunction) {
+    const toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];
     if (toReturn === '' || toReturn === 'anon') {
         return new Date().getTime().toString();
     }
     return toReturn;
 }
 
-function sanitizeModules() {
-    modules = makeArray.apply(undefined, arguments);
-    var index;
+export function sanitizeModules() {
+
+    const modules = makeArray.apply(undefined, arguments);
+    let index;
     if (
         (index = modules.indexOf('ng')) === -1 &&
         (index = modules.indexOf('angular')) === -1) {
@@ -134,3 +170,4 @@ function sanitizeModules() {
     }
     return modules;
 }
+console.log('common.js end');

@@ -1,0 +1,25 @@
+{
+  "esnext": true,
+  "bitwise": true,
+  "curly": true,
+  "eqeqeq": true,
+  "latedef": false,
+  "noarg": true,
+  "undef": true,
+  "unused": true,
+  "validthis": true,
+  "jasmine": true,
+  "boss": true,
+  "loopfunc": true,
+  "proto": true,
+  "globals": {
+    "console": false,
+    "angular": false,
+    "inject": false,
+    "module": false,
+    "window": false,
+    "_": false,
+    "quickmock": false,
+    "require": false
+  }
+}

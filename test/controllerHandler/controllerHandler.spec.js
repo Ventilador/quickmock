@@ -1,3 +1,5 @@
+import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
+
 describe('controllerHandler', function() {
     beforeEach(function() {
         controllerHandler.clean();
@@ -15,10 +17,10 @@ describe('controllerHandler', function() {
     });
     describe('creating a controller', function() {
         beforeEach(function() {
-            controllerHandler.addModules('test')
+            controllerHandler.addModules('test');
         });
         it('should allow creating a controller', function() {
-            var controllerObj;
+            let controllerObj;
             expect(function() {
                 controllerObj = controllerHandler.new('emptyController');
             }).not.toThrow();
@@ -30,7 +32,7 @@ describe('controllerHandler', function() {
             expect(controllerObj.usedModules).toEqual(['test']);
         });
         it('should allow creating a controller with bindings', function() {
-            var controllerObj = controllerHandler.setScope({
+            const controllerObj = controllerHandler.setScope({
                 boundProperty: 'something'
             }).bindWith({
                 boundProperty: '='
@@ -39,7 +41,7 @@ describe('controllerHandler', function() {
             expect(controllerObj.controllerInstance.boundProperty).toBe('something modified');
         });
         it('should allow to change the name of the binding', function() {
-            var scope = {
+            const scope = {
                     equals: function() {},
                     byText: 'byText',
                     expression: 'byText.toUpperCase()'
@@ -57,7 +59,7 @@ describe('controllerHandler', function() {
             expect(controllerObj.controllerInstance.expressionResult()).toBe(scope.byText.toUpperCase());
         });
         describe('Watchers', function() {
-            var scope, controllerObj;
+            let scope, controllerObj;
             beforeEach(function() {
                 scope = controllerHandler.$rootScope.$new();
             });
@@ -67,8 +69,8 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('emptyController');
-                var args;
-                var controller = controllerObj.watch('controller.boundProperty', function() {
+                let args;
+                const controller = controllerObj.watch('controller.boundProperty', function() {
                     args = arguments;
                 }).create();
                 expect(controller.boundProperty).toBe('lala');
@@ -82,8 +84,8 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('withInjections');
-                var args;
-                var controller = controllerObj.watch('controller.boundProperty', function() {
+                let args;
+                const controller = controllerObj.watch('controller.boundProperty', function() {
                     args = arguments;
                 }).create();
                 expect(controller.boundProperty).toBe('lala');
@@ -98,7 +100,7 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('withInjections');
-                var controller = controllerObj.create();
+                const controller = controllerObj.create();
                 controllerObj.parentScope.boundProperty = 'parent';
                 controllerObj.$apply();
                 expect(controller.boundProperty).toBe('parent');
@@ -108,7 +110,7 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('withInjections');
-                var controller = controllerObj.create();
+                const controller = controllerObj.create();
                 controllerObj.parentScope.boundProperty = 'parent';
                 controller.boundProperty = 'child';
                 controllerObj.$apply();
@@ -118,18 +120,15 @@ describe('controllerHandler', function() {
         });
     });
     describe('destroying a controller', function() {
-        var controllerObj;
+        let controllerObj;
         beforeEach(function() {
             controllerHandler.clean();
-            controllerHandler.addModules('test')
+            controllerHandler.addModules('test');
         });
         it('should allow destroying the object', function() {
             expect(function() {
                 controllerObj = controllerHandler.new('emptyController');
             }).not.toThrow();
-            var controller = controllerObj.create(false);
-            var parentScope = controllerObj.parentScope;
-            var controllerScope = controllerObj.controllerScope;
             controllerObj.$destroy();
         });
     });

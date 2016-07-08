@@ -1,5 +1,5 @@
 describe('quickmock', function() {
-    var controllerMocker;
+    let controllerMocker;
     beforeEach(function() {
         controllerMocker = quickmock({
             providerName: 'withInjections',
@@ -12,7 +12,7 @@ describe('quickmock', function() {
     });
 });
 describe('controller', function() {
-    var controllerMocker, spy;
+    let controllerMocker, spy;
     beforeEach(function() {
         spy = jasmine.createSpy('magicClick')
         controllerMocker = quickmock({
@@ -32,7 +32,7 @@ describe('controller', function() {
     });
     it('should allow me to perform clicks', function() {
         expect(controllerMocker.ngClick).toEqual(jasmine.any(Function));
-        var myClick = controllerMocker.ngClick('ctrl.somethingToCall(aObj, bObj)'),
+        const myClick = controllerMocker.ngClick('ctrl.somethingToCall(aObj, bObj)'),
             reference1 = function() {},
             reference2 = function() {},
             locals = {

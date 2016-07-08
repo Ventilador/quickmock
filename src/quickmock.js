@@ -1,5 +1,9 @@
+console.log('QM');
+import {
+    extend
+} from './controller/common.js';
+import controllerHandler from './controllerHandler/controllerHandler.js';
 (function(angular) {
-
     var opts, mockPrefix;
     var controllerDefaults = function(flag) {
         return {
@@ -7,7 +11,7 @@
             parentScope: {},
             controllerAs: 'controller',
             isDefault: !flag
-        }
+        };
     };
     quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
     quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
@@ -47,11 +51,12 @@
                         currProviderDeps = currProviderDeps.$inject || injector.annotate(currProviderDeps);
                     }
 
-                    for (var i = 0; i < currProviderDeps.length; i++)
+                    for (var i = 0; i < currProviderDeps.length; i++) {
                         if (!angular.isFunction(currProviderDeps[i])) {
                             var depName = currProviderDeps[i];
                             mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
                         }
+                    }
                 }
             });
 
@@ -83,7 +88,7 @@
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    var toReturn = controllerHandler
+                    const toReturn = controllerHandler
                         .addModules(opts.mockModules.concat(opts.moduleName))
                         .bindWith(opts.controller.bindToController)
                         .setScope(opts.controller.parentScope)
@@ -203,9 +208,13 @@
             if (angular.isFunction(property)) {
                 if (window.jasmine && window.spyOn && !property.calls) {
                     var spy = spyOn(provider, propertyName);
-                    spy.andCallThrough ? spy.andCallThrough() : spy.and.callThrough();
+                    if (spy.andCallThrough) {
+                        spy.andCallThrough();
+                    } else {
+                        spy.and.callThrough();
+                    }
                 } else if (window.sinon && window.sinon.spy) {
-                    sinon.spy(provider, propertyName);
+                    window.sinon.spy(provider, propertyName);
                 }
             }
         });
@@ -287,3 +296,5 @@
     return quickmock;
 
 })(angular);
+
+export default window.quickmock;

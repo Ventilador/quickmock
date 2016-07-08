@@ -1,6 +1,7 @@
+import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
+import directiveHandler from './../../src/directives/directiveHandler.js';
 describe('directiveHandler', function() {
-    var controllerService, spy, controller;
-    var expression = 'ctrl.myStringParameter';
+    let controllerService, spy, controller;
     beforeEach(function() {
         spy = jasmine.createSpy('click');
         controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
@@ -22,34 +23,35 @@ describe('directiveHandler', function() {
     });
     it('should allow me to create new instances', function() {
         expect(function() {
-            var temp = new directiveHandler();
+            new directiveHandler();
         }).not.toThrow();
     });
     it('should be able to compile html', function() {
         expect(function() {
-            var temp = new directiveHandler(controllerService, '<div/>');
+            new directiveHandler(controllerService, '<div/>');
         }).not.toThrow();
     });
     describe('ngClick', function() {
         it('should allow me to call ng-click', function() {
-            var handler = new directiveHandler(controllerService, '<div ng-click="ctrl.aString = \'anotherValue\'"/>');
+            const handler = new directiveHandler(controllerService, '<div ng-click="ctrl.aString = \'anotherValue\'"/>');
             handler.click();
             expect(controller.aString).toBe('anotherValue');
         });
         it('should not fail if the selected item is invalid', function() {
-            var handler = new directiveHandler(controllerService, '<div />');
+            const handler = new directiveHandler(controllerService, '<div />');
             expect(function() {
                 handler.ngFind('a').click();
             }).not.toThrow();
         });
         it('should not fail if the selected does not have the property', function() {
-            var handler = new directiveHandler(controllerService, '<div />');
+            const handler = new directiveHandler(controllerService, '<div />');
             expect(function() {
                 handler.click();
             }).not.toThrow();
         });
         it('should apply the click event to each of its childrens (if needed)', function() {
-            var handler = new directiveHandler(controllerService,
+
+            const handler = new directiveHandler(controllerService,
                 `   <div ng-click="ctrl.aInt = ctrl.aInt + 1">
                     <div id='first'>
                         <div id='second'>
@@ -64,7 +66,7 @@ describe('directiveHandler', function() {
             expect(controller.aInt).toBe(3);
         });
         it('should support locals (for testing)', function() {
-            var handler = new directiveHandler(controllerService,
+            const handler = new directiveHandler(controllerService,
                 `   <div ng-click="ctrl.aInt =  value + ctrl.aInt ">
                     <div id='first'>
                         <div id='second'>
@@ -89,16 +91,16 @@ describe('directiveHandler', function() {
     });
     describe('ngBind', function() {
         it('should allow me to call text', function() {
-            var handler = new directiveHandler(controllerService, '<div ng-bind="ctrl.aString"/>');
+            const handler = new directiveHandler(controllerService, '<div ng-bind="ctrl.aString"/>');
             expect(handler.text()).toBe('aValue');
         });
         it('should allow me to change the controller value', function() {
-            var handler = new directiveHandler(controllerService, '<div ng-bind="ctrl.aString"/>');
+            const handler = new directiveHandler(controllerService, '<div ng-bind="ctrl.aString"/>');
             handler.text('newValue');
             expect(controller.aString).toBe('newValue');
         });
         it('should allow me to change the controller value, one letter at the time', function() {
-            var handler = new directiveHandler(controllerService, '<div ng-bind="ctrl.aString"/>');
+            const handler = new directiveHandler(controllerService, '<div ng-bind="ctrl.aString"/>');
             controllerService.watch('ctrl.aString', spy);
             handler.text('newValue'.split(''));
             expect(controller.aString).toBe('newValue');
