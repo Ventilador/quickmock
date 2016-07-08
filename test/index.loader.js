@@ -1,0 +1,10 @@
+require('./controller/common.spec.js');
+require('./controller/controllerQM.spec.js');
+require('./controllerHandler/controllerHandler.spec.js');
+require('./controllerHandler/spies.spec.js');
+require('./directives/directiveProvider.spec.js');
+require('./directives/directiveHandler.spec.js');
+require('./directives/ngIf.spec.js');
+require('./directives/ngBind.spec.js');
+require('./directives/ngClick.spec.js');
+require('./directives/ngTranslate.spec.js');

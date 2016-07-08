@@ -1,3 +1,9 @@
+var $_CONTROLLER = $_CONTROLLER;
+var scopeHelper = scopeHelper;
+if (typeof require === 'function') {
+    $_CONTROLLER = require('./controllerHandler.extensions.js');
+    scopeHelper = require('./../controller/common.js').scopeHelper;
+}
 var controllerHandler = (function() {
     var internal = false;
     var myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
@@ -14,7 +20,7 @@ var controllerHandler = (function() {
         if (!controllerName) {
             return {
                 value: expression
-            }
+            };
         }
         expression = expression.replace(controllerName + '.', '');
         for (var key in bindings) {
@@ -86,7 +92,7 @@ var controllerHandler = (function() {
         internal = !!flag;
         return function() {
             internal = !flag;
-        }
+        };
     };
     $controllerHandler.new = function(controllerName, scopeControllersName, parentScope, childScope) {
         ctrlName = controllerName;
@@ -100,7 +106,7 @@ var controllerHandler = (function() {
             cName = scopeControllersName;
         }
         return $controllerHandler();
-    }
+    };
     $controllerHandler.newService = function(controllerName, controllerAs, parentScope, bindings) {
         var toReturn = $controllerHandler.new(controllerName, controllerAs, parentScope);
         toReturn.bindings = bindings;
@@ -108,3 +114,5 @@ var controllerHandler = (function() {
     };
     return $controllerHandler;
 })();
+
+module.export = controllerHandler;

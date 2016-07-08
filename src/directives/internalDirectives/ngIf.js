@@ -1,3 +1,5 @@
+module.export = ngIfDirective;
+
 function ngIfDirective() {
     return {
         regex: /ng-if="(.*)"/,
@@ -5,7 +7,9 @@ function ngIfDirective() {
             var subscriptors = [];
             var lastValue;
             if (scopeHelper.isController(controllerService)) {
-                controllerService.create && controllerService.create();
+                if (controllerService.create) {
+                    controllerService.create();
+                }
                 var watcher = controllerService.watch(expression, function() {
                     lastValue = arguments[0];
                     for (var ii = 0; ii < subscriptors.length; ii++) {
@@ -24,7 +28,7 @@ function ngIfDirective() {
                         var index = subscriptors.indexOf(callback);
                         subscriptors.splice(index, 1);
                     };
-                }
+                };
                 toReturn.value = function() {
                     return lastValue;
                 };

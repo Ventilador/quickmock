@@ -1,13 +1,17 @@
+module.export = ngBindDirective;
+
 function ngBindDirective($parse) {
     return {
         compile: function(controllerService, expression) {
             var subscriptors = [];
             var lastValue;
             if (scopeHelper.isController(controllerService)) {
-                controllerService.create && controllerService.create();
+                if (controllerService.create) {
+                    controllerService.create();
+                }
                 var getter = $parse(expression);
 
-                function toReturn(parameter) {
+                var toReturn = function(parameter) {
                     if (arguments.length === 0) {
                         return getter(controllerService.controllerScope);
                     } else if (angular.isString(parameter)) {
@@ -28,7 +32,7 @@ function ngBindDirective($parse) {
                     } else {
                         throw ['Dont know what to do with ', '["', makeArray(arguments).join('", "'), '"]'].join('');
                     }
-                }
+                };
                 toReturn.changes = function(callback) {
                     if (angular.isFunction(callback)) {
                         subscriptors.push(callback);
@@ -38,10 +42,10 @@ function ngBindDirective($parse) {
                         };
                     }
                     throw 'Callback is not a function';
-                }
+                };
                 return toReturn;
             }
             throw 'Error in ngBind';
         }
-    }
+    };
 }

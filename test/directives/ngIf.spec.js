@@ -13,7 +13,7 @@
       });
       it('should return undefined if no $digest was executed', function() {
           expect(myIf.value()).toBeUndefined();
-      })
+      });
       it('should return the value of the expression', function() {
           controllerService.$apply();
           expect(myIf.value()).toBe(true);

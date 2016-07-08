@@ -1,7 +1,8 @@
 var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
 var isExpression = /^{{.*}}$/;
+var sanitizeModules = require('./common.js').sanitizeModules;
 var controller = (function(angular) {
-    var $parse, self = this;
+    var $parse = this;
     angular.injector(['ng']).invoke(['$parse', function(parse) {
         $parse = parse;
     }]);
@@ -40,7 +41,7 @@ var controller = (function(angular) {
                     };
                     break;
                 case '@':
-                    var result = isExpression.exec(scope[parentKey]);
+                    result = isExpression.exec(scope[parentKey]);
                     if (result) {
                         var parentGet = $parse(result[1]);
                         var childGet = $parse(childKey);
@@ -122,3 +123,10 @@ var controller = (function(angular) {
     };
     return this;
 })(angular);
+var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
+var isExpression = /^{{.*}}$/;
+module.export = {
+    'controller': controller,
+    'PARSE_BINDING_REGEX': PARSE_BINDING_REGEX,
+    'isExpression': isExpression
+};

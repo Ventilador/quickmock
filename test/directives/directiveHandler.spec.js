@@ -49,6 +49,7 @@ describe('directiveHandler', function() {
             }).not.toThrow();
         });
         it('should apply the click event to each of its childrens (if needed)', function() {
+            /* jshint ignore:start */
             var handler = new directiveHandler(controllerService,
                 `   <div ng-click="ctrl.aInt = ctrl.aInt + 1">
                     <div id='first'>
@@ -58,12 +59,14 @@ describe('directiveHandler', function() {
                     <div id='third'>
                     </div>
                 <div/>`);
+            /* jshint ignore:end */
             handler.ngFind('#first').click();
             handler.ngFind('#second').click();
             handler.ngFind('#third').click();
             expect(controller.aInt).toBe(3);
         });
         it('should support locals (for testing)', function() {
+            /* jshint ignore:start */
             var handler = new directiveHandler(controllerService,
                 `   <div ng-click="ctrl.aInt =  value + ctrl.aInt ">
                     <div id='first'>
@@ -73,6 +76,7 @@ describe('directiveHandler', function() {
                     <div id='third'>
                     </div>
                 <div/>`);
+            /* jshint ignore:end */
             handler.ngFind('#first').click({
                 value: 1000
             });

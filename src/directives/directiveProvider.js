@@ -26,13 +26,13 @@ var directiveProvider = (function() {
             }
         };
 
-    toReturn.toCamelCase = function (name) {
+    toReturn.toCamelCase = function(name) {
         return name.
         replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
             return offset ? letter.toUpperCase() : letter;
         });
     };
-    toReturn.$get = function (directiveName) {
+    toReturn.$get = function(directiveName) {
         if (angular.isString(directiveName)) {
             directiveName = toReturn.toCamelCase(directiveName);
             if (internals[directiveName]) {
@@ -41,7 +41,7 @@ var directiveProvider = (function() {
         }
         return directives.get(directiveName);
     };
-    toReturn.$put = function (directiveName, directiveConstructor) {
+    toReturn.$put = function(directiveName, directiveConstructor) {
         if (!angular.isFunction(directiveConstructor)) {
             throw 'directiveConstructor is not a function';
         }
@@ -60,7 +60,8 @@ var directiveProvider = (function() {
     };
     toReturn.$clean = function() {
         directives.clear();
-    }
-    
+    };
+
     return toReturn;
 })();
+module.export = directiveProvider;

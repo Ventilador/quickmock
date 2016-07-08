@@ -15,7 +15,7 @@
      it('should update the controller when receiving a string', function() {
          myBind('aValue');
          expect(controller.myStringParameter).toBe('aValue');
-     })
+     });
      it('should fire an digest when doing and assigment', function() {
          controllerService.watch(expression, spy);
          expect(spy).not.toHaveBeenCalled();
@@ -66,7 +66,7 @@
      });
      it('should have a changes function', function() {
          expect(myBind.changes).toEqual(jasmine.any(Function));
-     })
+     });
      describe('changes', function() {
          it('changes should only fire once per change (independent of watcher)', function() {
              var watcherSpy = jasmine.createSpy();

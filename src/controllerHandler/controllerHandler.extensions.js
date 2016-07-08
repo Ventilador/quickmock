@@ -1,10 +1,11 @@
+var scopeHelper = require('./../controller/common.js').scopeHelper;
 var $_CONTROLLER = (function() {
     var $parse = angular.injector(['ng']).get('$parse');
     var ngClick;
 
     function assertNotDefined(obj, args) {
         var key;
-        while (key = args.shift())
+        while ((key = args.shift()))
             if (typeof obj[key] === 'undefined' || obj[key] === null)
                 throw ['"', key, '" property cannot be null'].join("");
     }
@@ -22,7 +23,7 @@ var $_CONTROLLER = (function() {
             for (var index = object.length - 1; index >= 0; index--) {
                 if (object.hasOwnProperty(index)) {
                     Array.prototype.splice.apply(object, [index, 1]);
-                };
+                }
             }
         } else if (angular.isObject(object)) {
             for (var key in object) {
@@ -73,7 +74,7 @@ var $_CONTROLLER = (function() {
                 .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
             this.controllerInstance = this.controllerConstructor();
             var watcher, self = this;
-            while (watcher = this.pendingWatchers.shift()) {
+            while ((watcher = this.pendingWatchers.shift())) {
                 this.watch.apply(this, watcher);
             }
             for (var key in this.bindings) {
@@ -84,10 +85,12 @@ var $_CONTROLLER = (function() {
                     if (result[1] === '=' && !controllerHandler.isInternal()) {
                         var destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), self.controllerInstance);
                         var destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), self.parentScope);
+                        /* jshint ignore:start */
                         this.parentScope.$on('$destroy', function() {
                             destroyer();
                             destroyer2();
                         });
+                        /* jshint ignore:end */
                     }
                 }
             }
@@ -104,14 +107,15 @@ var $_CONTROLLER = (function() {
         ngClick: function(expression) {
             return this.createDirective('ng-click', expression);
         },
-        createDirective: function(name, expression, args) {
+        createDirective: function(name, expression) {
             var directive = directiveProvider.$get(arguments[0]);
-            arguments[0] = this;
+            var args = makeArray(arguments);
+            args[0] = this;
             return directive.compile.apply(undefined, arguments);
         },
         compileHTML: function(htmlText) {
             return new directiveHandler(this, htmlText);
         }
-    }
+    };
     return _$_CONTROLLER;
 })();

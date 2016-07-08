@@ -15,7 +15,7 @@ describe('controllerHandler', function() {
     });
     describe('creating a controller', function() {
         beforeEach(function() {
-            controllerHandler.addModules('test')
+            controllerHandler.addModules('test');
         });
         it('should allow creating a controller', function() {
             var controllerObj;
@@ -121,7 +121,7 @@ describe('controllerHandler', function() {
         var controllerObj;
         beforeEach(function() {
             controllerHandler.clean();
-            controllerHandler.addModules('test')
+            controllerHandler.addModules('test');
         });
         it('should allow destroying the object', function() {
             expect(function() {

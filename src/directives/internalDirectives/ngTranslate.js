@@ -1,19 +1,23 @@
+module.export = ngTranslateDirective;
+
 function ngTranslateDirective($translate, $parse) {
     return {
         compile: function(expression, controllerService) {
             var subscriptors = [];
             var lastValue;
             if (scopeHelper.isController(controllerService)) {
-                controllerService.create && controllerService.create();
+                if (controllerService.create) {
+                    controllerService.create();
+                }
                 var getter = $parse(expression);
 
-                function toReturn() {
+                var toReturn = function() {
 
-                }
+                };
                 toReturn.changeLanguage = function() {
                     $translate.use(newLanguage);
                     controllerService.$apply();
-                }
+                };
                 return toReturn;
 
             }

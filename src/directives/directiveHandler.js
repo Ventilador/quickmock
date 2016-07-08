@@ -1,5 +1,5 @@
 var directiveHandler = (function() {
-    var proto = angular.element.prototype || angular.element.__proto__;
+    var proto = angular.element.prototype;
     proto.ngFind = function(selector) {
         var values = {
             length: 0
@@ -8,19 +8,19 @@ var directiveHandler = (function() {
             values[values.length++] = this[index].querySelector(selector) || '';
         }
         return angular.element(join(values));
-    }
+    };
     proto.click = function(locals) {
         if (this.length) {
             var click = this.data('ng-click');
             return click && click(locals);
         }
-    }
+    };
     proto.text = function() {
         if (this.length) {
             var click = this.data('ng-bind');
             return click && click.apply(undefined, arguments);
         }
-    }
+    };
 
     function getExpression(current, attribute) {
         var expression = current[0] && current[0].attributes.getNamedItem('ng-click');
@@ -49,7 +49,7 @@ var directiveHandler = (function() {
             var directiveName = obj[0].attributes[ii].name;
             var expression = obj[0].attributes[ii].value;
             var directive;
-            if (directive = directiveProvider.$get(directiveName)) {
+            if ((directive = directiveProvider.$get(directiveName))) {
                 var compiledDirective = directive.compile(controllerService, expression);
                 if (directive.ApplyToChildren) {
                     applyDirectivesToNodes(obj, directiveName, compiledDirective);
@@ -60,7 +60,7 @@ var directiveHandler = (function() {
 
         }
         var childrens = obj.children();
-        for (var ii = 0; ii < childrens.length; ii++) {
+        for (ii = 0; ii < childrens.length; ii++) {
             compile(childrens[ii], controllerService);
         }
     }
@@ -77,3 +77,5 @@ var directiveHandler = (function() {
 
     return control;
 })();
+
+module.export = directiveHandler;

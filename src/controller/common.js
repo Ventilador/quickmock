@@ -1,3 +1,5 @@
+var controllerHandler = require('./../controllerHandler/controllerHandler.js');
+
 /* Should return true 
  * for objects that wouldn't fail doing
  * Array.prototype.slice.apply(myObj);
@@ -61,7 +63,7 @@ function extend() {
     var values = Array.prototype.slice.apply(arguments);
     var destination = values.shift() || {};
     var current;
-    while (current = values.shift()) {
+    while ((current = values.shift())) {
         $$extend(destination, current);
     }
     return destination;
@@ -75,7 +77,7 @@ var scopeHelper = (function() {
             return scope.$root;
         }
         var parent;
-        while (parent = scope.$parent) {
+        while ((parent = scope.$parent)) {
             if (parent.$root) {
                 return parent.$root;
             }
@@ -122,7 +124,7 @@ function getFunctionName(myFunction) {
 }
 
 function sanitizeModules() {
-    modules = makeArray.apply(undefined, arguments);
+    var modules = makeArray.apply(undefined, arguments);
     var index;
     if (
         (index = modules.indexOf('ng')) === -1 &&
@@ -134,3 +136,13 @@ function sanitizeModules() {
     }
     return modules;
 }
+
+module.exports = {
+    'sanitizeModules': sanitizeModules,
+    'getFunctionName': getFunctionName,
+    'scopeHelper': scopeHelper,
+    'extend': extend,
+    'makeArray': makeArray,
+    'createSpy': createSpy,
+    'isArrayLike': isArrayLike
+};

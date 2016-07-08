@@ -89,7 +89,7 @@
               var toPass = {
                   a: {}, // for reference checking
                   b: {}
-              }
+              };
               var returnedScope;
               expect(function() {
                   returnedScope = scopeHelper.create(toPass);
