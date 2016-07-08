@@ -4,5 +4,21 @@
     },
     "exclude": [
         "node_modules"
+    ],
+    "files": [
+        "src/quickmock.js",
+        "src/quickmock.mockHelper.js",
+        "src/controller/common.js",
+        "src/controller/controllerQM.js",
+        "src/controllerHandler/controllerHandler.extensions.js",
+        "src/controllerHandler/controllerHandler.js",
+        "src/directives/internalDirectives/ngIf.js",
+        "src/directives/internalDirectives/ngClick.js",
+        "src/directives/internalDirectives/ngBind.js",
+        "src/directives/internalDirectives/ngTranslate.js",
+        "src/directives/directiveHandler.js",
+        "src/directives/directiveProvider.js",
+        "app/util.js",
+        "app/completeList.js"
     ]
 }
