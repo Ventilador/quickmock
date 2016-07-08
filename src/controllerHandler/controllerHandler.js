@@ -1,8 +1,8 @@
 var controllerHandler = (function() {
     var internal = false;
-    let myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
+    var myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
 
-    const $rootScope = angular.injector(['ng']).get('$rootScope');
+    var $rootScope = angular.injector(['ng']).get('$rootScope');
 
     function clean() {
         myModules = [];
@@ -37,13 +37,13 @@ var controllerHandler = (function() {
         if (!cScope) {
             cScope = pScope.$new();
         } {
-            const tempScope = scopeHelper.isScope(cScope);
+            var tempScope = scopeHelper.isScope(cScope);
             if (tempScope !== false) {
                 cScope = tempScope;
             }
         }
 
-        const toReturn = new $_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
+        var toReturn = new $_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
         clean();
         return toReturn;
     }
@@ -102,7 +102,7 @@ var controllerHandler = (function() {
         return $controllerHandler();
     }
     $controllerHandler.newService = function(controllerName, controllerAs, parentScope, bindings) {
-        const toReturn = $controllerHandler.new(controllerName, controllerAs, parentScope);
+        var toReturn = $controllerHandler.new(controllerName, controllerAs, parentScope);
         toReturn.bindings = bindings;
         return toReturn;
     };

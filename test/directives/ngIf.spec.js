@@ -1,6 +1,6 @@
   describe('ngIf', function() {
-      let controllerService, myIf;
-      const ngIf = directiveProvider.$get('ng-if');
+      var controllerService, myIf;
+      var ngIf = directiveProvider.$get('ng-if');
       beforeEach(function() {
           controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
               myBoolean: true
@@ -26,23 +26,23 @@
           expect(myIf.value()).toBe(angular.noop);
       });
       it('should allow attaching spys to the watching cycle', function() {
-          const mySpy = jasmine.createSpy();
+          var mySpy = jasmine.createSpy();
           myIf(mySpy);
           controllerService.$apply();
           expect(mySpy).toHaveBeenCalled();
           expect(mySpy.calls.count()).toBe(1);
       });
       it('should allow deattaching spies to the watching cycle', function() {
-          const mySpy = jasmine.createSpy();
-          const watcher = myIf(mySpy);
+          var mySpy = jasmine.createSpy();
+          var watcher = myIf(mySpy);
           watcher();
           controllerService.$apply();
           expect(mySpy).not.toHaveBeenCalled();
       });
       it('should only deattach the correcponding spy', function() {
-          const mySpy = jasmine.createSpy();
-          const mySpy2 = jasmine.createSpy();
-          const watcher = myIf(mySpy);
+          var mySpy = jasmine.createSpy();
+          var mySpy2 = jasmine.createSpy();
+          var watcher = myIf(mySpy);
           myIf(mySpy2);
           watcher();
           controllerService.$apply();

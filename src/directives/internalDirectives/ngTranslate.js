@@ -1,11 +1,11 @@
 function ngTranslateDirective($translate, $parse) {
     return {
         compile: function(expression, controllerService) {
-            const subscriptors = [];
-            let lastValue;
+            var subscriptors = [];
+            var lastValue;
             if (scopeHelper.isController(controllerService)) {
                 controllerService.create && controllerService.create();
-                const getter = $parse(expression);
+                var getter = $parse(expression);
 
                 function toReturn() {
 

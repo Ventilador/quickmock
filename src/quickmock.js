@@ -83,7 +83,7 @@
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    const toReturn = controllerHandler
+                    var toReturn = controllerHandler
                         .addModules(opts.mockModules.concat(opts.moduleName))
                         .bindWith(opts.controller.bindToController)
                         .setScope(opts.controller.parentScope)

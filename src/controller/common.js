@@ -20,9 +20,9 @@ function createSpy(callback) {
     if (!callback) {
         callback = angular.noop;
     }
-    const startTime = new Date().getTime();
-    let endTime;
-    const toReturn = spyOn({
+    var startTime = new Date().getTime();
+    var endTime;
+    var toReturn = spyOn({
         a: function() {
             callback.apply(callback, arguments);
             endTime = new Date().getTime();
@@ -46,7 +46,7 @@ function makeArray(item) {
 }
 
 function extend() {
-    let remove$ = arguments[arguments.length - 1] === false;
+    var remove$ = arguments[arguments.length - 1] === false;
 
     function $$extend(destination, source) {
         for (var key in source) {
@@ -58,9 +58,9 @@ function extend() {
         }
         return destination;
     }
-    const values = Array.prototype.slice.apply(arguments);
-    const destination = values.shift() || {};
-    let current;
+    var values = Array.prototype.slice.apply(arguments);
+    var destination = values.shift() || {};
+    var current;
     while (current = values.shift()) {
         $$extend(destination, current);
     }
@@ -68,13 +68,13 @@ function extend() {
 }
 
 var scopeHelper = (function() {
-    let rootScope = angular.injector(['ng']).get('$rootScope');
+    var rootScope = angular.injector(['ng']).get('$rootScope');
 
     function getRootFromScope(scope) {
         if (scope.$root) {
             return scope.$root;
         }
-        let parent;
+        var parent;
         while (parent = scope.$parent) {
             if (parent.$root) {
                 return parent.$root;
@@ -82,7 +82,7 @@ var scopeHelper = (function() {
         }
         return parent;
     }
-    const toReturn = {
+    var toReturn = {
         create: function(scope) {
             scope = scope || {};
             if (toReturn.isScope(scope)) {
@@ -114,7 +114,7 @@ var scopeHelper = (function() {
 })();
 
 function getFunctionName(myFunction) {
-    const toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];
+    var toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];
     if (toReturn === '' || toReturn === 'anon') {
         return new Date().getTime().toString();
     }
@@ -123,7 +123,7 @@ function getFunctionName(myFunction) {
 
 function sanitizeModules() {
     modules = makeArray.apply(undefined, arguments);
-    let index;
+    var index;
     if (
         (index = modules.indexOf('ng')) === -1 &&
         (index = modules.indexOf('angular')) === -1) {

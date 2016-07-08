@@ -1,9 +1,9 @@
 var $_CONTROLLER = (function() {
-    const $parse = angular.injector(['ng']).get('$parse');
-    let ngClick;
+    var $parse = angular.injector(['ng']).get('$parse');
+    var ngClick;
 
     function assertNotDefined(obj, args) {
-        let key;
+        var key;
         while (key = args.shift())
             if (typeof obj[key] === 'undefined' || obj[key] === null)
                 throw ['"', key, '" property cannot be null'].join("");
@@ -72,18 +72,18 @@ var $_CONTROLLER = (function() {
                 controller.$get(this.usedModules)
                 .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
             this.controllerInstance = this.controllerConstructor();
-            let watcher, self = this;
+            var watcher, self = this;
             while (watcher = this.pendingWatchers.shift()) {
                 this.watch.apply(this, watcher);
             }
             for (var key in this.bindings) {
                 if (this.bindings.hasOwnProperty(key)) {
-                    let result = PARSE_BINDING_REGEX.exec(this.bindings[key]),
+                    var result = PARSE_BINDING_REGEX.exec(this.bindings[key]),
                         scopeKey = result[2] || key,
                         spyKey = [scopeKey, ':', key].join('');
                     if (result[1] === '=' && !controllerHandler.isInternal()) {
-                        const destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), self.controllerInstance);
-                        const destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), self.parentScope);
+                        var destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), self.controllerInstance);
+                        var destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), self.parentScope);
                         this.parentScope.$on('$destroy', function() {
                             destroyer();
                             destroyer2();
@@ -105,7 +105,7 @@ var $_CONTROLLER = (function() {
             return this.createDirective('ng-click', expression);
         },
         createDirective: function(name, expression, args) {
-            const directive = directiveProvider.$get(arguments[0]);
+            var directive = directiveProvider.$get(arguments[0]);
             arguments[0] = this;
             return directive.compile.apply(undefined, arguments);
         },

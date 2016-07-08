@@ -1,5 +1,5 @@
 var directiveProvider = (function() {
-    const directives = new Map(),
+    var directives = new Map(),
         toReturn = {},
         $parse = angular.injector(['ng']).get('$parse'),
         $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate'),

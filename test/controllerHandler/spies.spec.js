@@ -1,6 +1,6 @@
 describe('controllerSpies', function() {
-    const uniqueObject = function uniqueObject() {};
-    let controllerConstructor;
+    var uniqueObject = function uniqueObject() {};
+    var controllerConstructor;
     beforeEach(function() {
         controllerHandler.clean();
         if (controllerConstructor) {
@@ -17,8 +17,8 @@ describe('controllerSpies', function() {
         }).new('emptyController');
     });
     it('should create spies for each Bounded property', function() {
-        const controller = controllerConstructor.create();
-        const mySpy = controllerConstructor.InternalSpies.Scope['a:a'];
+        var controller = controllerConstructor.create();
+        var mySpy = controllerConstructor.InternalSpies.Scope['a:a'];
         expect(mySpy).toBeDefined();
         controller.a = undefined;
         expect(mySpy).not.toHaveBeenCalled();

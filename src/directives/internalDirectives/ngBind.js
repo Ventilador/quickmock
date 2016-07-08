@@ -1,11 +1,11 @@
 function ngBindDirective($parse) {
     return {
         compile: function(controllerService, expression) {
-            const subscriptors = [];
-            let lastValue;
+            var subscriptors = [];
+            var lastValue;
             if (scopeHelper.isController(controllerService)) {
                 controllerService.create && controllerService.create();
-                const getter = $parse(expression);
+                var getter = $parse(expression);
 
                 function toReturn(parameter) {
                     if (arguments.length === 0) {
@@ -21,7 +21,7 @@ function ngBindDirective($parse) {
                         });
                         controllerService.$apply();
                     } else if (isArrayLike(parameter)) {
-                        let memory = '';
+                        var memory = '';
                         makeArray(parameter).forEach(function(current) {
                             toReturn(memory += current);
                         });
@@ -33,7 +33,7 @@ function ngBindDirective($parse) {
                     if (angular.isFunction(callback)) {
                         subscriptors.push(callback);
                         return function() {
-                            const index = subscriptors.indexOf(callback);
+                            var index = subscriptors.indexOf(callback);
                             subscriptors.splice(index, 1);
                         };
                     }

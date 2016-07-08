@@ -1,6 +1,6 @@
 describe('ngClick', function() {
-    let controllerService, myClick, spy;
-    const ngClick = directiveProvider.$get('ngClick');
+    var controllerService, myClick, spy;
+    var ngClick = directiveProvider.$get('ngClick');
     beforeEach(function() {
         spy = jasmine.createSpy('click');
         controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
@@ -24,9 +24,9 @@ describe('ngClick', function() {
         expect(spy).toHaveBeenCalled();
     });
     it('should support locals', function() {
-        const object1 = function() {};
-        const object2 = function() {};
-        const locals = {
+        var object1 = function() {};
+        var object2 = function() {};
+        var locals = {
             param1: object1,
             param2: object2
         };

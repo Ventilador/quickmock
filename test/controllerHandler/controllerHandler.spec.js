@@ -18,7 +18,7 @@ describe('controllerHandler', function() {
             controllerHandler.addModules('test')
         });
         it('should allow creating a controller', function() {
-            let controllerObj;
+            var controllerObj;
             expect(function() {
                 controllerObj = controllerHandler.new('emptyController');
             }).not.toThrow();
@@ -30,7 +30,7 @@ describe('controllerHandler', function() {
             expect(controllerObj.usedModules).toEqual(['test']);
         });
         it('should allow creating a controller with bindings', function() {
-            const controllerObj = controllerHandler.setScope({
+            var controllerObj = controllerHandler.setScope({
                 boundProperty: 'something'
             }).bindWith({
                 boundProperty: '='
@@ -39,7 +39,7 @@ describe('controllerHandler', function() {
             expect(controllerObj.controllerInstance.boundProperty).toBe('something modified');
         });
         it('should allow to change the name of the binding', function() {
-            const scope = {
+            var scope = {
                     equals: function() {},
                     byText: 'byText',
                     expression: 'byText.toUpperCase()'
@@ -57,7 +57,7 @@ describe('controllerHandler', function() {
             expect(controllerObj.controllerInstance.expressionResult()).toBe(scope.byText.toUpperCase());
         });
         describe('Watchers', function() {
-            let scope, controllerObj;
+            var scope, controllerObj;
             beforeEach(function() {
                 scope = controllerHandler.$rootScope.$new();
             });
@@ -67,8 +67,8 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('emptyController');
-                let args;
-                const controller = controllerObj.watch('controller.boundProperty', function() {
+                var args;
+                var controller = controllerObj.watch('controller.boundProperty', function() {
                     args = arguments;
                 }).create();
                 expect(controller.boundProperty).toBe('lala');
@@ -82,8 +82,8 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('withInjections');
-                let args;
-                const controller = controllerObj.watch('controller.boundProperty', function() {
+                var args;
+                var controller = controllerObj.watch('controller.boundProperty', function() {
                     args = arguments;
                 }).create();
                 expect(controller.boundProperty).toBe('lala');
@@ -98,7 +98,7 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('withInjections');
-                const controller = controllerObj.create();
+                var controller = controllerObj.create();
                 controllerObj.parentScope.boundProperty = 'parent';
                 controllerObj.$apply();
                 expect(controller.boundProperty).toBe('parent');
@@ -108,7 +108,7 @@ describe('controllerHandler', function() {
                         boundProperty: '='
                     })
                     .new('withInjections');
-                const controller = controllerObj.create();
+                var controller = controllerObj.create();
                 controllerObj.parentScope.boundProperty = 'parent';
                 controller.boundProperty = 'child';
                 controllerObj.$apply();
@@ -118,7 +118,7 @@ describe('controllerHandler', function() {
         });
     });
     describe('destroying a controller', function() {
-        let controllerObj;
+        var controllerObj;
         beforeEach(function() {
             controllerHandler.clean();
             controllerHandler.addModules('test')
@@ -127,9 +127,9 @@ describe('controllerHandler', function() {
             expect(function() {
                 controllerObj = controllerHandler.new('emptyController');
             }).not.toThrow();
-            const controller = controllerObj.create(false);
-            const parentScope = controllerObj.parentScope;
-            const controllerScope = controllerObj.controllerScope;
+            var controller = controllerObj.create(false);
+            var parentScope = controllerObj.parentScope;
+            var controllerScope = controllerObj.controllerScope;
             controllerObj.$destroy();
         });
     });

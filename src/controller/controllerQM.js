@@ -9,18 +9,18 @@ var controller = (function(angular) {
     this.parseBindings = function parseBindings(bindings, scope, isolateScope, controllerAs) {
         function assignBindings(destination, scope, key, mode) {
             mode = mode || '=';
-            const result = PARSE_BINDING_REGEX.exec(mode);
+            var result = PARSE_BINDING_REGEX.exec(mode);
             mode = result[1];
-            const parentKey = result[2] || key;
-            const childKey = controllerAs + '.' + key;
+            var parentKey = result[2] || key;
+            var childKey = controllerAs + '.' + key;
             switch (mode) {
                 case '=':
-                    const parentGet = $parse(parentKey);
-                    const childGet = $parse(childKey);
-                    let lastValue;
+                    var parentGet = $parse(parentKey);
+                    var childGet = $parse(childKey);
+                    var lastValue;
                     childGet.assign(destination, lastValue = parentGet(scope));
-                    const parentValueWatch = function() {
-                        let parentValue = parentGet(scope);
+                    var parentValueWatch = function() {
+                        var parentValue = parentGet(scope);
                         if (parentValue !== lastValue) {
                             childGet.assign(destination, parentValue);
                         } else {
@@ -40,12 +40,12 @@ var controller = (function(angular) {
                     };
                     break;
                 case '@':
-                    let result = isExpression.exec(scope[parentKey]);
+                    var result = isExpression.exec(scope[parentKey]);
                     if (result) {
-                        const parentGet = $parse(result[1]);
-                        const childGet = $parse(childKey);
-                        let parentValue, lastValue = parentValue = parentGet(scope);
-                        const parentValueWatch = function() {
+                        var parentGet = $parse(result[1]);
+                        var childGet = $parse(childKey);
+                        var parentValue, lastValue = parentValue = parentGet(scope);
+                        var parentValueWatch = function() {
                             parentValue = parentGet(scope);
                             if (parentValue !== lastValue) {
                                 childGet.assign(destination, lastValue = parentValue);
@@ -64,7 +64,7 @@ var controller = (function(angular) {
             }
             return destination;
         }
-        const destination = scopeHelper.create(isolateScope || scope.$new());
+        var destination = scopeHelper.create(isolateScope || scope.$new());
         if (!bindings) {
             return {};
         } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
@@ -88,7 +88,7 @@ var controller = (function(angular) {
 
 
     this.$get = function(moduleNames) {
-        let $controller, $rootScope = scopeHelper.$rootScope;
+        var $controller, $rootScope = scopeHelper.$rootScope;
         angular.injector(sanitizeModules(moduleNames)).invoke(
             ['$controller',
                 function(controller) {
@@ -99,11 +99,11 @@ var controller = (function(angular) {
         function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
             scope = scopeHelper.create(scope);
             scopeControllerName = scopeControllerName || 'controller';
-            let locals = extend(extendedLocals || {}, {
+            var locals = extend(extendedLocals || {}, {
                 $scope: scopeHelper.create(scope).$new()
             }, false);
 
-            const constructor = $controller(controllerName, locals, true, scopeControllerName);
+            var constructor = $controller(controllerName, locals, true, scopeControllerName);
             constructor.provideBindings = function(b, myLocals) {
                 locals = myLocals || locals;
                 b = b || bindings;
