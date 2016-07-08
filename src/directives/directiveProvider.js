@@ -1,3 +1,16 @@
+console.log('directiveProvider');
+import {
+    ngBindDirective
+} from './internalDirectives/ngBind.js';
+import {
+    ngClickDirective
+} from './internalDirectives/ngClick.js';
+import {
+    ngIfDirective
+} from './internalDirectives/ngIf.js';
+import {
+    ngTranslateDirective
+} from './internalDirectives/ngTranslate.js';
 var directiveProvider = (function() {
     const directives = new Map(),
         toReturn = {},
@@ -12,11 +25,11 @@ var directiveProvider = (function() {
             translate: ngTranslateDirective($translate, $parse),
             ngRepeat: {
                 regex: '<div></div>',
-                compile: function($element) {}
+                compile: function() {}
             },
             ngModel: {
-                regex: '<input type"text"/>',
-                compile: function($element) {}
+                regex: '<input type="text"/>',
+                compile: function() {}
             },
             translateValue: {
 
@@ -64,4 +77,5 @@ var directiveProvider = (function() {
 
     return toReturn;
 })();
-module.export = directiveProvider;
+console.log('directiveProvider end');
+export default directiveProvider;

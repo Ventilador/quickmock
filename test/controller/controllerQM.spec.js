@@ -1,3 +1,7 @@
+import controller from './../../src/controller/controllerQM.js';
+import {
+    scopeHelper
+} from './../../src/controller/common.js';
 describe('controller', function() {
     it('should be defined', function() {
         expect(controller).toBeDefined();

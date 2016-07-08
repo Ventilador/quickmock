@@ -1,3 +1,5 @@
+
+console.log('QM.helper');
 (function() {
 
     if (!window.quickmock) {

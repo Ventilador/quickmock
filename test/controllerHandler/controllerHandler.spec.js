@@ -1,3 +1,5 @@
+import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
+
 describe('controllerHandler', function() {
     beforeEach(function() {
         controllerHandler.clean();
@@ -127,9 +129,6 @@ describe('controllerHandler', function() {
             expect(function() {
                 controllerObj = controllerHandler.new('emptyController');
             }).not.toThrow();
-            const controller = controllerObj.create(false);
-            const parentScope = controllerObj.parentScope;
-            const controllerScope = controllerObj.controllerScope;
             controllerObj.$destroy();
         });
     });

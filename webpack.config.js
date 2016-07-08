@@ -1,3 +1,4 @@
+
 module.exports = {
     entry: {
         'src': "./src/quickmock.js",
@@ -7,10 +8,15 @@ module.exports = {
         path: __dirname,
         filename: "./[name]/index.js"
     },
+    devtool: 'inline-source-map',
     module: {
         preLoaders: [{
-            test: /\.js$/, // include .js files
-            exclude: /node_modules/, // exclude any and all files in the node_modules folder
+            test: /\.js$/,
+            exclude: /(node_modules|bower_components)/,
+            loader: 'babel?presets[]=es2015'
+        }, {
+            test: /\.js$/, 
+            exclude: /node_modules/, 
             loader: "jshint-loader"
         }]
     }

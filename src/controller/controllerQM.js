@@ -1,14 +1,18 @@
-var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
-var isExpression = /^{{.*}}$/;
-var sanitizeModules = require('./common.js').sanitizeModules;
-var controller = (function(angular) {
-    var $parse = this;
-    angular.injector(['ng']).invoke(['$parse', function(parse) {
-        $parse = parse;
-    }]);
+console.log('controllerQM.js');
+import {
+    extend,
+    scopeHelper,
+    sanitizeModules,
+    PARSE_BINDING_REGEX,
+    isExpression
 
-    this.parseBindings = function parseBindings(bindings, scope, isolateScope, controllerAs) {
-        function assignBindings(destination, scope, key, mode) {
+} from './common.js';
+
+var $parse = angular.injector(['ng']).get('$parse');
+
+class controller {
+    static parseBindings(bindings, scope, isolateScope, controllerAs) {
+        const assignBindings = (destination, scope, key, mode) => {
             mode = mode || '=';
             const result = PARSE_BINDING_REGEX.exec(mode);
             mode = result[1];
@@ -20,7 +24,7 @@ var controller = (function(angular) {
                     const childGet = $parse(childKey);
                     let lastValue;
                     childGet.assign(destination, lastValue = parentGet(scope));
-                    const parentValueWatch = function() {
+                    const parentValueWatch = () => {
                         let parentValue = parentGet(scope);
                         if (parentValue !== lastValue) {
                             childGet.assign(destination, parentValue);
@@ -36,21 +40,19 @@ var controller = (function(angular) {
                     destination.$on('$destroy', unwatch);
                     break;
                 case '&':
-                    destination[key] = function(locals) {
+                    destination[key] = (locals) => {
                         return $parse(scope[parentKey])(scope, locals);
                     };
                     break;
                 case '@':
-<<<<<<< HEAD
-                    result = isExpression.exec(scope[parentKey]);
-=======
-                    let result = isExpression.exec(scope[parentKey]);
->>>>>>> parent of 259f405... Changed let const to var for proteus
-                    if (result) {
-                        const parentGet = $parse(result[1]);
+
+                    let isExp = isExpression.exec(scope[parentKey]);
+                    if (isExp) {
+                        const parentGet = $parse(isExp[1]);
                         const childGet = $parse(childKey);
-                        let parentValue, lastValue = parentValue = parentGet(scope);
-                        const parentValueWatch = function() {
+                        let parentValue = parentGet(scope);
+                        let lastValue = parentValue;
+                        const parentValueWatch = () => {
                             parentValue = parentGet(scope);
                             if (parentValue !== lastValue) {
                                 childGet.assign(destination, lastValue = parentValue);
@@ -58,7 +60,7 @@ var controller = (function(angular) {
                             return lastValue;
                         };
                         scope.$watch(parentValueWatch);
-                        var unwatch = scope.$watch(parentValueWatch);
+                        const unwatch = scope.$watch(parentValueWatch);
                         destination.$on('$destroy', unwatch);
                     } else {
                         destination[key] = (scope[parentKey] || '').toString();
@@ -68,7 +70,7 @@ var controller = (function(angular) {
                     throw 'Could not apply bindings';
             }
             return destination;
-        }
+        };
         const destination = scopeHelper.create(isolateScope || scope.$new());
         if (!bindings) {
             return {};
@@ -80,7 +82,7 @@ var controller = (function(angular) {
             }
             return destination;
         } else if (angular.isObject(bindings)) {
-            for (var key in bindings) {
+            for (let key in bindings) {
                 if (bindings.hasOwnProperty(key)) {
                     assignBindings(destination, scope, key, bindings[key]);
                 }
@@ -88,15 +90,13 @@ var controller = (function(angular) {
             return destination;
         }
         throw 'Could not parse bindings';
-
     }
 
-
-    this.$get = function(moduleNames) {
-        let $controller, $rootScope = scopeHelper.$rootScope;
+    static $get(moduleNames) {
+        let $controller;
         angular.injector(sanitizeModules(moduleNames)).invoke(
             ['$controller',
-                function(controller) {
+                (controller) => {
                     $controller = controller;
                 }
             ]);
@@ -109,28 +109,22 @@ var controller = (function(angular) {
             }, false);
 
             const constructor = $controller(controllerName, locals, true, scopeControllerName);
-            constructor.provideBindings = function(b, myLocals) {
+            constructor.provideBindings = (b, myLocals) => {
                 locals = myLocals || locals;
                 b = b || bindings;
 
-                extend(constructor.instance, parseBindings(bindings, scope, locals.$scope, scopeControllerName));
+                extend(constructor.instance, controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName));
                 return constructor;
             };
             if (bindings) {
                 constructor.provideBindings();
             }
             return constructor;
-        };
+        }
         return {
             create: createController
         };
-    };
-    return this;
-})(angular);
-var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
-var isExpression = /^{{.*}}$/;
-module.export = {
-    'controller': controller,
-    'PARSE_BINDING_REGEX': PARSE_BINDING_REGEX,
-    'isExpression': isExpression
-};
+    }
+}
+export default controller;
+console.log('controllerQM.js end');

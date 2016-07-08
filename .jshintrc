@@ -9,6 +9,9 @@
   "unused": true,
   "validthis": true,
   "jasmine": true,
+  "boss": true,
+  "loopfunc": true,
+  "proto": true,
   "globals": {
     "console": false,
     "angular": false,

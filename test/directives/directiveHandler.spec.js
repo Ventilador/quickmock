@@ -1,6 +1,7 @@
+import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
+import directiveHandler from './../../src/directives/directiveHandler.js';
 describe('directiveHandler', function() {
     let controllerService, spy, controller;
-    const expression = 'ctrl.myStringParameter';
     beforeEach(function() {
         spy = jasmine.createSpy('click');
         controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
@@ -22,12 +23,12 @@ describe('directiveHandler', function() {
     });
     it('should allow me to create new instances', function() {
         expect(function() {
-            const temp = new directiveHandler();
+            new directiveHandler();
         }).not.toThrow();
     });
     it('should be able to compile html', function() {
         expect(function() {
-            const temp = new directiveHandler(controllerService, '<div/>');
+            new directiveHandler(controllerService, '<div/>');
         }).not.toThrow();
     });
     describe('ngClick', function() {
@@ -49,12 +50,8 @@ describe('directiveHandler', function() {
             }).not.toThrow();
         });
         it('should apply the click event to each of its childrens (if needed)', function() {
-<<<<<<< HEAD
-            /* jshint ignore:start */
-            var handler = new directiveHandler(controllerService,
-=======
+
             const handler = new directiveHandler(controllerService,
->>>>>>> parent of 259f405... Changed let const to var for proteus
                 `   <div ng-click="ctrl.aInt = ctrl.aInt + 1">
                     <div id='first'>
                         <div id='second'>
@@ -63,19 +60,13 @@ describe('directiveHandler', function() {
                     <div id='third'>
                     </div>
                 <div/>`);
-            /* jshint ignore:end */
             handler.ngFind('#first').click();
             handler.ngFind('#second').click();
             handler.ngFind('#third').click();
             expect(controller.aInt).toBe(3);
         });
         it('should support locals (for testing)', function() {
-<<<<<<< HEAD
-            /* jshint ignore:start */
-            var handler = new directiveHandler(controllerService,
-=======
             const handler = new directiveHandler(controllerService,
->>>>>>> parent of 259f405... Changed let const to var for proteus
                 `   <div ng-click="ctrl.aInt =  value + ctrl.aInt ">
                     <div id='first'>
                         <div id='second'>
@@ -84,7 +75,6 @@ describe('directiveHandler', function() {
                     <div id='third'>
                     </div>
                 <div/>`);
-            /* jshint ignore:end */
             handler.ngFind('#first').click({
                 value: 1000
             });

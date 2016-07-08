@@ -1,3 +1,4 @@
+import directiveProvider from './../../src/directives/directiveProvider.js';
 describe('directiveProvider', function() {
     it('should be defined', function() {
         expect(directiveProvider).toBeDefined();

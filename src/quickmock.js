@@ -1,9 +1,9 @@
-var extend = require('./controller/common.js').extend;
+console.log('QM');
+import {
+    extend
+} from './controller/common.js';
+import controllerHandler from './controllerHandler/controllerHandler.js';
 (function(angular) {
-
-    if (typeof require === 'function') {
-        var controllerHandler = require('./controllerHandler/controllerHandler.js');
-    }
     var opts, mockPrefix;
     var controllerDefaults = function(flag) {
         return {
@@ -297,4 +297,4 @@ var extend = require('./controller/common.js').extend;
 
 })(angular);
 
-module.export = window.quickmock;
+export default window.quickmock;

@@ -1,3 +1,4 @@
+import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
 describe('controllerSpies', function() {
     const uniqueObject = function uniqueObject() {};
     let controllerConstructor;

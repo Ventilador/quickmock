@@ -1,3 +1,5 @@
+import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
+import directiveProvider from './../../src/directives/directiveProvider.js';
 describe('ngClick', function() {
     let controllerService, myClick, spy;
     const ngClick = directiveProvider.$get('ngClick');

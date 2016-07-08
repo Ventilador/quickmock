@@ -1,38 +1,23 @@
-var $_CONTROLLER = $_CONTROLLER;
-var scopeHelper = scopeHelper;
-if (typeof require === 'function') {
-    $_CONTROLLER = require('./controllerHandler.extensions.js');
-    scopeHelper = require('./../controller/common.js').scopeHelper;
-}
+import {
+    makeArray,
+    isArrayLike,
+    scopeHelper
+} from './../controller/common.js';
+import {
+    $_CONTROLLER
+} from './controllerHandler.extensions.js';
+
 var controllerHandler = (function() {
+    console.log('controllerHandler.js');
     var internal = false;
     let myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
 
-    const $rootScope = angular.injector(['ng']).get('$rootScope');
 
     function clean() {
         myModules = [];
-        ctrlName = pScope = cLocals = cScope = scopeControllerName = bindToController = undefined;
+        ctrlName = pScope = cLocals = cScope = bindToController = undefined;
         return $controllerHandler;
     }
-
-    function cleanExpressionForAssignment(expression, controllerName, bindings) {
-        if (!controllerName) {
-            return {
-                value: expression
-            };
-        }
-        expression = expression.replace(controllerName + '.', '');
-        for (var key in bindings) {
-            if (bindings.hasOwnProperty(key)) {
-                if (expression.indexOf(key) !== -1) {
-                    expression = expression.replace(key, PARSE_BINDING_REGEX.exec(bindings[key])[2] || key);
-                    return expression;
-                }
-            }
-        }
-    }
-
 
     function $controllerHandler() {
 
@@ -112,7 +97,7 @@ var controllerHandler = (function() {
         toReturn.bindings = bindings;
         return toReturn;
     };
+    console.log('controllerHandler.js end');
     return $controllerHandler;
 })();
-
-module.export = controllerHandler;
+export default controllerHandler;
