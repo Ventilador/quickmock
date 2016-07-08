@@ -4,15 +4,20 @@ function ngIfDirective() {
     return {
         regex: /ng-if="(.*)"/,
         compile: function(expression, controllerService) {
-            var subscriptors = [];
-            var lastValue;
+            const subscriptors = [];
+            let lastValue;
             if (scopeHelper.isController(controllerService)) {
+<<<<<<< HEAD
                 if (controllerService.create) {
                     controllerService.create();
                 }
                 var watcher = controllerService.watch(expression, function() {
+=======
+                controllerService.create && controllerService.create();
+                const watcher = controllerService.watch(expression, function() {
+>>>>>>> parent of 259f405... Changed let const to var for proteus
                     lastValue = arguments[0];
-                    for (var ii = 0; ii < subscriptors.length; ii++) {
+                    for (let ii = 0; ii < subscriptors.length; ii++) {
                         subscriptors[ii].apply(subscriptors, arguments);
                     }
                 });
@@ -22,10 +27,10 @@ function ngIfDirective() {
                     } while (subscriptors.length);
                     watcher();
                 });
-                var toReturn = function(callback) {
+                const toReturn = function(callback) {
                     subscriptors.push(callback);
                     return function() {
-                        var index = subscriptors.indexOf(callback);
+                        const index = subscriptors.indexOf(callback);
                         subscriptors.splice(index, 1);
                     };
                 };

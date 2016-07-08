@@ -3,13 +3,18 @@ module.export = ngBindDirective;
 function ngBindDirective($parse) {
     return {
         compile: function(controllerService, expression) {
-            var subscriptors = [];
-            var lastValue;
+            const subscriptors = [];
+            let lastValue;
             if (scopeHelper.isController(controllerService)) {
+<<<<<<< HEAD
                 if (controllerService.create) {
                     controllerService.create();
                 }
                 var getter = $parse(expression);
+=======
+                controllerService.create && controllerService.create();
+                const getter = $parse(expression);
+>>>>>>> parent of 259f405... Changed let const to var for proteus
 
                 var toReturn = function(parameter) {
                     if (arguments.length === 0) {
@@ -25,7 +30,7 @@ function ngBindDirective($parse) {
                         });
                         controllerService.$apply();
                     } else if (isArrayLike(parameter)) {
-                        var memory = '';
+                        let memory = '';
                         makeArray(parameter).forEach(function(current) {
                             toReturn(memory += current);
                         });
@@ -37,7 +42,7 @@ function ngBindDirective($parse) {
                     if (angular.isFunction(callback)) {
                         subscriptors.push(callback);
                         return function() {
-                            var index = subscriptors.indexOf(callback);
+                            const index = subscriptors.indexOf(callback);
                             subscriptors.splice(index, 1);
                         };
                     }

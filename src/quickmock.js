@@ -88,7 +88,7 @@ var extend = require('./controller/common.js').extend;
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    var toReturn = controllerHandler
+                    const toReturn = controllerHandler
                         .addModules(opts.mockModules.concat(opts.moduleName))
                         .bindWith(opts.controller.bindToController)
                         .setScope(opts.controller.parentScope)

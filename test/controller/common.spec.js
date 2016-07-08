@@ -6,13 +6,13 @@
   })();
   describe('Util logic', function() {
       beforeEach(function() {
-          var $rootScope = scopeHelper.$rootScope;
+          const $rootScope = scopeHelper.$rootScope;
       });
       describe('array-like', function() {
           it('should return true for array-like objects', function() {
               expect(isArrayLike(arguments)).toBe(true);
               expect(isArrayLike([])).toBe(true);
-              var testObject = {
+              const testObject = {
                   length: 1,
                   0: 'lala'
               };
@@ -50,22 +50,22 @@
               expect(sanitizeModules('angular').length).toBe(1);
           });
           it('should allow passing arrays-like objects', function() {
-              var object1 = ['module1', 'module2'];
-              var object2 = arguments;
-              var object3 = {
+              const object1 = ['module1', 'module2'];
+              const object2 = arguments;
+              const object3 = {
                   length: 2,
                   0: 'module1',
                   1: 'module2'
               };
               [object1, object2, object3].forEach(function(value) {
                   expect(function() {
-                      var result = sanitizeModules(value);
+                      const result = sanitizeModules(value);
                       expect(result.length).toBe(value.length + 1);
                   }).not.toThrow();
               });
           });
           it('should move default ng/angular module to the first position', function() {
-              var result1 = sanitizeModules(['module1', 'module2', 'ng']),
+              const result1 = sanitizeModules(['module1', 'module2', 'ng']),
                   result2 = sanitizeModules(['module1', 'module2', 'angular']);
               expect(result1[0]).toBe('ng');
               expect(result1.length).toBe(3);
@@ -78,19 +78,24 @@
               expect(scopeHelper.create().$root).toBe(injections.$rootScope);
           });
           it('should return the same scope reference when it receive a scope', function() {
-              var scope = injections.$rootScope.$new();
+              const scope = injections.$rootScope.$new();
               expect(scopeHelper.create(scope)).toBe(scope);
           });
           it('should return the same scope reference when it receives an isolated scope', function() {
-              var scope = injections.$rootScope.$new(true);
+              const scope = injections.$rootScope.$new(true);
               expect(scopeHelper.create(scope)).toBe(scope);
           });
           it('should return an scope with the properties of a passed object', function() {
-              var toPass = {
+              const toPass = {
                   a: {}, // for reference checking
                   b: {}
+<<<<<<< HEAD
               };
               var returnedScope;
+=======
+              }
+              let returnedScope;
+>>>>>>> parent of 259f405... Changed let const to var for proteus
               expect(function() {
                   returnedScope = scopeHelper.create(toPass);
               }).not.toThrow();
@@ -99,7 +104,7 @@
           });
           it('should know when an object is a controller Constructor', function() {
               controllerHandler.clean();
-              var controllerObj = controllerHandler.setScope({
+              const controllerObj = controllerHandler.setScope({
                   boundProperty: 'something'
               }).bindWith({
                   boundProperty: '='

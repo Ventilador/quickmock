@@ -8,50 +8,50 @@ describe('controller', function() {
         expect(angular.isFunction(controller.$get().create)).toBe(true);
     });
     describe('$get', function() {
-        var controllerCreator;
+        let controllerCreator;
         beforeEach(function() {
             controllerCreator = controller.$get('test');
         });
         it('should return a valid controller', function() {
-            var controller = controllerCreator.create('emptyController');
+            const controller = controllerCreator.create('emptyController');
             expect(controller).toBeDefined();
             expect(controller().name).toBe('emptyController');
         });
         it('should handle controllers with injections', function() {
-            var controller = controllerCreator.create('withInjections');
+            const controller = controllerCreator.create('withInjections');
             expect(controller().q).toBeDefined();
         });
         it('should support creating a controller with an scope', function() {
-            var controller = controllerCreator.create('emptyController', {});
+            const controller = controllerCreator.create('emptyController', {});
             expect(controller).toBeDefined();
         });
         it('should set a property in the scope for the controller', function() {
-            var scope = scopeHelper.$rootScope.$new();
-            var controller1 = controllerCreator.create('withBindings', scope, false)();
+            const scope = scopeHelper.$rootScope.$new();
+            const controller1 = controllerCreator.create('withBindings', scope, false)();
             expect(scope.$$childHead.controller).toBe(controller1);
         });
         it('should set a property in the scope for the controller with the given name', function() {
-            var scope = scopeHelper.$rootScope.$new();
-            var controller1 = controllerCreator.create('withBindings', scope, false, 'myController')();
+            const scope = scopeHelper.$rootScope.$new();
+            const controller1 = controllerCreator.create('withBindings', scope, false, 'myController')();
             expect(scope.$$childHead.myController).toBe(controller1);
         });
         describe('bindings', function() {
             it('should support "true" and "=" as bindToController', function() {
-                var controller1 = controllerCreator.create('withBindings', {
+                const controller1 = controllerCreator.create('withBindings', {
                     boundProperty: 'Something'
                 }, true)();
                 expect(controller1.boundProperty).toBe('Something modified');
-                var controller2 = controllerCreator.create('withBindings', {
+                const controller2 = controllerCreator.create('withBindings', {
                     boundProperty: 'Something'
                 }, '=')();
                 expect(controller2.boundProperty).toBe('Something modified');
             });
             it('should not bind if bindToController is "false" or "undefined"', function() {
-                var controller1 = controllerCreator.create('withBindings', {
+                const controller1 = controllerCreator.create('withBindings', {
                     boundProperty: 'Something'
                 }, false)();
                 expect(controller1.boundProperty).toBe('undefined modified');
-                var controller2 = controllerCreator.create('withBindings', {
+                const controller2 = controllerCreator.create('withBindings', {
                     boundProperty: 'Something'
                 })();
                 expect(controller2.boundProperty).toBe('undefined modified');
@@ -59,7 +59,7 @@ describe('controller', function() {
 
             describe('bindToController', function() {
                 it('should support bindToController as an object for "="', function() {
-                    var controller = controllerCreator.create('withBindings', {
+                    const controller = controllerCreator.create('withBindings', {
                         boundProperty: 'Something'
                     }, {
                         boundProperty: '='
@@ -67,7 +67,7 @@ describe('controller', function() {
                     expect(controller().boundProperty).toBe('Something modified');
                 });
                 it('should support bindToController as an object for "@"', function() {
-                    var controller = controllerCreator.create('withBindings', {
+                    const controller = controllerCreator.create('withBindings', {
                         boundProperty: 'Something'
                     }, {
                         boundProperty: '@'
@@ -75,7 +75,7 @@ describe('controller', function() {
                     expect(controller().boundProperty).toBe('Something modified');
                 });
                 it('should support bindToController as an object for "&"', function() {
-                    var controller = controllerCreator.create('emptyController', {
+                    let controller = controllerCreator.create('emptyController', {
                         boundProperty: 'otherProperty.join("")',
                         otherProperty: [1, 2, 3]
                     }, {
@@ -86,7 +86,7 @@ describe('controller', function() {
 
                 });
                 it('expressions should allow locals', function() {
-                    var controller = controllerCreator.create('emptyController', {
+                    let controller = controllerCreator.create('emptyController', {
                         boundProperty: 'otherProperty.join("")',
                         otherProperty: [1, 2, 3]
                     }, {

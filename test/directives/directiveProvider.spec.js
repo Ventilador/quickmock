@@ -6,7 +6,7 @@ describe('directiveProvider', function() {
         expect(angular.isFunction(directiveProvider.$get)).toBe(true);
     });
     it('should return undefined and not throw is the directive does not exist', function() {
-        var returned = {};
+        let returned = {};
         expect(function() {
             returned = directiveProvider.$get('not existing');
         }).not.toThrow();
@@ -31,7 +31,7 @@ describe('directiveProvider', function() {
     });
 
     describe('puts and uses', function() {
-        var spy;
+        let spy;
         beforeEach(function() {
             spy = jasmine.createSpy();
             spy.and.returnValue(spy);
@@ -56,7 +56,7 @@ describe('directiveProvider', function() {
         });
         it('allow me to overwrite with a third parameter in a function that return true', function() {
             directiveProvider.$put('my-directive', spy);
-            var anotherSpy = jasmine.createSpy();
+            const anotherSpy = jasmine.createSpy();
             anotherSpy.and.returnValue(anotherSpy);
             expect(function() {
                 directiveProvider.$put('my-directive', anotherSpy, function() {

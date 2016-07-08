@@ -1,11 +1,16 @@
 var scopeHelper = require('./../controller/common.js').scopeHelper;
 var $_CONTROLLER = (function() {
-    var $parse = angular.injector(['ng']).get('$parse');
-    var ngClick;
+    const $parse = angular.injector(['ng']).get('$parse');
+    let ngClick;
 
     function assertNotDefined(obj, args) {
+<<<<<<< HEAD
         var key;
         while ((key = args.shift()))
+=======
+        let key;
+        while (key = args.shift())
+>>>>>>> parent of 259f405... Changed let const to var for proteus
             if (typeof obj[key] === 'undefined' || obj[key] === null)
                 throw ['"', key, '" property cannot be null'].join("");
     }
@@ -73,19 +78,29 @@ var $_CONTROLLER = (function() {
                 controller.$get(this.usedModules)
                 .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
             this.controllerInstance = this.controllerConstructor();
+<<<<<<< HEAD
             var watcher, self = this;
             while ((watcher = this.pendingWatchers.shift())) {
+=======
+            let watcher, self = this;
+            while (watcher = this.pendingWatchers.shift()) {
+>>>>>>> parent of 259f405... Changed let const to var for proteus
                 this.watch.apply(this, watcher);
             }
             for (var key in this.bindings) {
                 if (this.bindings.hasOwnProperty(key)) {
-                    var result = PARSE_BINDING_REGEX.exec(this.bindings[key]),
+                    let result = PARSE_BINDING_REGEX.exec(this.bindings[key]),
                         scopeKey = result[2] || key,
                         spyKey = [scopeKey, ':', key].join('');
                     if (result[1] === '=' && !controllerHandler.isInternal()) {
+<<<<<<< HEAD
                         var destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), self.controllerInstance);
                         var destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), self.parentScope);
                         /* jshint ignore:start */
+=======
+                        const destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), self.controllerInstance);
+                        const destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), self.parentScope);
+>>>>>>> parent of 259f405... Changed let const to var for proteus
                         this.parentScope.$on('$destroy', function() {
                             destroyer();
                             destroyer2();
@@ -107,10 +122,16 @@ var $_CONTROLLER = (function() {
         ngClick: function(expression) {
             return this.createDirective('ng-click', expression);
         },
+<<<<<<< HEAD
         createDirective: function(name, expression) {
             var directive = directiveProvider.$get(arguments[0]);
             var args = makeArray(arguments);
             args[0] = this;
+=======
+        createDirective: function(name, expression, args) {
+            const directive = directiveProvider.$get(arguments[0]);
+            arguments[0] = this;
+>>>>>>> parent of 259f405... Changed let const to var for proteus
             return directive.compile.apply(undefined, arguments);
         },
         compileHTML: function(htmlText) {

@@ -3,13 +3,18 @@ module.export = ngTranslateDirective;
 function ngTranslateDirective($translate, $parse) {
     return {
         compile: function(expression, controllerService) {
-            var subscriptors = [];
-            var lastValue;
+            const subscriptors = [];
+            let lastValue;
             if (scopeHelper.isController(controllerService)) {
+<<<<<<< HEAD
                 if (controllerService.create) {
                     controllerService.create();
                 }
                 var getter = $parse(expression);
+=======
+                controllerService.create && controllerService.create();
+                const getter = $parse(expression);
+>>>>>>> parent of 259f405... Changed let const to var for proteus
 
                 var toReturn = function() {
 

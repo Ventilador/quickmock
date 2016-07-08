@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/tennisgent/QuickMock/issues"
   },
-  "homepage": "https://github.com/tennisgent/QuickMock"
+  "homepage": "https://github.com/tennisgent/QuickMock",
+  "devDependencies": {
+    "babel-cli": "^6.10.1"
+  }
 }

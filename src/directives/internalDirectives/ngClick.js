@@ -20,7 +20,7 @@ function ngClickDirective($parse) {
                         scope = scope || controllerService.controllerScope;
                         locals = locals || {};
                     }
-                    var result = expression(scope, locals);
+                    const result = expression(scope, locals);
                     controllerService.$apply();
                     return result;
                 };

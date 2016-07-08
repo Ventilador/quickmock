@@ -1,7 +1,7 @@
  describe('ngBind', function() {
-     var controllerService, myBind, spy, controller;
-     var ngBind = directiveProvider.$get('ngBind');
-     var expression = 'ctrl.myStringParameter';
+     let controllerService, myBind, spy, controller;
+     const ngBind = directiveProvider.$get('ngBind');
+     const expression = 'ctrl.myStringParameter';
      beforeEach(function() {
          spy = jasmine.createSpy('click');
          controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {}, true);
@@ -33,7 +33,7 @@
          expect(spy).not.toHaveBeenCalled();
      });
      it('should allow array to fire changes', function() {
-         var object = {};
+         const object = {};
          controllerService.watch(expression, function(newValue) {
              object[newValue] = !object[newValue] ? 1 : object[newValue] + 1; //counting the calls
          });
@@ -49,7 +49,7 @@
          });
      });
      it('should allow a second true parameter, to simulate the array', function() {
-         var object = {};
+         const object = {};
          controllerService.watch(expression, function(newValue) {
              object[newValue] = !object[newValue] ? 1 : object[newValue] + 1; //counting the calls
          });
@@ -69,7 +69,7 @@
      });
      describe('changes', function() {
          it('changes should only fire once per change (independent of watcher)', function() {
-             var watcherSpy = jasmine.createSpy();
+             const watcherSpy = jasmine.createSpy();
              controllerService.watch(expression, watcherSpy);
              myBind.changes(spy);
              myBind('aValue', true);
