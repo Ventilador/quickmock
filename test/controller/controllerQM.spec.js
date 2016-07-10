@@ -9,7 +9,7 @@ describe('controller', function() {
     it('should have a $get method which return a controller generator', function() {
         expect(controller.$get).toBeDefined();
         expect(angular.isFunction(controller.$get)).toBe(true);
-        expect(angular.isFunction(controller.$get().create)).toBe(true);
+        expect(angular.isFunction(controller.$get('ng').create)).toBe(true);
     });
     describe('$get', function() {
         let controllerCreator;
@@ -23,7 +23,7 @@ describe('controller', function() {
         });
         it('should handle controllers with injections', function() {
             const controller = controllerCreator.create('withInjections');
-            expect(controller().q).toBeDefined();
+            expect(controller().$q).toBeDefined();
         });
         it('should support creating a controller with an scope', function() {
             const controller = controllerCreator.create('emptyController', {});

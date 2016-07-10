@@ -2,7 +2,7 @@ console.log('ng.if.js');
 export function ngIfDirective() {
     return {
         regex: /ng-if="(.*)"/,
-        compile: (expression, controllerService) => {
+        compile: (controllerService, expression) => {
             const subscriptors = [];
             let lastValue;
             if (controllerService.create) {
@@ -16,7 +16,7 @@ export function ngIfDirective() {
             });
             controllerService.parentScope.$on('$destroy', function() {
                 do {
-                    subscriptors.shift();
+                    subscriptors.shift()();
                 } while (subscriptors.length);
                 watcher();
             });
@@ -31,6 +31,19 @@ export function ngIfDirective() {
                 return lastValue;
             };
             return toReturn;
+        },
+        attachToElement: (controllerService, $element) => {
+            const compiledDirective = $element.data('ng-if');
+            let lastValue, parent;
+            compiledDirective((newValue) => {
+                if (!newValue) {
+                    parent = $element.parent();
+                    lastValue = $element;
+                    $element.remove();
+                } else {
+                    parent.append(lastValue);
+                }
+            });
         }
     };
 }

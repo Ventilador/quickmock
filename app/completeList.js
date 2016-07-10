@@ -4,8 +4,8 @@ export default function Config() {
             this.name = 'emptyController';
         }])
         .controller('withInjections', ['$q', '$timeout', function($q, t) {
-            this.q = $q;
-            this.t = t;
+            this.$q = $q;
+            this.$timeout = t;
         }])
         .controller('withBindings', [function() {
             this.boundProperty = this.boundProperty + ' modified';
@@ -26,7 +26,7 @@ export default function Config() {
             $translateProvider.preferredLanguage('en');
         }])
         .mockService('$q', [function() {
-            return jasmine.createSpy();
+            return jasmine.createSpy('___$q');
         }])
         .mockService('$timeout', ['$timeout', function() {
             return jasmine.createSpy('___$timeout');

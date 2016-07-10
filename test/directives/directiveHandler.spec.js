@@ -8,12 +8,14 @@ describe('directiveHandler', function() {
             aString: 'aValue',
             aFunction: spy,
             aKey: 'HELLO',
-            aInt: 0
+            aInt: 0,
+            aBoolean: true
         }, {
             aString: '=',
             aFunction: '&',
             aKey: '@',
-            aInt: '='
+            aInt: '=',
+            aBoolean: '='
         });
         controllerService.create();
         controller = controllerService.controllerInstance;
@@ -105,6 +107,12 @@ describe('directiveHandler', function() {
             handler.text('newValue'.split(''));
             expect(controller.aString).toBe('newValue');
             expect(spy.calls.count()).toBe('newValue'.length);
+        });
+    });
+    describe('ngIf', function() {
+        it('should allow to call ngIf', function() {
+            const handler = new directiveHandler(controllerService, '<div><div ng-if="ctrl.aBoolean"/></div>');
+            expect(handler.ngIf()).toBe(true);
         });
     });
 });

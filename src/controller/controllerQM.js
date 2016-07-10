@@ -8,22 +8,72 @@ import {
 
 } from './common.js';
 
-var $parse = angular.injector(['ng']).get('$parse');
+const $parse = angular.injector(['ng']).get('$parse');
 
 class controller {
-    static parseBindings(bindings, scope, isolateScope, controllerAs, locals) {
+    static getValues(scope, bindings) {
+        const toReturn = {};
+        if (!angular.isObject(bindings)) {
+            if (bindings === true || bindings === '=') {
+                bindings = (() => {
+                    const toReturn = {};
+                    for (var key in scope) {
+                        if (scope.hasOwnProperty(key) && !key.startsWith('$')) {
+                            toReturn[key] = '=';
+                        }
+                    }
+                    return toReturn;
+                })();
+            } else if (bindings === false) {
+                return toReturn;
+            }
+        }
+        for (var key in bindings) {
+            if (bindings.hasOwnProperty(key)) {
+                const result = PARSE_BINDING_REGEX.exec(bindings[key]);
+                const mode = result[1];
+                const parentKey = result[2] || key;
+                const parentGet = $parse(parentKey);
+                switch (mode) {
+                    case '=':
+                        toReturn[key] = parentGet(scope);
+                        break;
+                    case '&':
+                        const fn = $parse(parentGet(scope));
+                        toReturn[key] = (locals) => {
+                            return fn(scope, locals);
+                        };
+                        break;
+                    case '@':
+                        let exp = parentGet(scope);
+                        const isExp = isExpression.exec(exp);
+                        if (isExp) {
+                            exp = exp.trim();
+                            exp = exp.subString(2, exp.length - 3);
+                            toReturn[key] = $parse(exp)(scope);
+                        } else {
+                            toReturn[key] = parentGet(scope);
+                        }
+                        break;
+                    default:
+                        throw 'Could not apply bindings';
+                }
+            }
+        }
+        return toReturn;
+    }
+    static parseBindings(bindings, scope, isolateScope, controllerAs) {
         const assignBindings = (destination, scope, key, mode) => {
             mode = mode || '=';
             const result = PARSE_BINDING_REGEX.exec(mode);
             mode = result[1];
             const parentKey = result[2] || key;
             const childKey = controllerAs + '.' + key;
+            const parentGet = $parse(parentKey);
+            const childGet = $parse(childKey);
             switch (mode) {
                 case '=':
-                    const parentGet = $parse(parentKey);
-                    const childGet = $parse(childKey);
-                    let lastValue;
-                    childGet.assign(destination, lastValue = parentGet(scope));
+                    let lastValue = parentGet(scope);
                     const parentValueWatch = () => {
                         let parentValue = parentGet(scope);
                         if (parentValue !== lastValue) {
@@ -35,35 +85,25 @@ class controller {
                         lastValue = parentValue;
                         return lastValue;
                     };
-                    scope.$watch(parentValueWatch);
                     var unwatch = scope.$watch(parentValueWatch);
                     destination.$on('$destroy', unwatch);
                     break;
                 case '&':
-                    destination[key] = (locals) => {
-                        return $parse(scope[parentKey])(scope, locals);
-                    };
                     break;
                 case '@':
-
                     let isExp = isExpression.exec(scope[parentKey]);
                     if (isExp) {
-                        const parentGet = $parse(isExp[1]);
-                        const childGet = $parse(childKey);
                         let parentValue = parentGet(scope);
                         let lastValue = parentValue;
                         const parentValueWatch = () => {
-                            parentValue = parentGet(scope);
+                            parentValue = parentGet(scope, isolateScope);
                             if (parentValue !== lastValue) {
                                 childGet.assign(destination, lastValue = parentValue);
                             }
                             return lastValue;
                         };
-                        scope.$watch(parentValueWatch);
                         const unwatch = scope.$watch(parentValueWatch);
                         destination.$on('$destroy', unwatch);
-                    } else {
-                        destination[key] = (scope[parentKey] || '').toString();
                     }
                     break;
                 default:
@@ -71,13 +111,7 @@ class controller {
             }
             return destination;
         };
-        const overwriteWithLocals = (destination) => {
-            for (var key in locals) {
-                if (locals.hasOwnProperty(key) && key !== controllerAs && key !== '$scope') {
-                    destination[key] = locals[key];
-                }
-            }
-        };
+
         const destination = scopeHelper.create(isolateScope || scope.$new());
         if (!bindings) {
             return {};
@@ -87,7 +121,6 @@ class controller {
                     assignBindings(destination, scope, key);
                 }
             }
-            overwriteWithLocals(destination);
             return destination;
         } else if (angular.isObject(bindings)) {
             for (let key in bindings) {
@@ -95,7 +128,6 @@ class controller {
                     assignBindings(destination, scope, key, bindings[key]);
                 }
             }
-            overwriteWithLocals(destination);
             return destination;
         }
         throw 'Could not parse bindings';
@@ -103,7 +135,16 @@ class controller {
 
     static $get(moduleNames) {
         let $controller;
-        angular.injector(makeArray(moduleNames)).invoke(
+        const array = makeArray(moduleNames);
+        // const indexMock = array.indexOf('ngMock');
+        // const indexNg = array.indexOf('ng');
+        // if (indexMock !== -1) {
+        //     array[indexMock] = 'ng';
+        // }
+        // if (indexNg === -1) {
+        //     array.push('ng');
+        // }
+        angular.injector(array).invoke(
             ['$controller',
                 (controller) => {
                     $controller = controller;
@@ -117,12 +158,21 @@ class controller {
                 $scope: scopeHelper.create(scope).$new()
             }, false);
 
-            const constructor = $controller(controllerName, locals, true, scopeControllerName);
-            constructor.provideBindings = (b, myLocals) => {
-                locals = myLocals || locals;
-                b = b || bindings;
+            const constructor = () => {
 
-                extend(constructor.instance, controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName, locals));
+                const constructor = $controller(controllerName, locals, true, scopeControllerName);
+                extend(constructor.instance, controller.getValues(scope, bindings));
+                const toReturn = constructor();
+                controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
+                return toReturn;
+            };
+            constructor.provideBindings = (b) => {
+                bindings = b || bindings;
+                // locals = myLocals || locals;
+                // b = b || bindings;
+
+                // controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
+                //extend(constructor.instance, extendedLocals);
                 return constructor;
             };
             if (bindings) {

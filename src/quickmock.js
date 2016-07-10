@@ -91,12 +91,17 @@ var mocker = (function(angular) {
                 case 'controller':
                     const toReturn = controllerHandler
                         .clean()
-                        .addModules(allModules)
+                        .addModules(allModules.concat(opts.moduleName))
                         .bindWith(opts.controller.bindToController)
                         .setScope(opts.controller.parentScope)
                         .setLocals(mocks)
                         .new(opts.providerName, opts.controller.controllerAs);
                     toReturn.create();
+                    for (var key in mocks) {
+                        if (mocks.hasOwnProperty(key) && toReturn.controllerInstance[key]) {
+                            mocks[key] = toReturn.controllerInstance[key];
+                        }
+                    }
                     if (opts.controller.isDefault) {
                         return toReturn.controllerInstance;
                     }
