@@ -25,14 +25,6 @@ var directiveHandler = (function() {
         }
     };
 
-    // function getExpression(current) {
-    //     let expression = current[0] && current[0].attributes.getNamedItem('ng-click');
-    //     if (expression !== undefined && expression !== null) {
-    //         expression = expression.value;
-    //         return expression;
-    //     }
-    // }
-
     function join(obj) {
         return Array.prototype.concat.apply([], obj);
     }
@@ -60,8 +52,10 @@ var directiveHandler = (function() {
                 } else {
                     obj.data(directiveName, compiledDirective);
                 }
+                if (angular.isFunction(directive.attachToElement)) {
+                    directive.attachToElement(controllerService, angular.element(obj));
+                }
             }
-
         }
 
         const childrens = obj.children();
