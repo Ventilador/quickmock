@@ -9,7 +9,6 @@ var _common = require('./../controller/common.js');
 var _controllerHandlerExtensions = require('./controllerHandler.extensions.js');
 
 var controllerHandler = function () {
-    console.log('controllerHandler.js');
     var internal = false;
     var myModules = void 0,
         ctrlName = void 0,
@@ -103,7 +102,6 @@ var controllerHandler = function () {
         toReturn.bindings = bindings;
         return toReturn;
     };
-    console.log('controllerHandler.js end');
     return $controllerHandler;
 }();
 exports.default = controllerHandler;

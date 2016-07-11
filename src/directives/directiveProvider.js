@@ -1,7 +1,6 @@
-console.log('directiveProvider');
 import {
-    ngBindDirective
-} from './internalDirectives/ngBind.js';
+    ngModelDirective
+} from './internalDirectives/ngModel.js';
 import {
     ngClickDirective
 } from './internalDirectives/ngClick.js';
@@ -11,43 +10,42 @@ import {
 import {
     ngTranslateDirective
 } from './internalDirectives/ngTranslate.js';
+import {
+    ngBindDirective
+} from './internalDirectives/ngBind.js';
+import {
+    ngClassDirective
+} from './internalDirectives/ngClass.js';
+import {
+    toCamelCase
+} from './../controller/common.js';
+import {
+    ngRepeatDirective
+} from './internalDirectives/ngRepeat.js';
 var directiveProvider = (function() {
+    let $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate');
     const directives = new Map(),
         toReturn = {},
         $parse = angular.injector(['ng']).get('$parse'),
-        $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate'),
-        SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g,
         internals = {
             ngIf: ngIfDirective(),
             ngClick: ngClickDirective($parse),
-            ngBind: ngBindDirective($parse),
+            ngModel: ngModelDirective($parse),
             ngDisabled: ngIfDirective(),
             translate: ngTranslateDirective($translate, $parse),
-            ngRepeat: {
-                regex: '<div></div>',
-                compile: function() {}
-            },
-            ngModel: {
-                regex: '<input type="text"/>',
-                compile: function() {}
-            },
+            ngBind: ngBindDirective(),
+            ngClass: ngClassDirective($parse),
+            ngRepeat: ngRepeatDirective(),
             translateValue: {
-
-            },
-            ngClass: {
 
             }
         };
+    internals.ngTranslate = internals.translate;
 
-    toReturn.toCamelCase = function(name) {
-        return name.
-        replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
-            return offset ? letter.toUpperCase() : letter;
-        });
-    };
+
     toReturn.$get = function(directiveName) {
         if (angular.isString(directiveName)) {
-            directiveName = toReturn.toCamelCase(directiveName);
+            directiveName = toCamelCase(directiveName);
             if (internals[directiveName]) {
                 return internals[directiveName];
             }
@@ -59,7 +57,7 @@ var directiveProvider = (function() {
             throw 'directiveConstructor is not a function';
         }
         if (angular.isString(directiveName)) {
-            directiveName = toReturn.toCamelCase(directiveName);
+            directiveName = toCamelCase(directiveName);
         }
         if (directives.has(directiveName)) {
             if (arguments.length === 3 && angular.isFunction(arguments[2]) && arguments[2]() === true) {
@@ -74,8 +72,10 @@ var directiveProvider = (function() {
     toReturn.$clean = function() {
         directives.clear();
     };
-
+    toReturn.useModule = (moduleName) => {
+        $translate = angular.injector(['ng', 'pascalprecht.translate'].concat(moduleName)).get('$translate');
+        internals.translate.changeService($translate);
+    };
     return toReturn;
 })();
-console.log('directiveProvider end');
 export default directiveProvider;

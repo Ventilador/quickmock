@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-console.log('QM.helper');
 
 function loadHelper(mocker) {
     (function (quickmock) {

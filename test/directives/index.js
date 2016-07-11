@@ -1,0 +1,11 @@
+require('./htmlCompilation');
+require('./directiveHandler.spec.js');
+require('./directiveProvider.spec.js');
+require('./ngClick.spec.js');
+require('./ngIf.spec.js');
+require('./ngModel.spec.js');
+require('./ngTranslate.spec.js');
+require('./ngClick.spec.js');
+require('./ngBind.spec.js');
+require('./ngClass.spec.js');
+require('./ngRepeat.spec.js');

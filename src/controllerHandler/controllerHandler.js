@@ -8,7 +8,6 @@ import {
 } from './controllerHandler.extensions.js';
 
 var controllerHandler = (function() {
-    console.log('controllerHandler.js');
     var internal = false;
     let myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
 
@@ -97,7 +96,6 @@ var controllerHandler = (function() {
         toReturn.bindings = bindings;
         return toReturn;
     };
-    console.log('controllerHandler.js end');
     return $controllerHandler;
 })();
 export default controllerHandler;

@@ -1,4 +1,3 @@
-console.log('controllerHandler.extension.js');
 
 import directiveProvider from './../directives/directiveProvider.js';
 import {
@@ -100,4 +99,3 @@ export class $_CONTROLLER {
         return new directiveHandler(this, htmlText);
     }
 }
-console.log('controllerHandler.extension.js end');

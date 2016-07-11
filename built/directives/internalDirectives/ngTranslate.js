@@ -7,33 +7,82 @@ exports.ngTranslateDirective = ngTranslateDirective;
 
 var _common = require('./../../controller/common.js');
 
-console.log('ng.translate.js');
-function ngTranslateDirective($translate) {
+function ngTranslateDirective($translate, $parse) {
+    var translateService = $translate;
     return {
-        compile: function compile(expression, controllerService) {
+        compile: function compile(controllerService, expression) {
             if (controllerService.create) {
                 controllerService.create();
             }
-            // const getter = $parse(expression);
+            var value = void 0,
+                key = expression,
+                subscriptors = [];
+            var watcher = void 0;
+            controllerService.controllerScope.$on('$destroy', function () {
+                do {
+                    (subscriptors.shift() || angular.noop)();
+                } while (subscriptors.length > 0);
+                if (angular.isFunction(watcher)) {
+                    watcher();
+                }
+                value = watcher = toReturn = subscriptors = undefined;
+            });
+            if ((0, _common.isExpression)(expression)) {
+                expression = (0, _common.expressionSanitizer)(expression);
+                key = $parse(expression)(controllerService.controllerScope);
+                watcher = controllerService.watch(expression, function (newValue) {
+                    key = newValue;
+                    value = translateService.instant(newValue);
+                    subscriptors.forEach(function (fn) {
+                        fn(value);
+                    });
+                });
+            } else {
+                value = translateService.instant(key);
+            }
+            var toReturn = function toReturn() {
+                return value;
+            };
 
-            var toReturn = function toReturn() {};
             toReturn.changeLanguage = function (newLanguage) {
-                $translate.use(newLanguage);
-                controllerService.$apply();
+                translateService.use(newLanguage);
+                var tempWatcher = controllerService.watch(function () {}, function () {
+                    value = translateService.instant(key);
+                    tempWatcher();
+                    subscriptors.forEach(function (fn) {
+                        fn(value);
+                    });
+                });
+            };
+            toReturn.changes = function (callback) {
+                if (angular.isFunction(callback)) {
+                    subscriptors.push(callback);
+                    return function () {
+                        var index = subscriptors.indexOf(callback);
+                        subscriptors.splice(index, 1);
+                    };
+                }
+                throw 'Callback is not a function';
             };
             return toReturn;
         },
-        isExpression: function isExpression(myText) {
-            return _common.isExpression.test(myText);
-        },
         translate: function translate(text) {
-            return $translate.instant(text);
+            return translateService.instant(text);
         },
         changeLanguage: function changeLanguage(newLanguage) {
-            $translate.use(newLanguage);
-        }
+            translateService.use(newLanguage);
+        },
+        changeService: function changeService(newService) {
+            translateService = newService;
+        },
+        attachToElement: function attachToElement(controllerService, elem) {
+            var model = elem.data('ng-translate');
+            elem.text(model());
+            model.changes(function (newValue) {
+                elem.text(newValue);
+            });
+        },
+        name: 'ng-translate'
 
     };
 }
-
-console.log('ng.translate.js end');

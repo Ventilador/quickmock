@@ -1,4 +1,14 @@
-console.log('ng.click.js');
+import {
+    makeArray
+} from './../../../built/controller/common.js';
+
+function recurseObjects(object) {
+    let toReturn = makeArray(object);
+    for (let ii = 0; ii < object.children().length; ii++) {
+        toReturn = toReturn.concat(recurseObjects(angular.element(object.children()[ii])));
+    }
+    return toReturn; 
+}
 export function ngClickDirective($parse) {
     return {
         regex: /ng-click="(.*)"/,
@@ -24,7 +34,14 @@ export function ngClickDirective($parse) {
             };
             return click;
         },
-        ApplyToChildren: true
+        attachToElement: (controllerService, $element) => {
+            const clickData = $element.data('ng-click');
+            const myArray = recurseObjects($element);
+            for (var index = 0; index < myArray.length; index++) {
+                angular.element(myArray[index]).data('ng-click', clickData);
+            }
+
+        },
+        name: 'ng-click'
     };
 }
-console.log('ng.click.js end');

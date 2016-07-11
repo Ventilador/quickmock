@@ -1,4 +1,3 @@
-console.log('QM');
 import helper from './quickmock.mockHelper.js';
 import {
     extend

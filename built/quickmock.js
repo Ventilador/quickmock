@@ -16,8 +16,6 @@ var _controllerHandler2 = _interopRequireDefault(_controllerHandler);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-console.log('QM');
-
 var mocker = function (angular) {
     var opts, mockPrefix;
     var controllerDefaults = function controllerDefaults(flag) {
@@ -102,8 +100,13 @@ var mocker = function (angular) {
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    var toReturn = _controllerHandler2.default.clean().addModules(opts.mockModules.concat(opts.moduleName)).bindWith(opts.controller.bindToController).setScope(opts.controller.parentScope).setLocals(mocks).new(opts.providerName, opts.controller.controllerAs);
+                    var toReturn = _controllerHandler2.default.clean().addModules(allModules.concat(opts.moduleName)).bindWith(opts.controller.bindToController).setScope(opts.controller.parentScope).setLocals(mocks).new(opts.providerName, opts.controller.controllerAs);
                     toReturn.create();
+                    for (var key in mocks) {
+                        if (mocks.hasOwnProperty(key) && toReturn.controllerInstance[key]) {
+                            mocks[key] = toReturn.controllerInstance[key];
+                        }
+                    }
                     if (opts.controller.isDefault) {
                         return toReturn.controllerInstance;
                     }

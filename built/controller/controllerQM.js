@@ -10,9 +10,6 @@ var _common = require('./common.js');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-console.log('controllerQM.js');
-
-
 var $parse = angular.injector(['ng']).get('$parse');
 
 var controller = function () {
@@ -21,23 +18,76 @@ var controller = function () {
     }
 
     _createClass(controller, null, [{
+        key: 'getValues',
+        value: function getValues(scope, bindings) {
+            var toReturn = {};
+            if (!angular.isObject(bindings)) {
+                if (bindings === true || bindings === '=') {
+                    bindings = function () {
+                        var toReturn = {};
+                        for (var key in scope) {
+                            if (scope.hasOwnProperty(key) && !key.startsWith('$')) {
+                                toReturn[key] = '=';
+                            }
+                        }
+                        return toReturn;
+                    }();
+                } else if (bindings === false) {
+                    return toReturn;
+                }
+            }
+            for (var key in bindings) {
+                if (bindings.hasOwnProperty(key)) {
+                    var result = _common.PARSE_BINDING_REGEX.exec(bindings[key]);
+                    var mode = result[1];
+                    var parentKey = result[2] || key;
+                    var parentGet = $parse(parentKey);
+
+                    (function () {
+                        switch (mode) {
+                            case '=':
+                                toReturn[key] = parentGet(scope);
+                                break;
+                            case '&':
+                                var fn = $parse(parentGet(scope));
+                                toReturn[key] = function (locals) {
+                                    return fn(scope, locals);
+                                };
+                                break;
+                            case '@':
+                                var exp = parentGet(scope);
+                                var isExp = (0, _common.isExpression)(exp);
+                                if (isExp) {
+                                    toReturn[key] = $parse((0, _common.expressionSanitizer)(exp))(scope);
+                                } else {
+                                    toReturn[key] = parentGet(scope);
+                                }
+                                break;
+                            default:
+                                throw 'Could not apply bindings';
+                        }
+                    })();
+                }
+            }
+            return toReturn;
+        }
+    }, {
         key: 'parseBindings',
-        value: function parseBindings(bindings, scope, isolateScope, controllerAs, locals) {
+        value: function parseBindings(bindings, scope, isolateScope, controllerAs) {
             var assignBindings = function assignBindings(destination, scope, key, mode) {
                 mode = mode || '=';
                 var result = _common.PARSE_BINDING_REGEX.exec(mode);
                 mode = result[1];
                 var parentKey = result[2] || key;
                 var childKey = controllerAs + '.' + key;
+                var parentGet = $parse(parentKey);
+                var childGet = $parse(childKey);
                 var unwatch;
 
                 (function () {
                     switch (mode) {
                         case '=':
-                            var parentGet = $parse(parentKey);
-                            var childGet = $parse(childKey);
-                            var lastValue = void 0;
-                            childGet.assign(destination, lastValue = parentGet(scope));
+                            var lastValue = parentGet(scope);
                             var parentValueWatch = function parentValueWatch() {
                                 var parentValue = parentGet(scope);
                                 if (parentValue !== lastValue) {
@@ -49,38 +99,28 @@ var controller = function () {
                                 lastValue = parentValue;
                                 return lastValue;
                             };
-                            scope.$watch(parentValueWatch);
                             unwatch = scope.$watch(parentValueWatch);
 
                             destination.$on('$destroy', unwatch);
                             break;
                         case '&':
-                            destination[key] = function (locals) {
-                                return $parse(scope[parentKey])(scope, locals);
-                            };
                             break;
                         case '@':
-
-                            var isExp = _common.isExpression.exec(scope[parentKey]);
+                            var isExp = (0, _common.isExpression)(scope[parentKey]);
                             if (isExp) {
                                 (function () {
-                                    var parentGet = $parse(isExp[1]);
-                                    var childGet = $parse(childKey);
                                     var parentValue = parentGet(scope);
                                     var lastValue = parentValue;
                                     var parentValueWatch = function parentValueWatch() {
-                                        parentValue = parentGet(scope);
+                                        parentValue = parentGet(scope, isolateScope);
                                         if (parentValue !== lastValue) {
                                             childGet.assign(destination, lastValue = parentValue);
                                         }
                                         return lastValue;
                                     };
-                                    scope.$watch(parentValueWatch);
                                     var unwatch = scope.$watch(parentValueWatch);
                                     destination.$on('$destroy', unwatch);
                                 })();
-                            } else {
-                                destination[key] = (scope[parentKey] || '').toString();
                             }
                             break;
                         default:
@@ -90,13 +130,7 @@ var controller = function () {
 
                 return destination;
             };
-            var overwriteWithLocals = function overwriteWithLocals(destination) {
-                for (var key in locals) {
-                    if (locals.hasOwnProperty(key) && key !== controllerAs && key !== '$scope') {
-                        destination[key] = locals[key];
-                    }
-                }
-            };
+
             var destination = _common.scopeHelper.create(isolateScope || scope.$new());
             if (!bindings) {
                 return {};
@@ -106,7 +140,6 @@ var controller = function () {
                         assignBindings(destination, scope, key);
                     }
                 }
-                overwriteWithLocals(destination);
                 return destination;
             } else if (angular.isObject(bindings)) {
                 for (var _key in bindings) {
@@ -114,7 +147,6 @@ var controller = function () {
                         assignBindings(destination, scope, _key, bindings[_key]);
                     }
                 }
-                overwriteWithLocals(destination);
                 return destination;
             }
             throw 'Could not parse bindings';
@@ -123,7 +155,16 @@ var controller = function () {
         key: '$get',
         value: function $get(moduleNames) {
             var $controller = void 0;
-            angular.injector((0, _common.sanitizeModules)(moduleNames)).invoke(['$controller', function (controller) {
+            var array = (0, _common.makeArray)(moduleNames);
+            // const indexMock = array.indexOf('ngMock');
+            // const indexNg = array.indexOf('ng');
+            // if (indexMock !== -1) {
+            //     array[indexMock] = 'ng';
+            // }
+            // if (indexNg === -1) {
+            //     array.push('ng');
+            // }
+            angular.injector(array).invoke(['$controller', function (controller) {
                 $controller = controller;
             }]);
 
@@ -134,12 +175,21 @@ var controller = function () {
                     $scope: _common.scopeHelper.create(scope).$new()
                 }, false);
 
-                var constructor = $controller(controllerName, locals, true, scopeControllerName);
-                constructor.provideBindings = function (b, myLocals) {
-                    locals = myLocals || locals;
-                    b = b || bindings;
+                var constructor = function constructor() {
 
-                    (0, _common.extend)(constructor.instance, controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName, locals));
+                    var constructor = $controller(controllerName, locals, true, scopeControllerName);
+                    (0, _common.extend)(constructor.instance, controller.getValues(scope, bindings));
+                    var toReturn = constructor();
+                    controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
+                    return toReturn;
+                };
+                constructor.provideBindings = function (b) {
+                    bindings = b || bindings;
+                    // locals = myLocals || locals;
+                    // b = b || bindings;
+
+                    // controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
+                    //extend(constructor.instance, extendedLocals);
                     return constructor;
                 };
                 if (bindings) {
@@ -157,5 +207,3 @@ var controller = function () {
 }();
 
 exports.default = controller;
-
-console.log('controllerQM.js end');
