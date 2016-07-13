@@ -25,6 +25,16 @@ var directiveProvider = function () {
     var directives = new Map(),
         toReturn = {},
         $parse = angular.injector(['ng']).get('$parse'),
+        $animate = angular.injector(['ng']).get('$animate'),
+        $transclude = function controllersBoundTransclude(scope, cloneAttachFn, futureParentElement) {
+
+        // No scope passed in:
+        if (!_common.scopeHelper.isScope(scope)) {
+            futureParentElement = cloneAttachFn;
+            cloneAttachFn = scope;
+            scope = undefined;
+        }
+    },
         internals = {
         ngIf: (0, _ngIf.ngIfDirective)(),
         ngClick: (0, _ngClick.ngClickDirective)($parse),
@@ -33,7 +43,7 @@ var directiveProvider = function () {
         translate: (0, _ngTranslate.ngTranslateDirective)($translate, $parse),
         ngBind: (0, _ngBind.ngBindDirective)(),
         ngClass: (0, _ngClass.ngClassDirective)($parse),
-        ngRepeat: (0, _ngRepeat.ngRepeatDirective)(),
+        ngRepeat: (0, _ngRepeat.ngRepeatDirective)($parse, $animate, $transclude),
         translateValue: {}
     };
     internals.ngTranslate = internals.translate;

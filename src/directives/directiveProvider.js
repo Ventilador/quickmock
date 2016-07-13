@@ -17,7 +17,8 @@ import {
     ngClassDirective
 } from './internalDirectives/ngClass.js';
 import {
-    toCamelCase
+    toCamelCase,
+    scopeHelper
 } from './../controller/common.js';
 import {
     ngRepeatDirective
@@ -27,6 +28,17 @@ var directiveProvider = (function() {
     const directives = new Map(),
         toReturn = {},
         $parse = angular.injector(['ng']).get('$parse'),
+        $animate = angular.injector(['ng']).get('$animate'),
+        $transclude = function controllersBoundTransclude(scope, cloneAttachFn, futureParentElement) {
+
+            // No scope passed in:
+            if (!scopeHelper.isScope(scope)) {
+                futureParentElement = cloneAttachFn;
+                cloneAttachFn = scope;
+                scope = undefined;
+            }
+
+        },
         internals = {
             ngIf: ngIfDirective(),
             ngClick: ngClickDirective($parse),
@@ -35,7 +47,7 @@ var directiveProvider = (function() {
             translate: ngTranslateDirective($translate, $parse),
             ngBind: ngBindDirective(),
             ngClass: ngClassDirective($parse),
-            ngRepeat: ngRepeatDirective(),
+            ngRepeat: ngRepeatDirective($parse, $animate, $transclude),
             translateValue: {
 
             }

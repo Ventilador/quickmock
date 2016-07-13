@@ -9,9 +9,9 @@ export function ngModelDirective($parse) {
         compile: (controllerService, expression) => {
             const subscriptors = [];
             controllerService.controllerScope.$on('$destroy', () => {
-                do {
+                while (subscriptors.length) {
                     (subscriptors.shift() || angular.noop)();
-                } while (subscriptors.length);
+                }
             });
             if (controllerService.create) {
                 controllerService.create();

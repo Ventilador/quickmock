@@ -57,9 +57,9 @@ export function ngClassDirective($parse) {
             });
             controllerService.controllerScope.$on('$destroy', () => {
                 watcher();
-                do {
+                while (subscriptors.length) {
                     (subscriptors.shift() || angular.noop)();
-                } while (subscriptors.length);
+                }
             });
             const toReturn = () => {
                 if (!lastValue) {
