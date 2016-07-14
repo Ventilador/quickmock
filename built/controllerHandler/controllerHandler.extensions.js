@@ -59,8 +59,10 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
     }, {
         key: '$destroy',
         value: function $destroy() {
-            delete this.$rootScope;
-            this.parentScope.$destroy();
+            this.$rootScope = undefined;
+            if (this.parentScope && angular.isFunction(this.parentScope.$destroy)) {
+                this.parentScope.$destroy();
+            }
             (0, _common.clean)(this);
         }
     }, {

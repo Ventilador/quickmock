@@ -66,7 +66,7 @@ class controller {
             mode = result[1];
             const parentKey = result[2] || key;
             const childKey = controllerAs + '.' + key;
-            const parentGet = $parse(parentKey);
+            let parentGet = $parse(parentKey);
             const childGet = $parse(childKey);
             switch (mode) {
                 case '=':
@@ -90,6 +90,8 @@ class controller {
                 case '@':
                     let isExp = isExpression(scope[parentKey]);
                     if (isExp) {
+                        let exp = parentGet(scope);
+                        parentGet = $parse(expressionSanitizer(exp));
                         let parentValue = parentGet(scope);
                         let lastValue = parentValue;
                         const parentValueWatch = () => {

@@ -18,11 +18,16 @@ var controllerHandler = function () {
         cName = void 0,
         bindToController = void 0;
 
-    function clean() {
+    function clean(root) {
         myModules = [];
         ctrlName = pScope = cLocals = cScope = bindToController = undefined;
+        if (root) {
+            $controllerHandler.$rootScope = _common.scopeHelper.$rootScope = root;
+        }
         return $controllerHandler;
     }
+
+    var lastInstance = void 0;
 
     function $controllerHandler() {
 
@@ -38,8 +43,11 @@ var controllerHandler = function () {
                 cScope = tempScope;
             }
         }
-
+        if (lastInstance) {
+            lastInstance.$destroy();
+        }
         var toReturn = new _controllerHandlerExtensions.$_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
+        lastInstance = toReturn;
         clean();
         return toReturn;
     }

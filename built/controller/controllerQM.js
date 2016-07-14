@@ -109,6 +109,8 @@ var controller = function () {
                             var isExp = (0, _common.isExpression)(scope[parentKey]);
                             if (isExp) {
                                 (function () {
+                                    var exp = parentGet(scope);
+                                    parentGet = $parse((0, _common.expressionSanitizer)(exp));
                                     var parentValue = parentGet(scope);
                                     var lastValue = parentValue;
                                     var parentValueWatch = function parentValueWatch() {

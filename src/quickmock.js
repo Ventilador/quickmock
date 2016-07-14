@@ -16,11 +16,14 @@ var mocker = (function(angular) {
     quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
     quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
     quickmock.MUTE_LOGS = false;
+    let rootScope;
 
-    function quickmock(options) {
+    function quickmock(options, root) {
+        rootScope = root;
         opts = assertRequiredOptions(options);
         return mockProvider();
     }
+
 
     function mockProvider() {
         var allModules = opts.mockModules.concat(['ngMock']),
@@ -30,7 +33,6 @@ var mocker = (function(angular) {
             providerType = getProviderType(opts.providerName, invokeQueue),
             mocks = {},
             provider = {};
-
         angular.forEach(allModules || [], function(modName) {
             invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
         });
@@ -89,7 +91,7 @@ var mocker = (function(angular) {
             switch (providerType) {
                 case 'controller':
                     const toReturn = controllerHandler
-                        .clean()
+                        .clean(rootScope)
                         .addModules(allModules.concat(opts.moduleName))
                         .bindWith(opts.controller.bindToController)
                         .setScope(opts.controller.parentScope)

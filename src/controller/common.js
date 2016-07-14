@@ -126,10 +126,7 @@ export function clean(object) {
     } else if (angular.isObject(object)) {
         for (var key in object) {
             if (object.hasOwnProperty(key)) {
-                if (!key.startsWith('$')) {
-                    clean(object[key]);
-                }
-                delete object[key];
+                object[key] = undefined;
             }
         }
     }
@@ -186,6 +183,9 @@ export function extend() {
     }
     return destination;
 }
+
+
+
 const rootScope = angular.injector(['ng']).get('$rootScope');
 
 function getRootFromScope(scope) {
@@ -222,16 +222,16 @@ export class scopeHelper {
         }
 
         if (angular.isObject(scope)) {
-            return scopeHelper.decorateScopeCounter(extend(rootScope.$new(true), scope));
+            return scopeHelper.decorateScopeCounter(extend(scopeHelper.$rootScope.$new(true), scope));
         }
         if (isArrayLike(scope)) {
             scope = makeArray(scope);
-            return scopeHelper.decorateScopeCounter(extend.apply(undefined, [rootScope.$new(true)].concat(scope)));
+            return scopeHelper.decorateScopeCounter(extend.apply(undefined, [scopeHelper.$rootScope.$new(true)].concat(scope)));
         }
 
     }
     static isScope(object) {
-        return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
+        return object && getRootFromScope(object) === getRootFromScope(scopeHelper.$rootScope) && object;
     }
 }
 scopeHelper.$rootScope = rootScope;
