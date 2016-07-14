@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -8,7 +8,14 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+exports.getBlockNodes = getBlockNodes;
+exports.hashKey = hashKey;
+exports.createMap = createMap;
+exports.shallowCopy = shallowCopy;
 exports.isArrayLike = isArrayLike;
+exports.trim = trim;
+exports.isExpression = isExpression;
+exports.expressionSanitizer = expressionSanitizer;
 exports.assertNotDefined = assertNotDefined;
 exports.assert_$_CONTROLLER = assert_$_CONTROLLER;
 exports.clean = clean;
@@ -17,20 +24,100 @@ exports.makeArray = makeArray;
 exports.extend = extend;
 exports.getFunctionName = getFunctionName;
 exports.sanitizeModules = sanitizeModules;
+exports.toCamelCase = toCamelCase;
+exports.toSnakeCase = toSnakeCase;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-console.log('common.js');
 var PARSE_BINDING_REGEX = exports.PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
-var isExpression = exports.isExpression = /^{{.*}}$/;
+var EXPRESSION_REGEX = exports.EXPRESSION_REGEX = /^{{.*}}$/;
 /* Should return true 
  * for objects that wouldn't fail doing
  * Array.prototype.slice.apply(myObj);
  * which returns a new array (reference-wise)
  * Probably needs more specs
  */
+
+var slice = [].slice;
+function getBlockNodes(nodes) {
+    // TODO(perf): update `nodes` instead of creating a new object?
+    var node = nodes[0];
+    var endNode = nodes[nodes.length - 1];
+    var blockNodes;
+
+    for (var i = 1; node !== endNode && (node = node.nextSibling); i++) {
+        if (blockNodes || nodes[i] !== node) {
+            if (!blockNodes) {
+                blockNodes = angular.element(slice.call(nodes, 0, i));
+            }
+            blockNodes.push(node);
+        }
+    }
+
+    return blockNodes || nodes;
+}
+
+var uid = 0;
+var nextUid = function nextUid() {
+    return ++uid;
+};
+
+function hashKey(obj, nextUidFn) {
+    var key = obj && obj.$$hashKey;
+    if (key) {
+        if (typeof key === 'function') {
+            key = obj.$$hashKey();
+        }
+        return key;
+    }
+    var objType = typeof obj === 'undefined' ? 'undefined' : _typeof(obj);
+    if (objType === 'function' || objType === 'object' && obj !== null) {
+        key = obj.$$hashKey = objType + ':' + (nextUidFn || nextUid)();
+    } else {
+        key = objType + ':' + obj;
+    }
+    return key;
+}
+
+function createMap() {
+    return Object.create(null);
+}
+
+function shallowCopy(src, dst) {
+    if (angular.isArray(src)) {
+        dst = dst || [];
+
+        for (var i = 0, ii = src.length; i < ii; i++) {
+            dst[i] = src[i];
+        }
+    } else if (angular.isObject(src)) {
+        dst = dst || {};
+
+        for (var key in src) {
+            if (!(key.charAt(0) === '$' && key.charAt(1) === '$')) {
+                dst[key] = src[key];
+            }
+        }
+    }
+
+    return dst || src;
+}
 function isArrayLike(item) {
-    return Array.isArray(item) || !!item && (typeof item === "undefined" ? "undefined" : _typeof(item)) === "object" && item.hasOwnProperty("length") && typeof item.length === "number" && item.length >= 0 || Object.prototype.toString.call(item) === '[object Arguments]';
+    return Array.isArray(item) || !!item && (typeof item === 'undefined' ? 'undefined' : _typeof(item)) === "object" && item.hasOwnProperty("length") && typeof item.length === "number" && item.length >= 0 || Object.prototype.toString.call(item) === '[object Arguments]';
+}
+
+function trim(value) {
+    value = value || '';
+    return value.trim();
+}
+
+function isExpression(value) {
+    return EXPRESSION_REGEX.test(trim(value));
+}
+
+function expressionSanitizer(expression) {
+    expression = expression.trim();
+    return expression.substring(2, expression.length - 2);
 }
 
 function assertNotDefined(obj, args) {
@@ -57,10 +144,7 @@ function clean(object) {
     } else if (angular.isObject(object)) {
         for (var key in object) {
             if (object.hasOwnProperty(key)) {
-                if (!key.startsWith('$')) {
-                    clean(object[key]);
-                }
-                delete object[key];
+                object[key] = undefined;
             }
         }
     }
@@ -119,6 +203,7 @@ function extend() {
     }
     return destination;
 }
+
 var rootScope = angular.injector(['ng']).get('$rootScope');
 
 function getRootFromScope(scope) {
@@ -141,11 +226,20 @@ var scopeHelper = exports.scopeHelper = function () {
     }
 
     _createClass(scopeHelper, null, [{
-        key: "create",
+        key: 'decorateScopeCounter',
+        value: function decorateScopeCounter(scope) {
+            scope.$$digestCount = 0;
+            scope.$$postDigest(function () {
+                scope.$$digestCount++;
+            });
+            return scope;
+        }
+    }, {
+        key: 'create',
         value: function create(scope) {
             scope = scope || {};
             if (this.isScope(scope)) {
-                return scope;
+                return scopeHelper.decorateScopeCounter(scope);
             }
             for (var key in scope) {
                 if (scope.hasOwnProperty(key) && key.startsWith('$')) {
@@ -154,17 +248,17 @@ var scopeHelper = exports.scopeHelper = function () {
             }
 
             if (angular.isObject(scope)) {
-                return extend(rootScope.$new(true), scope);
+                return scopeHelper.decorateScopeCounter(extend(scopeHelper.$rootScope.$new(true), scope));
             }
             if (isArrayLike(scope)) {
                 scope = makeArray(scope);
-                return extend.apply(undefined, [rootScope.$new(true)].concat(scope));
+                return scopeHelper.decorateScopeCounter(extend.apply(undefined, [scopeHelper.$rootScope.$new(true)].concat(scope)));
             }
         }
     }, {
-        key: "isScope",
+        key: 'isScope',
         value: function isScope(object) {
-            return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
+            return object && getRootFromScope(object) === getRootFromScope(scopeHelper.$rootScope) && object;
         }
     }]);
 
@@ -193,4 +287,15 @@ function sanitizeModules() {
     }
     return modules;
 }
-console.log('common.js end');
+var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
+function toCamelCase(name) {
+    return name.replace(SPECIAL_CHARS_REGEXP, function (_, separator, letter, offset) {
+        return offset ? letter.toUpperCase() : letter;
+    });
+}
+function toSnakeCase(value, key) {
+    key = key || '-';
+    return value.replace(/([A-Z])/g, function ($1) {
+        return key + $1.toLowerCase();
+    });
+}

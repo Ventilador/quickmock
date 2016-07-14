@@ -8,16 +8,22 @@ import {
 } from './controllerHandler.extensions.js';
 
 var controllerHandler = (function() {
-    console.log('controllerHandler.js');
     var internal = false;
     let myModules, ctrlName, cLocals, pScope, cScope, cName, bindToController;
 
 
-    function clean() {
+    function clean(root) {
         myModules = [];
         ctrlName = pScope = cLocals = cScope = bindToController = undefined;
+        if (root) {
+           $controllerHandler.$rootScope = scopeHelper.$rootScope = root;
+        }
         return $controllerHandler;
     }
+
+    let lastInstance;
+
+
 
     function $controllerHandler() {
 
@@ -33,8 +39,11 @@ var controllerHandler = (function() {
                 cScope = tempScope;
             }
         }
-
+        if (lastInstance) {
+            lastInstance.$destroy();
+        }
         const toReturn = new $_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
+        lastInstance = toReturn;
         clean();
         return toReturn;
     }
@@ -97,7 +106,6 @@ var controllerHandler = (function() {
         toReturn.bindings = bindings;
         return toReturn;
     };
-    console.log('controllerHandler.js end');
     return $controllerHandler;
 })();
 export default controllerHandler;

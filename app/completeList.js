@@ -1,5 +1,7 @@
+import directiveProvider from './../src/directives/directiveProvider.js';
 export default function Config() {
-    angular.module('test', ['ng', 'pascalprecht.translate'])
+    directiveProvider.useModule(
+        angular.module('test', ['ng', 'pascalprecht.translate'])
         .controller('emptyController', [function() {
             this.name = 'emptyController';
         }])
@@ -24,11 +26,14 @@ export default function Config() {
                 BUTTON_LANG_DE: 'deutsch'
             });
             $translateProvider.preferredLanguage('en');
+            $translateProvider.use('en');
         }])
         .mockService('$q', [function() {
             return jasmine.createSpy('___$q');
         }])
         .mockService('$timeout', ['$timeout', function() {
             return jasmine.createSpy('___$timeout');
-        }]);
+        }]).name
+    );
+
 }

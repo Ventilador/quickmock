@@ -1,12 +1,77 @@
-console.log('common.js');
 export var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
-export var isExpression = /^{{.*}}$/;
+export var EXPRESSION_REGEX = /^{{.*}}$/;
 /* Should return true 
  * for objects that wouldn't fail doing
  * Array.prototype.slice.apply(myObj);
  * which returns a new array (reference-wise)
  * Probably needs more specs
  */
+
+
+const slice = [].slice;
+export function getBlockNodes(nodes) {
+    // TODO(perf): update `nodes` instead of creating a new object?
+    var node = nodes[0];
+    var endNode = nodes[nodes.length - 1];
+    var blockNodes;
+
+    for (var i = 1; node !== endNode && (node = node.nextSibling); i++) {
+        if (blockNodes || nodes[i] !== node) {
+            if (!blockNodes) {
+                blockNodes = angular.element(slice.call(nodes, 0, i));
+            }
+            blockNodes.push(node);
+        }
+    }
+
+    return blockNodes || nodes;
+}
+
+var uid = 0;
+const nextUid = function() {
+    return ++uid;
+};
+
+export function hashKey(obj, nextUidFn) {
+    let key = obj && obj.$$hashKey;
+    if (key) {
+        if (typeof key === 'function') {
+            key = obj.$$hashKey();
+        }
+        return key;
+    }
+    const objType = typeof obj;
+    if (objType === 'function' || (objType === 'object' && obj !== null)) {
+        key = obj.$$hashKey = objType + ':' + (nextUidFn || nextUid)();
+    } else {
+        key = objType + ':' + obj;
+    }
+    return key;
+}
+
+export function createMap() {
+    return Object.create(null);
+}
+
+export function shallowCopy(src, dst) {
+    if (angular.isArray(src)) {
+        dst = dst || [];
+
+        for (var i = 0, ii = src.length; i < ii; i++) {
+            dst[i] = src[i];
+        }
+    } else if (angular.isObject(src)) {
+        dst = dst || {};
+
+        for (var key in src) {
+            if (!(key.charAt(0) === '$' && key.charAt(1) === '$')) {
+                dst[key] = src[key];
+            }
+        }
+    }
+
+    return dst || src;
+}
 export function isArrayLike(item) {
     return Array.isArray(item) ||
         (!!item &&
@@ -16,6 +81,21 @@ export function isArrayLike(item) {
             item.length >= 0
         ) ||
         Object.prototype.toString.call(item) === '[object Arguments]';
+}
+
+export function trim(value) {
+    value = value || '';
+    return value.trim();
+}
+
+
+export function isExpression(value) {
+    return EXPRESSION_REGEX.test(trim(value));
+}
+
+export function expressionSanitizer(expression) {
+    expression = expression.trim();
+    return expression.substring(2, expression.length - 2);
 }
 
 export function assertNotDefined(obj, args) {
@@ -46,10 +126,7 @@ export function clean(object) {
     } else if (angular.isObject(object)) {
         for (var key in object) {
             if (object.hasOwnProperty(key)) {
-                if (!key.startsWith('$')) {
-                    clean(object[key]);
-                }
-                delete object[key];
+                object[key] = undefined;
             }
         }
     }
@@ -106,6 +183,9 @@ export function extend() {
     }
     return destination;
 }
+
+
+
 const rootScope = angular.injector(['ng']).get('$rootScope');
 
 function getRootFromScope(scope) {
@@ -123,10 +203,17 @@ function getRootFromScope(scope) {
 }
 
 export class scopeHelper {
+    static decorateScopeCounter(scope) {
+        scope.$$digestCount = 0;
+        scope.$$postDigest(() => {
+            scope.$$digestCount++;
+        });
+        return scope;
+    }
     static create(scope) {
         scope = scope || {};
         if (this.isScope(scope)) {
-            return scope;
+            return scopeHelper.decorateScopeCounter(scope);
         }
         for (var key in scope) {
             if (scope.hasOwnProperty(key) && key.startsWith('$')) {
@@ -135,15 +222,16 @@ export class scopeHelper {
         }
 
         if (angular.isObject(scope)) {
-            return extend(rootScope.$new(true), scope);
+            return scopeHelper.decorateScopeCounter(extend(scopeHelper.$rootScope.$new(true), scope));
         }
         if (isArrayLike(scope)) {
             scope = makeArray(scope);
-            return extend.apply(undefined, [rootScope.$new(true)].concat(scope));
+            return scopeHelper.decorateScopeCounter(extend.apply(undefined, [scopeHelper.$rootScope.$new(true)].concat(scope)));
         }
+
     }
     static isScope(object) {
-        return object && getRootFromScope(object) === getRootFromScope(rootScope) && object;
+        return object && getRootFromScope(object) === getRootFromScope(scopeHelper.$rootScope) && object;
     }
 }
 scopeHelper.$rootScope = rootScope;
@@ -170,4 +258,16 @@ export function sanitizeModules() {
     }
     return modules;
 }
-console.log('common.js end');
+const SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
+export function toCamelCase(name) {
+    return name.
+    replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
+        return offset ? letter.toUpperCase() : letter;
+    });
+}
+export function toSnakeCase(value, key) {
+    key = key || '-';
+    return value.replace(/([A-Z])/g, function($1) {
+        return key + $1.toLowerCase();
+    });
+}

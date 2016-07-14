@@ -1,11 +1,10 @@
-console.log('controllerQM.js');
 import {
     extend,
     scopeHelper,
     makeArray,
     PARSE_BINDING_REGEX,
-    isExpression
-
+    isExpression,
+    expressionSanitizer
 } from './common.js';
 
 const $parse = angular.injector(['ng']).get('$parse');
@@ -46,11 +45,9 @@ class controller {
                         break;
                     case '@':
                         let exp = parentGet(scope);
-                        const isExp = isExpression.exec(exp);
+                        const isExp = isExpression(exp);
                         if (isExp) {
-                            exp = exp.trim();
-                            exp = exp.subString(2, exp.length - 3);
-                            toReturn[key] = $parse(exp)(scope);
+                            toReturn[key] = $parse(expressionSanitizer(exp))(scope);
                         } else {
                             toReturn[key] = parentGet(scope);
                         }
@@ -69,7 +66,7 @@ class controller {
             mode = result[1];
             const parentKey = result[2] || key;
             const childKey = controllerAs + '.' + key;
-            const parentGet = $parse(parentKey);
+            let parentGet = $parse(parentKey);
             const childGet = $parse(childKey);
             switch (mode) {
                 case '=':
@@ -91,8 +88,10 @@ class controller {
                 case '&':
                     break;
                 case '@':
-                    let isExp = isExpression.exec(scope[parentKey]);
+                    let isExp = isExpression(scope[parentKey]);
                     if (isExp) {
+                        let exp = parentGet(scope);
+                        parentGet = $parse(expressionSanitizer(exp));
                         let parentValue = parentGet(scope);
                         let lastValue = parentValue;
                         const parentValueWatch = () => {
@@ -186,4 +185,3 @@ class controller {
     }
 }
 export default controller;
-console.log('controllerQM.js end');

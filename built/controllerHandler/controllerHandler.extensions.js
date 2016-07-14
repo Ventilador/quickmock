@@ -23,8 +23,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-console.log('controllerHandler.extension.js');
-
 var $_CONTROLLER = exports.$_CONTROLLER = function () {
     _createClass($_CONTROLLER, null, [{
         key: 'isController',
@@ -61,8 +59,10 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
     }, {
         key: '$destroy',
         value: function $destroy() {
-            delete this.$rootScope;
-            this.parentScope.$destroy();
+            this.$rootScope = undefined;
+            if (this.parentScope && angular.isFunction(this.parentScope.$destroy)) {
+                this.parentScope.$destroy();
+            }
             (0, _common.clean)(this);
         }
     }, {
@@ -72,12 +72,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
 
             this.bindings = angular.isDefined(bindings) && bindings !== null ? bindings : this.bindings;
             (0, _common.assert_$_CONTROLLER)(this);
-            for (var _key in this.locals) {
-                var index = this.usedModules.indexOf(_key);
-                if (index !== -1) {
-                    this.usedModules.splice(index, 1);
-                }
-            }
+
             this.controllerConstructor = _controllerQM2.default.$get(this.usedModules).create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
             this.controllerInstance = this.controllerConstructor();
 
@@ -138,5 +133,3 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
 
     return $_CONTROLLER;
 }();
-
-console.log('controllerHandler.extension.js end');

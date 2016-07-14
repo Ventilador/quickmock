@@ -1,28 +1,27 @@
-console.log('ng.if.js');
 export function ngIfDirective() {
     return {
         regex: /ng-if="(.*)"/,
         compile: (controllerService, expression) => {
-            const subscriptors = [];
             let lastValue;
             if (controllerService.create) {
                 controllerService.create();
             }
+            const subscriptors = [];
             const watcher = controllerService.watch(expression, function() {
                 lastValue = arguments[0];
                 for (let ii = 0; ii < subscriptors.length; ii++) {
                     subscriptors[ii].apply(subscriptors, arguments);
                 }
             });
-            controllerService.parentScope.$on('$destroy', function() {
+            controllerService.controllerScope.$on('$destroy', () => {
                 do {
-                    subscriptors.shift()();
+                    (subscriptors.shift() || angular.nosop)();
                 } while (subscriptors.length);
                 watcher();
             });
-            const toReturn = function(callback) {
+            const toReturn = (callback) => {
                 subscriptors.push(callback);
-                return function() {
+                return () => {
                     const index = subscriptors.indexOf(callback);
                     subscriptors.splice(index, 1);
                 };
@@ -33,18 +32,32 @@ export function ngIfDirective() {
             return toReturn;
         },
         attachToElement: (controllerService, $element) => {
-            const compiledDirective = $element.data('ng-if');
-            let lastValue, parent;
+            let lastValue,
+                parent = $element.parent(),
+                compiledDirective = $element.data('ng-if');
             compiledDirective((newValue) => {
                 if (!newValue) {
-                    parent = $element.parent();
-                    lastValue = $element;
-                    $element.remove();
+                    if (parent.children().length === 0) {
+                        lastValue = Array.prototype.splice.call($element, 0, $element.length);
+                    } else {
+                        lastValue = $element;
+                        $element.detach();
+                    }
                 } else {
-                    parent.append(lastValue);
+                    if (parent) {
+                        if (Array.isArray(lastValue)) {
+                            Array.prototype.push.apply($element, lastValue);
+                        } else {
+                            parent.append(lastValue);
+                        }
+                        parent = undefined;
+                    }
                 }
             });
-        }
+            controllerService.controllerScope.$on('$destroy', () => {
+                lastValue = parent = compiledDirective = undefined;
+            });
+        },
+        name: 'ng-if'
     };
 }
-console.log('ng.if.js end');

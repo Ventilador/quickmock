@@ -16,8 +16,6 @@ var _controllerHandler2 = _interopRequireDefault(_controllerHandler);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-console.log('QM');
-
 var mocker = function (angular) {
     var opts, mockPrefix;
     var controllerDefaults = function controllerDefaults(flag) {
@@ -31,8 +29,10 @@ var mocker = function (angular) {
     quickmock.MOCK_PREFIX = mockPrefix = quickmock.MOCK_PREFIX || '___';
     quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
     quickmock.MUTE_LOGS = false;
+    var rootScope = void 0;
 
-    function quickmock(options) {
+    function quickmock(options, root) {
+        rootScope = root;
         opts = assertRequiredOptions(options);
         return mockProvider();
     }
@@ -45,7 +45,6 @@ var mocker = function (angular) {
             providerType = getProviderType(opts.providerName, invokeQueue),
             mocks = {},
             provider = {};
-
         angular.forEach(allModules || [], function (modName) {
             invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
         });
@@ -102,8 +101,13 @@ var mocker = function (angular) {
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    var toReturn = _controllerHandler2.default.clean().addModules(opts.mockModules.concat(opts.moduleName)).bindWith(opts.controller.bindToController).setScope(opts.controller.parentScope).setLocals(mocks).new(opts.providerName, opts.controller.controllerAs);
+                    var toReturn = _controllerHandler2.default.clean(rootScope).addModules(allModules.concat(opts.moduleName)).bindWith(opts.controller.bindToController).setScope(opts.controller.parentScope).setLocals(mocks).new(opts.providerName, opts.controller.controllerAs);
                     toReturn.create();
+                    for (var key in mocks) {
+                        if (mocks.hasOwnProperty(key) && toReturn.controllerInstance[key]) {
+                            mocks[key] = toReturn.controllerInstance[key];
+                        }
+                    }
                     if (opts.controller.isDefault) {
                         return toReturn.controllerInstance;
                     }

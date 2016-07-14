@@ -1,5 +1,3 @@
-console.log('controllerHandler.extension.js');
-
 import directiveProvider from './../directives/directiveProvider.js';
 import {
     directiveHandler
@@ -44,14 +42,16 @@ export class $_CONTROLLER {
         this.$rootScope.$apply();
     }
     $destroy() {
-        delete this.$rootScope;
-        this.parentScope.$destroy();
+        this.$rootScope = undefined;
+        if (this.parentScope && angular.isFunction(this.parentScope.$destroy)) {
+            this.parentScope.$destroy();
+        }
         clean(this);
     }
     create(bindings) {
         this.bindings = angular.isDefined(bindings) && bindings !== null ? bindings : this.bindings;
         assert_$_CONTROLLER(this);
-       
+
         this.controllerConstructor =
             controller.$get(this.usedModules)
             .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
@@ -100,4 +100,3 @@ export class $_CONTROLLER {
         return new directiveHandler(this, htmlText);
     }
 }
-console.log('controllerHandler.extension.js end');

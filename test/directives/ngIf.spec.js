@@ -8,7 +8,7 @@ describe('ngIf', function() {
             myBoolean: true
         }, true);
         controllerService.create();
-        myIf = ngIf.compile('ctrl.myBoolean', controllerService);
+        myIf = ngIf.compile(controllerService, 'ctrl.myBoolean');
     });
     it('should have defined myIf', function() {
         expect(myIf).toBeDefined();
@@ -51,4 +51,5 @@ describe('ngIf', function() {
         expect(mySpy).not.toHaveBeenCalled();
         expect(mySpy2).toHaveBeenCalled();
     });
+  
 });

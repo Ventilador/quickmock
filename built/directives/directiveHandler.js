@@ -8,53 +8,49 @@ var _directiveProvider = require('./directiveProvider.js');
 
 var _directiveProvider2 = _interopRequireDefault(_directiveProvider);
 
+var _attribute = require('./../controller/attribute.js');
+
+var _attribute2 = _interopRequireDefault(_attribute);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var directiveHandler = function () {
-    console.log('directiveHandler');
 
     var proto = angular.element.prototype || angular.element.__proto__;
-    proto.ngFind = function (selector) {
+    proto.$find = function (selector) {
         var values = {
             length: 0
         };
         for (var index = 0; index < this.length; index++) {
-            values[values.length++] = this[index].querySelector(selector) || '';
+            var value = this[index].querySelector(selector);
+            if (value) {
+                values[values.length++] = value;
+            }
         }
+
         return angular.element(join(values));
     };
-    proto.click = function (locals) {
+    proto.$click = function (locals) {
         if (this.length) {
             var click = this.data('ng-click');
             return click && click(locals);
         }
     };
-    proto.text = function () {
+    proto.$text = function () {
         if (this.length) {
-            var click = this.data('ng-bind');
-            return click && click.apply(undefined, arguments);
+            var text = this.data('ng-model') || this.data('ng-bind') || this.data('ng-translate') || this.text;
+            return text && text.apply(undefined, arguments) || '';
+        }
+    };
+    proto.$if = function () {
+        if (this.length) {
+            var ngIf = this.data('ng-if');
+            return ngIf && ngIf.value.apply(undefined, arguments);
         }
     };
 
-    // function getExpression(current) {
-    //     let expression = current[0] && current[0].attributes.getNamedItem('ng-click');
-    //     if (expression !== undefined && expression !== null) {
-    //         expression = expression.value;
-    //         return expression;
-    //     }
-    // }
-
     function join(obj) {
         return Array.prototype.concat.apply([], obj);
-    }
-
-    function applyDirectivesToNodes(object, attributeName, compiledDirective) {
-        object = angular.element(object);
-        object.data(attributeName, compiledDirective);
-        var childrens = object.children();
-        for (var ii = 0; ii < childrens.length; ii++) {
-            applyDirectivesToNodes(childrens[ii], attributeName, compiledDirective);
-        }
     }
 
     function compile(obj, controllerService) {
@@ -66,10 +62,9 @@ var directiveHandler = function () {
             var directive = void 0;
             if (directive = _directiveProvider2.default.$get(directiveName)) {
                 var compiledDirective = directive.compile(controllerService, expression);
-                if (directive.ApplyToChildren) {
-                    applyDirectivesToNodes(obj, directiveName, compiledDirective);
-                } else {
-                    obj.data(directiveName, compiledDirective);
+                obj.data(directive.name, compiledDirective);
+                if (angular.isFunction(directive.attachToElement)) {
+                    directive.attachToElement(controllerService, angular.element(obj), new _attribute2.default(obj));
                 }
             }
         }
@@ -86,11 +81,9 @@ var directiveHandler = function () {
             return current;
         }
         compile(current, controllerService);
-
         return current;
     }
 
-    console.log('directiveHandler end');
     return control;
 }();
 exports.default = directiveHandler;

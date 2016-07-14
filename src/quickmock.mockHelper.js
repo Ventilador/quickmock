@@ -1,4 +1,3 @@
-console.log('QM.helper');
 
 function loadHelper(mocker) {
     (function(quickmock) {

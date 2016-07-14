@@ -1,6 +1,6 @@
 module.exports = {
     entry: {
-        'src': "./src/index.loader.js",
+        'built': "./built/index.loader.js",
         'test': "./test/index.loader.js"
     },
     output: {
@@ -11,11 +11,11 @@ module.exports = {
     module: {
         preLoaders: [{
             test: /\.js$/,
-            exclude: /(node_modules|bower_components)/,
+            exclude: /(node_modules|bower_components|built)/,
             loader: 'babel?presets[]=es2015'
         }, {
             test: /\.js$/,
-            exclude: /node_modules/,
+            exclude: /(node_modules|bower_components|built)/,
             loader: "jshint-loader"
         }]
     }
