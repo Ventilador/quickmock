@@ -1,3 +1,10 @@
 .idea/
 node_modules
-CUsersadmin.npmreponode_moduleswebpack 
+src/index.js
+test/index.js
+built/controller
+built/controllerHandler
+built/directives
+built/index.loader.js
+built/quickmock.js
+built/quickmock.mockHelper.js
