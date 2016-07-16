@@ -8,10 +8,19 @@ export function ngModelDirective($parse) {
     return {
         compile: (controllerService, expression) => {
             const subscriptors = [];
+            let lastValue;
+            let watcher = controllerService.watch(expression, (newValue) => {
+                lastValue = newValue;
+                subscriptors.forEach((fn) => {
+                    fn(lastValue);
+                });
+            });
             controllerService.controllerScope.$on('$destroy', () => {
                 while (subscriptors.length) {
                     (subscriptors.shift() || angular.noop)();
                 }
+                watcher();
+                watcher = undefined;
             });
             if (controllerService.create) {
                 controllerService.create();
@@ -20,16 +29,13 @@ export function ngModelDirective($parse) {
 
             var toReturn = function(parameter) {
                 if (arguments.length === 0) {
-                    return getter(controllerService.controllerScope);
+                    return lastValue;
                 } else if (angular.isString(parameter)) {
                     if (arguments.length === 2 && arguments[1] === true) {
                         toReturn(parameter.split(''));
                         return;
                     }
                     getter.assign(controllerService.controllerScope, parameter);
-                    subscriptors.forEach((fn) => {
-                        fn(parameter);
-                    });
                     controllerService.$apply();
                 } else if (isArrayLike(parameter)) {
                     let memory = '';
@@ -55,9 +61,9 @@ export function ngModelDirective($parse) {
         },
         attachToElement: (controllerService, elem) => {
             const model = elem.data('ng-model');
-            elem.text(model());
+            elem.$text(model());
             model.changes((newValue) => {
-                elem.text(newValue);
+                elem.$text(newValue);
             });
         },
         name: 'ng-model'

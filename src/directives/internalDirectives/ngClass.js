@@ -58,7 +58,7 @@ export function ngClassDirective($parse) {
             controllerService.controllerScope.$on('$destroy', () => {
                 watcher();
                 while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
+                    subscriptors.shift();
                 }
             });
             const toReturn = () => {
@@ -81,7 +81,9 @@ export function ngClassDirective($parse) {
                     subscriptors.push(callback);
                     return () => {
                         const index = subscriptors.indexOf(callback);
-                        subscriptors.splice(index, 1);
+                        if (index !== -1) {
+                            subscriptors.splice(index, 1);
+                        }
                     };
                 }
                 throw 'Callback is not a function';

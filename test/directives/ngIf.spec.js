@@ -14,29 +14,29 @@ describe('ngIf', function() {
         expect(myIf).toBeDefined();
     });
     it('should return undefined if no $digest was executed', function() {
-        expect(myIf.value()).toBeUndefined();
+        expect(myIf()).toBeUndefined();
     });
     it('should return the value of the expression', function() {
         controllerService.$apply();
-        expect(myIf.value()).toBe(true);
+        expect(myIf()).toBe(true);
     });
     it('should return the latest evaluated value on a watch', function() {
         controllerService.$apply();
         controllerService.controllerInstance.myBoolean = angular.noop;
-        expect(myIf.value()).not.toBe(angular.noop);
+        expect(myIf()).not.toBe(angular.noop);
         controllerService.$apply();
-        expect(myIf.value()).toBe(angular.noop);
+        expect(myIf()).toBe(angular.noop);
     });
     it('should allow attaching spys to the watching cycle', function() {
         const mySpy = jasmine.createSpy();
-        myIf(mySpy);
+        myIf.changes(mySpy);
         controllerService.$apply();
         expect(mySpy).toHaveBeenCalled();
         expect(mySpy.calls.count()).toBe(1);
     });
     it('should allow deattaching spies to the watching cycle', function() {
         const mySpy = jasmine.createSpy();
-        const watcher = myIf(mySpy);
+        const watcher = myIf.changes(mySpy);
         watcher();
         controllerService.$apply();
         expect(mySpy).not.toHaveBeenCalled();
@@ -44,8 +44,8 @@ describe('ngIf', function() {
     it('should only deattach the correcponding spy', function() {
         const mySpy = jasmine.createSpy();
         const mySpy2 = jasmine.createSpy();
-        const watcher = myIf(mySpy);
-        myIf(mySpy2);
+        const watcher = myIf.changes(mySpy);
+        myIf.changes(mySpy2);
         watcher();
         controllerService.$apply();
         expect(mySpy).not.toHaveBeenCalled();

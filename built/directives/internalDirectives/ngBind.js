@@ -41,9 +41,9 @@ function ngBindDirective() {
         },
         attachToElement: function attachToElement(controllerService, elem) {
             var model = elem.data('ng-bind');
-            elem.text(model());
+            elem.$text(model());
             model.changes(function (newValue) {
-                elem.text(newValue);
+                elem.$text(newValue);
             });
         },
         name: 'ng-bind'

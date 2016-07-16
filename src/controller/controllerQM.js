@@ -149,6 +149,7 @@ class controller {
                     $controller = controller;
                 }
             ]);
+        let lastScope;
 
         function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
             scope = scopeHelper.create(scope);
@@ -158,7 +159,10 @@ class controller {
             }, false);
 
             const constructor = () => {
-
+                if (lastScope) {
+                    lastScope.$destroy();
+                }
+                lastScope = scope;
                 const constructor = $controller(controllerName, locals, true, scopeControllerName);
                 extend(constructor.instance, controller.getValues(scope, bindings));
                 const toReturn = constructor();

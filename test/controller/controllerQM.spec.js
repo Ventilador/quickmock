@@ -50,7 +50,7 @@ describe('controller', function() {
                 }, '=')();
                 expect(controller2.boundProperty).toBe('Something modified');
             });
-            it('should not bind if bindToController is "false" or "undefined"', function() {
+            it('should not bind if bindToController is falsy', function() {
                 const controller1 = controllerCreator.create('withBindings', {
                     boundProperty: 'Something'
                 }, false)();

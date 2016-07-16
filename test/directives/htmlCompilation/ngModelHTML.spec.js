@@ -22,17 +22,19 @@ describe('ngModel', function() {
     });
     it('should allow me to call text', function() {
         const handler = new directiveHandler(controllerService, '<div ng-model="ctrl.aString"/>');
-        expect(handler.$text()).toBe('aValue');
+        expect(handler.text()).toBe('');
+        controllerService.$apply();
+        expect(handler.text()).toBe('aValue');
     });
     it('should allow me to change the controller value', function() {
         const handler = new directiveHandler(controllerService, '<div ng-model="ctrl.aString"/>');
-        handler.$text('newValue');
+        handler.text('newValue');
         expect(controller.aString).toBe('newValue');
     });
     it('should allow me to change the controller value, one letter at the time', function() {
         const handler = new directiveHandler(controllerService, '<div ng-model="ctrl.aString"/>');
         controllerService.watch('ctrl.aString', spy);
-        handler.$text('newValue'.split(''));
+        handler.text('newValue'.split(''));
         expect(controller.aString).toBe('newValue');
         expect(spy.calls.count()).toBe('newValue'.length);
     });

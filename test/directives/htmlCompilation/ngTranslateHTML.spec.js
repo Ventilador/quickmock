@@ -22,8 +22,10 @@ describe('ngTranslate', function() {
     });
     it('should replace the content of the element with the translatation', () => {
         const handler = new directiveHandler(controllerService, '<span translate="TITLE"><div>something</di></span>');
+        expect(handler.text()).toBe('something');
+        controllerService.$apply();
         expect(handler.text()).toBe('Hello');
-        expect(handler.$find('div').length).toBe(0);
+        expect(handler.find('div').length).toBe(0);
     });
     it('should replace the content after a $digest', () => {
         const handler = new directiveHandler(controllerService, '<span translate="{{ctrl.aKey}}"><div>something</di></span>');

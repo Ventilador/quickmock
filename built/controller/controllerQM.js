@@ -169,6 +169,7 @@ var controller = function () {
             angular.injector(array).invoke(['$controller', function (controller) {
                 $controller = controller;
             }]);
+            var lastScope = void 0;
 
             function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
                 scope = _common.scopeHelper.create(scope);
@@ -178,7 +179,10 @@ var controller = function () {
                 }, false);
 
                 var constructor = function constructor() {
-
+                    if (lastScope) {
+                        lastScope.$destroy();
+                    }
+                    lastScope = scope;
                     var constructor = $controller(controllerName, locals, true, scopeControllerName);
                     (0, _common.extend)(constructor.instance, controller.getValues(scope, bindings));
                     var toReturn = constructor();

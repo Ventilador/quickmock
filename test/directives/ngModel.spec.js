@@ -24,9 +24,12 @@ describe('ngModel', function() {
         myModel('aValue');
         expect(spy).toHaveBeenCalled();
     });
-    it('should return the current value of current state', function() {
+    it('should return the lastest watched value', function() {
         controller.myStringParameter = 'someValue';
+        expect(myModel()).toBe(undefined);
+        controllerService.$apply();
         expect(myModel()).toBe('someValue');
+
     });
     it('should not fire digests when consulting', function() {
         controller.myStringParameter = 'someValue';
@@ -34,7 +37,7 @@ describe('ngModel', function() {
         myModel();
         expect(spy).not.toHaveBeenCalled();
     });
-    it('should allow array to fire changes', function() {
+    it('should allow arrays to fire multiples changes (one per char)', function() {
         const object = {};
         controllerService.watch(expression, function(newValue) {
             object[newValue] = !object[newValue] ? 1 : object[newValue] + 1; //counting the calls
@@ -68,17 +71,5 @@ describe('ngModel', function() {
     });
     it('should have a changes function', function() {
         expect(myModel.changes).toEqual(jasmine.any(Function));
-    });
-    describe('changes', function() {
-        it('changes should only fire once per change (independent of watcher)', function() {
-            const watcherSpy = jasmine.createSpy();
-            controllerService.watch(expression, watcherSpy);
-            myModel.changes(spy);
-            myModel('aValue', true);
-            controller.myStringParameter = 'anotherValue';
-            controllerService.$apply();
-            expect(spy.calls.count()).toBe(6);
-            expect(watcherSpy.calls.count()).toBe(7);
-        });
     });
 });

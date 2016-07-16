@@ -12,50 +12,42 @@ var _attribute = require('./../controller/attribute.js');
 
 var _attribute2 = _interopRequireDefault(_attribute);
 
+var _jquery = require('jquery');
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var directiveHandler = function () {
-
-    var proto = angular.element.prototype || angular.element.__proto__;
-    proto.$find = function (selector) {
-        var values = {
-            length: 0
-        };
-        for (var index = 0; index < this.length; index++) {
-            var value = this[index].querySelector(selector);
-            if (value) {
-                values[values.length++] = value;
+(function (_$) {
+    var _text = _$.fn.text,
+        _click = _$.fn.click;
+    _$.fn.extend({
+        text: function text() {
+            if (arguments.length) {
+                var text = this.data('ng-model') || text;
+                return text && text.apply(this, arguments) || '';
             }
-        }
-
-        return angular.element(join(values));
-    };
-    proto.$click = function (locals) {
-        if (this.length) {
-            var click = this.data('ng-click');
-            return click && click(locals);
-        }
-    };
-    proto.$text = function () {
-        if (this.length) {
-            var text = this.data('ng-model') || this.data('ng-bind') || this.data('ng-translate') || this.text;
-            return text && text.apply(undefined, arguments) || '';
-        }
-    };
-    proto.$if = function () {
-        if (this.length) {
-            var ngIf = this.data('ng-if');
-            return ngIf && ngIf.value.apply(undefined, arguments);
-        }
-    };
-
-    function join(obj) {
-        return Array.prototype.concat.apply([], obj);
-    }
-
+            return _text.apply(this, arguments) || '';
+        },
+        click: function click(locals) {
+            if (this.length) {
+                var click = this.data('ng-click');
+                return click && click(locals);
+            }
+            return _click.apply(this, arguments);
+        },
+        if: function _if() {
+            if (this.length) {
+                var ngIf = this.data('ng-if');
+                return ngIf && ngIf.apply(undefined, arguments);
+            }
+        },
+        $text: _text
+    });
+    _$.fn.init.prototype = _$.fn;
+})(_jquery2.default);
+var directiveHandler = function () {
     function compile(obj, controllerService) {
-        obj = angular.element(obj);
-
         for (var ii = 0; ii < obj[0].attributes.length; ii++) {
             var directiveName = obj[0].attributes[ii].name;
             var expression = obj[0].attributes[ii].value;
@@ -64,19 +56,19 @@ var directiveHandler = function () {
                 var compiledDirective = directive.compile(controllerService, expression);
                 obj.data(directive.name, compiledDirective);
                 if (angular.isFunction(directive.attachToElement)) {
-                    directive.attachToElement(controllerService, angular.element(obj), new _attribute2.default(obj));
+                    directive.attachToElement(controllerService, obj, new _attribute2.default(obj));
                 }
             }
         }
 
         var childrens = obj.children();
         for (var _ii = 0; _ii < childrens.length; _ii++) {
-            compile(childrens[_ii], controllerService);
+            compile((0, _jquery2.default)(childrens[_ii]), controllerService);
         }
     }
 
     function control(controllerService, obj) {
-        var current = angular.element(obj);
+        var current = (0, _jquery2.default)(obj || '');
         if (!current || !controllerService) {
             return current;
         }

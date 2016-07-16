@@ -22,19 +22,19 @@ describe('ngClick', function() {
     });
     it('should allow me to call ng-click', function() {
         const handler = new directiveHandler(controllerService, '<div ng-click="ctrl.aString = \'anotherValue\'"/>');
-        handler.$click();
+        handler.click();
         expect(controller.aString).toBe('anotherValue');
     });
     it('should not fail if the selected item is invalid', function() {
         const handler = new directiveHandler(controllerService, '<div />');
         expect(function() {
-            handler.$find('a').$click();
+            handler.find('a').click();
         }).not.toThrow();
     });
     it('should not fail if the selected does not have the property', function() {
         const handler = new directiveHandler(controllerService, '<div />');
         expect(function() {
-            handler.$click();
+            handler.click();
         }).not.toThrow();
     });
     it('should apply the click event to each of its childrens (if needed)', function() {
@@ -48,9 +48,9 @@ describe('ngClick', function() {
                     <div id='third'>
                     </div>
                 <div/>`);
-        handler.$find('#first').$click();
-        handler.$find('#second').$click();
-        handler.$find('#third').$click();
+        handler.find('#first').click();
+        handler.find('#second').click();
+        handler.find('#third').click();
         expect(controller.aInt).toBe(3);
     });
     it('should support locals (for testing)', function() {
@@ -63,15 +63,15 @@ describe('ngClick', function() {
                     <div id='third'>
                     </div>
                 <div/>`);
-        handler.$find('#first').$click({
+        handler.find('#first').click({
             value: 1000
         });
         expect(controller.aInt).toBe(1000);
-        handler.$find('#second').$click({
+        handler.find('#second').click({
             value: ''
         });
         expect(controller.aInt).toBe('1000');
-        handler.$find('#third').$click({
+        handler.find('#third').click({
             value: 1
         });
         expect(controller.aInt).toBe('11000');

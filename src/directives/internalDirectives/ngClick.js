@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import {
     makeArray
 } from './../../../built/controller/common.js';
@@ -7,7 +8,7 @@ function recurseObjects(object) {
     for (let ii = 0; ii < object.children().length; ii++) {
         toReturn = toReturn.concat(recurseObjects(angular.element(object.children()[ii])));
     }
-    return toReturn; 
+    return toReturn;
 }
 export function ngClickDirective($parse) {
     return {
@@ -38,7 +39,7 @@ export function ngClickDirective($parse) {
             const clickData = $element.data('ng-click');
             const myArray = recurseObjects($element);
             for (var index = 0; index < myArray.length; index++) {
-                angular.element(myArray[index]).data('ng-click', clickData);
+                $(myArray[index]).data('ng-click', clickData);
             }
 
         },
