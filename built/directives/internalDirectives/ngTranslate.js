@@ -38,7 +38,14 @@ function ngTranslateDirective($translate, $parse) {
                     });
                 });
             } else {
-                value = translateService.instant(key);
+                watcher = controllerService.watch(function () {
+                    value = translateService.instant(key);
+                    watcher();
+                    watcher = undefined;
+                    subscriptors.forEach(function (fn) {
+                        fn(value);
+                    });
+                });
             }
             var toReturn = function toReturn() {
                 return value;
@@ -77,9 +84,9 @@ function ngTranslateDirective($translate, $parse) {
         },
         attachToElement: function attachToElement(controllerService, elem) {
             var model = elem.data('ng-translate');
-            elem.text(model());
+            elem.$text(model());
             model.changes(function (newValue) {
-                elem.text(newValue);
+                elem.$text(newValue);
             });
         },
         name: 'ng-translate'

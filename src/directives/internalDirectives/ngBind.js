@@ -35,9 +35,9 @@ export function ngBindDirective() {
         },
         attachToElement: (controllerService, elem) => {
             const model = elem.data('ng-bind');
-            elem.text(model());
+            elem.$text(model());
             model.changes((newValue) => {
-                elem.text(newValue);
+                elem.$text(newValue);
             });
         },
         name: 'ng-bind'

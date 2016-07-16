@@ -26,10 +26,10 @@ describe('ngBind', function() {
     });
     it('should defined ngBind', () => {
         const handler = new directiveHandler(controllerService, '<p ng-bind="ctrl.aString"/>');
-        expect(handler.$text).toEqual(jasmine.any(Function));
+        expect(handler.text).toEqual(jasmine.any(Function));
     });
     it('should return the same as jQuerymethod .text()', () => {
         const handler = new directiveHandler(controllerService, '<p ng-bind="ctrl.aString"/>');
-        expect(handler.text()).toBe(handler.$text());
+        expect(handler.text()).toBe(handler.text());
     });
 });

@@ -5,7 +5,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ngClickDirective = ngClickDirective;
 
+var _jquery = require('jquery');
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
 var _common = require('./../../../built/controller/common.js');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function recurseObjects(object) {
     var toReturn = (0, _common.makeArray)(object);
@@ -45,7 +51,7 @@ function ngClickDirective($parse) {
             var clickData = $element.data('ng-click');
             var myArray = recurseObjects($element);
             for (var index = 0; index < myArray.length; index++) {
-                angular.element(myArray[index]).data('ng-click', clickData);
+                (0, _jquery2.default)(myArray[index]).data('ng-click', clickData);
             }
         },
         name: 'ng-click'
