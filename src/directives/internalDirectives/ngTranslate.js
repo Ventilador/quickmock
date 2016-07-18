@@ -79,7 +79,7 @@ export function ngTranslateDirective($translate, $parse) {
         changeService: function(newService) {
             translateService = newService;
         },
-        attachToElement: (controllerService, elem) => {
+        attachToElement: function(controllerService, elem) {
             const model = elem.data('ng-translate');
             elem.$text(model());
             model.changes((newValue) => {

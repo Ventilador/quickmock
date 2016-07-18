@@ -156,6 +156,7 @@ export function ngRepeatDirective($parse) {
                     myObjects.splice(elementsToRemove, 1);
                     differences.removed.push(block);
                     block.scope.$destroy();
+
                 }
 
                 // we are not using forEach for perf reasons (trying to avoid #call)
@@ -170,7 +171,8 @@ export function ngRepeatDirective($parse) {
                         differences.modified.push(block);
                     } else {
                         // new item which we don't know about
-                        block.scope = $scope.$new(false);
+                        block.scope = $scope.$new();
+
                         myObjects.splice(index, 0, block);
                         differences.added.push(block);
                         nextBlockMap[block.id] = block;
@@ -209,15 +211,16 @@ export function ngRepeatDirective($parse) {
             return toReturn;
         },
         attachToElement: (controllerService, elem, $transclude) => {
-            const directive = elem.data('ng-repeat');
-            const withChildren = elem.children().length;
+            const directive = elem.data('ng-repeat'),
+                parent = elem.parent(),
+                withParent = !!parent[0];
             directive.changes((objects, differences) => {
                 if (objects && differences) {
                     if (elem.data('ng-repeat')) {
-                        if (!withChildren) {
+                        if (!withParent) {
                             splice(elem, 0, elem.length);
                         } else {
-                            elem.empty();
+                            parent.empty();
                         }
                         elem.removeData('ng-repeat');
                     }
@@ -251,42 +254,41 @@ export function ngRepeatDirective($parse) {
                     for (let ii = 0; ii < toModify.length; ii++) {
                         switch (toModify[ii].action) {
                             case 'remove':
-                                if (!withChildren) {
+                                if (!withParent) {
                                     splice(elem, ii, 1);
-
                                 } else {
-                                    elem.find(`>*:eq(${ii})`).remove();
+                                    parent.children().eq(ii).remove();
                                 }
                                 toModify[ii].old.$destroy();
                                 break;
                             case 'add':
-                                if (!withChildren) {
+                                if (!withParent) {
                                     $transclude((clone, compile) => {
                                         splice(elem, ii, 0, clone[0]);
-                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        compile(clone, controllerService.createShallowCopy(toModify[ii].new));
                                     });
                                 } else {
                                     $transclude((clone, compile) => {
-                                        if (elem.children().length) {
-                                            elem.children(`:nth-child(${ii})`).after(clone);
+                                        if (parent.children().length < ii) {
+                                            parent.children().eq(ii).before(clone);
                                         } else {
-                                            elem.append(clone);
+                                            parent.append(clone);
                                         }
-                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        compile(parent.children().eq(ii), controllerService.createShallowCopy(toModify[ii].new));
                                     });
-
                                 }
                                 break;
                             case 'replace':
-                                if (!withChildren) {
+                                if (!withParent) {
                                     $transclude((clone, compile) => {
                                         splice(elem, ii, 1, clone[0]);
-                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        compile(clone, controllerService.createShallowCopy(toModify[ii].new));
                                     });
                                 } else {
                                     $transclude((clone, compile) => {
-                                        elem.find(`>*:eq(${ii})`).replaceWith(clone);
-                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        parent.children().eq(ii).remove();
+                                        parent.children().eq(ii).before(clone);
+                                        compile(parent.children().eq(ii), controllerService.createShallowCopy(toModify[ii].new));
                                     });
                                 }
                                 toModify[ii].old.$destroy();

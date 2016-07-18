@@ -101,7 +101,7 @@ export class $_CONTROLLER {
         const shallowConstructor = function() {};
         shallowConstructor.prototype = this;
         const toReturn = new shallowConstructor();
-        toReturn.parentScope = this.parentScope;
+        toReturn.parentScope = this.controllerScope;
         toReturn.controllerScope = scope;
         return toReturn;
     }

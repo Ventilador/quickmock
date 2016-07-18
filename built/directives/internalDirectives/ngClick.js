@@ -49,7 +49,11 @@ function ngClickDirective($parse) {
             var clickData = $element.data('ng-click');
             var myArray = recurseObjects($element);
             for (var index = 0; index < myArray.length; index++) {
-                (0, _jquery2.default)(myArray[index]).data('ng-click', clickData);
+                try {
+                    (0, _jquery2.default)(myArray[index]).data('ng-click', clickData);
+                } catch (err) {
+                    console.log(err);
+                }
             }
         },
         name: 'ng-click'

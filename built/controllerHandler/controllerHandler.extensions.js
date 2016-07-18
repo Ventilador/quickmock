@@ -137,7 +137,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
             var shallowConstructor = function shallowConstructor() {};
             shallowConstructor.prototype = this;
             var toReturn = new shallowConstructor();
-            toReturn.parentScope = this.parentScope;
+            toReturn.parentScope = this.controllerScope;
             toReturn.controllerScope = scope;
             return toReturn;
         }

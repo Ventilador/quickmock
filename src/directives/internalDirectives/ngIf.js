@@ -1,7 +1,7 @@
 export function ngIfDirective() {
     return {
         regex: /ng-if="(.*)"/,
-        compile: (controllerService, expression) => {
+        compile: function(controllerService, expression) {
             let lastValue;
             if (controllerService.create) {
                 controllerService.create();
@@ -36,7 +36,7 @@ export function ngIfDirective() {
             };
             return toReturn;
         },
-        attachToElement: (controllerService, $element) => {
+        attachToElement: function(controllerService, $element) {
             let lastValue,
                 parent = $element.parent(),
                 compiledDirective = $element.data('ng-if');

@@ -1,6 +1,6 @@
 export function ngBindDirective() {
     return {
-        compile: (controllerService, expression) => {
+        compile: function(controllerService, expression) {
             const subscriptors = [];
             if (controllerService.create) {
                 controllerService.create();
@@ -33,7 +33,7 @@ export function ngBindDirective() {
             };
             return toReturn;
         },
-        attachToElement: (controllerService, elem) => {
+        attachToElement: function(controllerService, elem) {
             const model = elem.data('ng-bind');
             elem.$text(model());
             model.changes((newValue) => {

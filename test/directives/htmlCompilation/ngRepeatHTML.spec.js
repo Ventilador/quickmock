@@ -52,7 +52,7 @@ describe('ngRepeat', function() {
         }, {
             c: 'c'
         }];
-        const handler = new directiveHandler(controllerService, '<ul ng-repeat="item in ctrl.anArray"><li ng-click="ctrl.aFunction(item)"></li></ul>');
+        const handler = new directiveHandler(controllerService, '<ul ><li ng-repeat="item in ctrl.anArray" ng-click="ctrl.aFunction(item)"></li></ul>');
         controllerService.$apply();
         expect(handler.find('li').length).toBe(3);
         handler.find('li').click();
@@ -62,7 +62,7 @@ describe('ngRepeat', function() {
         }
     });
     it('should repeat childrend instead of self if any', () => {
-        const handler = new directiveHandler(controllerService, '<ul ng-repeat="item in ctrl.anArray"><li ng-click="ctrl.aFunction(item)"></li></ul>');
+        const handler = new directiveHandler(controllerService, '<ul ><li ng-repeat="item in ctrl.anArray" ng-click="ctrl.aFunction(item)"></li></ul>');
         controllerService.$apply();
         expect(handler.length).toBe(1);
         expect(handler.children().length).toBe(3);
@@ -75,7 +75,7 @@ describe('ngRepeat', function() {
         }, {
             value: 0
         }];
-        const handler = new directiveHandler(controllerService, '<ul ng-repeat="item in ctrl.anArray"><li ng-click="ctrl.aFunction(item.value = item.value + 1)"></li></ul>');
+        const handler = new directiveHandler(controllerService, '<ul ><li ng-repeat="item in ctrl.anArray" ng-click="ctrl.aFunction(item.value = item.value + 1)"></li></ul>');
         controllerService.$apply();
         handler.find('li').click();
         expect(spy.calls.count()).toBe(3);

@@ -84,9 +84,6 @@ var directiveHandler = function () {
     };
 
     function getTransclude(obj, directive) {
-        if (obj.children().length) {
-            obj = obj.find('>*');
-        }
         var internalClon = obj.clone(true);
 
         if (directive && directive.removeOnTransclusion) {

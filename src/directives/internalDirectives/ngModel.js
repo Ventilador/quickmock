@@ -6,7 +6,7 @@ import {
 
 export function ngModelDirective($parse) {
     return {
-        compile: (controllerService, expression) => {
+        compile: function(controllerService, expression) {
             const subscriptors = [];
             let lastValue;
             let watcher = controllerService.watch(expression, (newValue) => {
@@ -59,7 +59,7 @@ export function ngModelDirective($parse) {
             };
             return toReturn;
         },
-        attachToElement: (controllerService, elem) => {
+        attachToElement: function(controllerService, elem) {
             const model = elem.data('ng-model');
             elem.$text(model());
             model.changes((newValue) => {
