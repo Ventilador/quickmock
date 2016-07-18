@@ -21,7 +21,7 @@ export function ngClickDirective($parse) {
                 controllerService.create();
             }
 
-            var click = (scope, locals) => {
+            var click = function(scope, locals) {
                 if (arguments.length === 1) {
                     locals = scope || {};
                     scope = controllerService.controllerScope;

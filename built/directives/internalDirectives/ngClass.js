@@ -7,7 +7,7 @@ exports.ngClassDirective = ngClassDirective;
 
 var _common = require('./../../controller/common.js');
 
-function ngClassDirective($parse) {
+function ngClassDirective() {
     return {
         compile: function compile(controllerService, expression) {
             if (angular.isFunction(controllerService.create)) {
@@ -15,9 +15,7 @@ function ngClassDirective($parse) {
             }
             var subscriptors = [];
             var lastValue = {};
-            var getter = $parse((0, _common.trim)(expression));
-            var watcher = controllerService.watch(function () {
-                var newValue = getter(controllerService.controllerScope);
+            var watcher = controllerService.watch(expression, function (newValue) {
                 var fireChange = void 0;
                 var toNotify = {};
                 if (angular.isString(newValue)) {
@@ -26,14 +24,35 @@ function ngClassDirective($parse) {
                     classes.forEach(function (key) {
                         newValue[key] = true;
                     });
-                } else if (angular.isUndefined(newValue)) {
+                } else if (newValue === undefined || newValue === null) {
                     newValue = {};
                 } else if (angular.isArray(newValue)) {
-                    var temp = newValue;
-                    newValue = {};
-                    temp.forEach(function (key) {
-                        newValue[key] = true;
-                    });
+                    (function () {
+                        var temp = (0, _common.makeArray)(newValue);
+                        newValue = {};
+                        temp.forEach(function (key) {
+                            key.split(' ').forEach(function (item) {
+                                newValue[item] = newValue[item] || !!temp[key];
+                            });
+                        });
+                    })();
+                } else if (angular.isObject(newValue)) {
+                    (function () {
+                        var temp = {};
+
+                        var _loop = function _loop(key) {
+                            if (newValue.hasOwnProperty(key)) {
+                                key.split(' ').forEach(function (item) {
+                                    temp[item] = temp[item] || !!newValue[key];
+                                });
+                            }
+                        };
+
+                        for (var key in newValue) {
+                            _loop(key);
+                        }
+                        newValue = temp;
+                    })();
                 }
                 for (var key in newValue) {
                     if (newValue.hasOwnProperty(key) && newValue[key] !== lastValue[key]) {
@@ -59,7 +78,6 @@ function ngClassDirective($parse) {
                     });
                     lastValue = newValue;
                 }
-                return lastValue;
             });
             controllerService.controllerScope.$on('$destroy', function () {
                 watcher();
@@ -111,9 +129,13 @@ function ngClassDirective($parse) {
                 for (var key in newChanges) {
                     if (newChanges.hasOwnProperty(key)) {
                         if (newChanges[key].new === true) {
-                            element.addClass(key);
+                            if (!element.hasClass(key)) {
+                                element.addClass(key);
+                            }
                         } else {
-                            element.removeClass(key);
+                            if (element.hasClass(key)) {
+                                element.removeClass(key);
+                            }
                         }
                     }
                 }

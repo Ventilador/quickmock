@@ -1,7 +1,5 @@
 import directiveProvider from './../directives/directiveProvider.js';
-import {
-    directiveHandler
-} from './../directives/directiveHandler.js';
+import directiveHandler from './../directives/directiveHandler.js';
 import controller from './../controller/controllerQM.js';
 import {
     extend,
@@ -98,5 +96,13 @@ export class $_CONTROLLER {
     }
     compileHTML(htmlText) {
         return new directiveHandler(this, htmlText);
+    }
+    createShallowCopy(scope) {
+        const shallowConstructor = function() {};
+        shallowConstructor.prototype = this;
+        const toReturn = new shallowConstructor();
+        toReturn.parentScope = this.parentScope;
+        toReturn.controllerScope = scope;
+        return toReturn;
     }
 }

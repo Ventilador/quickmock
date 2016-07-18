@@ -150,6 +150,18 @@ export function createSpy(callback) {
     return toReturn;
 }
 
+export function shift(array) {
+    return Array.prototype.shift.call(array);
+}
+
+export function splice(array, start, count, newItems) {
+    if (newItems) {
+        Array.prototype.splice.call(array, start, count, newItems);
+    } else {
+        return Array.prototype.splice.call(array, start, count);
+    }
+}
+
 export function makeArray(item) {
     if (arguments.length > 1) {
         return makeArray(arguments);

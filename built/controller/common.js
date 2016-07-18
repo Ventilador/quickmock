@@ -20,6 +20,8 @@ exports.assertNotDefined = assertNotDefined;
 exports.assert_$_CONTROLLER = assert_$_CONTROLLER;
 exports.clean = clean;
 exports.createSpy = createSpy;
+exports.shift = shift;
+exports.splice = splice;
 exports.makeArray = makeArray;
 exports.extend = extend;
 exports.getFunctionName = getFunctionName;
@@ -168,6 +170,18 @@ function createSpy(callback) {
         return endTime - startTime;
     };
     return toReturn;
+}
+
+function shift(array) {
+    return Array.prototype.shift.call(array);
+}
+
+function splice(array, start, count, newItems) {
+    if (newItems) {
+        Array.prototype.splice.call(array, start, count, newItems);
+    } else {
+        return Array.prototype.splice.call(array, start, count);
+    }
 }
 
 function makeArray(item) {

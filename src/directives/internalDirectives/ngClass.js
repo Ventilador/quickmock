@@ -1,17 +1,16 @@
 import {
-    trim
+    trim,
+    makeArray
 } from './../../controller/common.js';
-export function ngClassDirective($parse) {
+export function ngClassDirective() {
     return {
-        compile: (controllerService, expression) => {
+        compile: function(controllerService, expression) {
             if (angular.isFunction(controllerService.create)) {
                 controllerService.create();
             }
             const subscriptors = [];
             let lastValue = {};
-            const getter = $parse(trim(expression));
-            let watcher = controllerService.watch(() => {
-                let newValue = getter(controllerService.controllerScope);
+            let watcher = controllerService.watch(expression, (newValue) => {
                 let fireChange;
                 const toNotify = {};
                 if (angular.isString(newValue)) {
@@ -20,14 +19,26 @@ export function ngClassDirective($parse) {
                     classes.forEach((key) => {
                         newValue[key] = true;
                     });
-                } else if (angular.isUndefined(newValue)) {
+                } else if (newValue === undefined || newValue === null) {
                     newValue = {};
                 } else if (angular.isArray(newValue)) {
-                    const temp = newValue;
+                    const temp = makeArray(newValue);
                     newValue = {};
                     temp.forEach((key) => {
-                        newValue[key] = true;
+                        key.split(' ').forEach((item) => {
+                            newValue[item] = newValue[item] || !!temp[key];
+                        });
                     });
+                } else if (angular.isObject(newValue)) {
+                    const temp = {};
+                    for (let key in newValue) {
+                        if (newValue.hasOwnProperty(key)) {
+                            key.split(' ').forEach((item) => {
+                                temp[item] = temp[item] || !!newValue[key];
+                            });
+                        }
+                    }
+                    newValue = temp;
                 }
                 for (let key in newValue) {
                     if (newValue.hasOwnProperty(key) && newValue[key] !== lastValue[key]) {
@@ -53,7 +64,6 @@ export function ngClassDirective($parse) {
                     });
                     lastValue = newValue;
                 }
-                return lastValue;
             });
             controllerService.controllerScope.$on('$destroy', () => {
                 watcher();
@@ -99,15 +109,19 @@ export function ngClassDirective($parse) {
             return toReturn;
         },
         name: 'ng-class',
-        attachToElement: (controllerService, element) => {
+        attachToElement: function(controllerService, element) {
 
             element.data('ng-class').changes((lastValue, newChanges) => {
                 for (let key in newChanges) {
                     if (newChanges.hasOwnProperty(key)) {
                         if (newChanges[key].new === true) {
-                            element.addClass(key);
+                            if (!element.hasClass(key)) {
+                                element.addClass(key);
+                            }
                         } else {
-                            element.removeClass(key);
+                            if (element.hasClass(key)) {
+                                element.removeClass(key);
+                            }
                         }
                     }
                 }

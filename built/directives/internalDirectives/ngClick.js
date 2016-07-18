@@ -21,8 +21,6 @@ function recurseObjects(object) {
     return toReturn;
 }
 function ngClickDirective($parse) {
-    var _arguments = arguments;
-
     return {
         regex: /ng-click="(.*)"/,
         compile: function compile(controllerService, expression) {
@@ -34,7 +32,7 @@ function ngClickDirective($parse) {
             }
 
             var click = function click(scope, locals) {
-                if (_arguments.length === 1) {
+                if (arguments.length === 1) {
                     locals = scope || {};
                     scope = controllerService.controllerScope;
                 } else {

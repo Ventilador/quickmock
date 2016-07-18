@@ -13,6 +13,8 @@ var _directiveProvider2 = _interopRequireDefault(_directiveProvider);
 
 var _directiveHandler = require('./../directives/directiveHandler.js');
 
+var _directiveHandler2 = _interopRequireDefault(_directiveHandler);
+
 var _controllerQM = require('./../controller/controllerQM.js');
 
 var _controllerQM2 = _interopRequireDefault(_controllerQM);
@@ -127,7 +129,17 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
     }, {
         key: 'compileHTML',
         value: function compileHTML(htmlText) {
-            return new _directiveHandler.directiveHandler(this, htmlText);
+            return new _directiveHandler2.default(this, htmlText);
+        }
+    }, {
+        key: 'createShallowCopy',
+        value: function createShallowCopy(scope) {
+            var shallowConstructor = function shallowConstructor() {};
+            shallowConstructor.prototype = this;
+            var toReturn = new shallowConstructor();
+            toReturn.parentScope = this.parentScope;
+            toReturn.controllerScope = scope;
+            return toReturn;
         }
     }]);
 

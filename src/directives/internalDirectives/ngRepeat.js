@@ -1,7 +1,8 @@
+//import $ from 'jquery';
 import {
     createMap,
     isArrayLike,
-    //getBlockNodes,
+    splice,
     hashKey
 } from './../../controller/common.js';
 export function ngRepeatDirective($parse) {
@@ -23,6 +24,7 @@ export function ngRepeatDirective($parse) {
 
     return {
         name: 'ngRepeat',
+        priority: 0,
         compile: function(controllerService, expression) {
             const subscriptors = [];
             if (angular.isFunction(controllerService.create)) {
@@ -168,7 +170,7 @@ export function ngRepeatDirective($parse) {
                         differences.modified.push(block);
                     } else {
                         // new item which we don't know about
-                        block.scope = $scope.$new();
+                        block.scope = $scope.$new(false);
                         myObjects.splice(index, 0, block);
                         differences.added.push(block);
                         nextBlockMap[block.id] = block;
@@ -205,6 +207,97 @@ export function ngRepeatDirective($parse) {
                 throw 'Callback is not a function';
             };
             return toReturn;
-        }
+        },
+        attachToElement: (controllerService, elem, $transclude) => {
+            const directive = elem.data('ng-repeat');
+            const withChildren = elem.children().length;
+            directive.changes((objects, differences) => {
+                if (objects && differences) {
+                    if (elem.data('ng-repeat')) {
+                        if (!withChildren) {
+                            splice(elem, 0, elem.length);
+                        } else {
+                            elem.empty();
+                        }
+                        elem.removeData('ng-repeat');
+                    }
+                    const toModify = {
+                        length: objects.length
+                    };
+                    differences.removed.forEach((element) => {
+                        toModify[element.index] = {
+                            action: 'remove',
+                            old: element.scope
+                        };
+                    });
+                    differences.modified.forEach((element) => {
+                        toModify[element.index] = {
+                            action: 'same',
+                            old: element.scope
+                        };
+                    });
+                    differences.added.forEach((element) => {
+                        if (toModify[element.index] && toModify[element.index].action === 'remove') {
+                            toModify[element.index].action = 'replace';
+                            toModify[element.index].new = element.scope;
+                        } else {
+                            toModify[element.index] = {
+                                action: 'add',
+                                new: element.scope
+                            };
+                        }
+                    });
+
+                    for (let ii = 0; ii < toModify.length; ii++) {
+                        switch (toModify[ii].action) {
+                            case 'remove':
+                                if (!withChildren) {
+                                    splice(elem, ii, 1);
+
+                                } else {
+                                    elem.find(`>*:eq(${ii})`).remove();
+                                }
+                                toModify[ii].old.$destroy();
+                                break;
+                            case 'add':
+                                if (!withChildren) {
+                                    $transclude((clone, compile) => {
+                                        splice(elem, ii, 0, clone[0]);
+                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                    });
+                                } else {
+                                    $transclude((clone, compile) => {
+                                        if (elem.children().length) {
+                                            elem.children(`:nth-child(${ii})`).after(clone);
+                                        } else {
+                                            elem.append(clone);
+                                        }
+                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                    });
+
+                                }
+                                break;
+                            case 'replace':
+                                if (!withChildren) {
+                                    $transclude((clone, compile) => {
+                                        splice(elem, ii, 1, clone[0]);
+                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                    });
+                                } else {
+                                    $transclude((clone, compile) => {
+                                        elem.find(`>*:eq(${ii})`).replaceWith(clone);
+                                        compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                    });
+                                }
+                                toModify[ii].old.$destroy();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            });
+        },
+        removeOnTransclusion: ['ng-repeat']
     };
 }

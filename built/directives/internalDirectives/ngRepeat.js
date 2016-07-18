@@ -26,6 +26,7 @@ function ngRepeatDirective($parse) {
 
     return {
         name: 'ngRepeat',
+        priority: 0,
         compile: function compile(controllerService, expression) {
             var subscriptors = [];
             if (angular.isFunction(controllerService.create)) {
@@ -174,7 +175,7 @@ function ngRepeatDirective($parse) {
                         differences.modified.push(block);
                     } else {
                         // new item which we don't know about
-                        block.scope = $scope.$new();
+                        block.scope = $scope.$new(false);
                         myObjects.splice(index, 0, block);
                         differences.added.push(block);
                         nextBlockMap[block.id] = block;
@@ -211,6 +212,101 @@ function ngRepeatDirective($parse) {
                 throw 'Callback is not a function';
             };
             return toReturn;
-        }
+        },
+        attachToElement: function attachToElement(controllerService, elem, $transclude) {
+            var directive = elem.data('ng-repeat');
+            var withChildren = elem.children().length;
+            directive.changes(function (objects, differences) {
+                if (objects && differences) {
+                    (function () {
+                        if (elem.data('ng-repeat')) {
+                            if (!withChildren) {
+                                (0, _common.splice)(elem, 0, elem.length);
+                            } else {
+                                elem.empty();
+                            }
+                            elem.removeData('ng-repeat');
+                        }
+                        var toModify = {
+                            length: objects.length
+                        };
+                        differences.removed.forEach(function (element) {
+                            toModify[element.index] = {
+                                action: 'remove',
+                                old: element.scope
+                            };
+                        });
+                        differences.modified.forEach(function (element) {
+                            toModify[element.index] = {
+                                action: 'same',
+                                old: element.scope
+                            };
+                        });
+                        differences.added.forEach(function (element) {
+                            if (toModify[element.index] && toModify[element.index].action === 'remove') {
+                                toModify[element.index].action = 'replace';
+                                toModify[element.index].new = element.scope;
+                            } else {
+                                toModify[element.index] = {
+                                    action: 'add',
+                                    new: element.scope
+                                };
+                            }
+                        });
+
+                        var _loop = function _loop(ii) {
+                            switch (toModify[ii].action) {
+                                case 'remove':
+                                    if (!withChildren) {
+                                        (0, _common.splice)(elem, ii, 1);
+                                    } else {
+                                        elem.find('>*:eq(' + ii + ')').remove();
+                                    }
+                                    toModify[ii].old.$destroy();
+                                    break;
+                                case 'add':
+                                    if (!withChildren) {
+                                        $transclude(function (clone, compile) {
+                                            (0, _common.splice)(elem, ii, 0, clone[0]);
+                                            compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        });
+                                    } else {
+                                        $transclude(function (clone, compile) {
+                                            if (elem.children().length) {
+                                                elem.children(':nth-child(' + ii + ')').after(clone);
+                                            } else {
+                                                elem.append(clone);
+                                            }
+                                            compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        });
+                                    }
+                                    break;
+                                case 'replace':
+                                    if (!withChildren) {
+                                        $transclude(function (clone, compile) {
+                                            (0, _common.splice)(elem, ii, 1, clone[0]);
+                                            compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        });
+                                    } else {
+                                        $transclude(function (clone, compile) {
+                                            elem.find('>*:eq(' + ii + ')').replaceWith(clone);
+                                            compile(clone, controllerService.createShallowCopy(objects[ii].scope));
+                                        });
+                                    }
+                                    toModify[ii].old.$destroy();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        };
+
+                        for (var ii = 0; ii < toModify.length; ii++) {
+                            _loop(ii);
+                        }
+                    })();
+                }
+            });
+        },
+        removeOnTransclusion: ['ng-repeat']
     };
-}
+} //import $ from 'jquery';

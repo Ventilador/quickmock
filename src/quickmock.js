@@ -3,6 +3,7 @@ import {
     extend
 } from './controller/common.js';
 import controllerHandler from './controllerHandler/controllerHandler.js';
+
 var mocker = (function(angular) {
     var opts, mockPrefix;
     var controllerDefaults = function(flag) {
