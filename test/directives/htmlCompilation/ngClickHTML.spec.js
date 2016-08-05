@@ -1,6 +1,6 @@
 import controllerHandler from './../../../src/controllerHandler/controllerHandler.js';
 import directiveHandler from './../../../src/directives/directiveHandler.js';
-describe('ngClick', function() {
+describe('ngClickHTML', function() {
     let controllerService, spy, controller;
     beforeEach(function() {
         spy = jasmine.createSpy('click');

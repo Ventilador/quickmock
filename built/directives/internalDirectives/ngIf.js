@@ -4,9 +4,12 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.ngIfDirective = ngIfDirective;
+
+var _common = require('./../../controller/common.js');
+
 function ngIfDirective() {
     return {
-        regex: /ng-if="(.*)"/,
+        transclude: true,
         compile: function compile(controllerService, expression) {
             var lastValue = void 0;
             if (controllerService.create) {
@@ -21,9 +24,7 @@ function ngIfDirective() {
             });
             controllerService.controllerScope.$on('$destroy', function () {
                 watcher();
-                while (subscriptors.length) {
-                    subscriptors.shift();
-                }
+                subscriptors.length = 0;
             });
             var toReturn = function toReturn() {
                 return lastValue;
@@ -42,31 +43,18 @@ function ngIfDirective() {
             };
             return toReturn;
         },
-        attachToElement: function attachToElement(controllerService, $element) {
+        attachToElement: function attachToElement(controllerService, $element, transclude, $animate) {
             var lastValue = void 0,
-                parent = $element.parent(),
                 compiledDirective = $element.data('ng-if');
             compiledDirective.changes(function (newValue) {
                 if (!newValue) {
-                    if (parent && parent.children().length === 0) {
-                        lastValue = Array.prototype.splice.call($element, 0, $element.length);
-                    } else {
-                        lastValue = $element;
-                        $element.detach();
-                    }
+                    $animate.leave((0, _common.getBlockNodes)($element));
                 } else {
-                    if (parent) {
-                        if (Array.isArray(lastValue)) {
-                            Array.prototype.push.apply($element, lastValue);
-                        } else {
-                            parent.append(lastValue);
-                        }
-                        parent = undefined;
-                    }
+                    $animate.enter($element);
                 }
             });
             controllerService.controllerScope.$on('$destroy', function () {
-                lastValue = parent = compiledDirective = undefined;
+                lastValue = compiledDirective = undefined;
             });
         },
         name: 'ng-if'

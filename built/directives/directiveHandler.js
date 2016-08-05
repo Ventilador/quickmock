@@ -84,7 +84,7 @@ var directiveHandler = function () {
     };
 
     function getTransclude(obj, directive) {
-        var internalClon = obj.clone(true);
+        var internalClon = obj.clone().contents();
 
         if (directive && directive.removeOnTransclusion) {
             Object.keys(internalClon.attrs()).forEach(function (element) {
@@ -111,41 +111,96 @@ var directiveHandler = function () {
         };
     }
 
-    function compile(obj, controllerService) {
-        var length = obj[0].attributes.length;
-        var toCompile = new sortedArray();
-        for (var ii = 0; ii < length; ii++) {
-            if (!obj[0]) {
-                break;
-            }
-            var directiveName = obj[0].attributes[ii].name;
-            var expression = obj[0].attributes[ii].value;
-            var directive = void 0;
-            if (directive = _directiveProvider2.default.$get(directiveName)) {
-                directive.priority = directive.priority || 9999;
-                toCompile.$push({
-                    exp: expression,
-                    directive: directive
-                });
-            }
-        }
+    function getDomHandler(element) {
 
-        toCompile.forEach(function (elem) {
-            var compiledDirective = elem.directive.compile(controllerService, elem.exp);
-            if (!obj.data('compiled-directives')) {
-                obj.data('compiled-directives', []);
+        return {
+            enter: function enter(nodes, parent, after) {
+                if (after) {
+                    while (nodes.length--) {
+                        after.nextSibling = nodes[nodes.length];
+                        after = after.nextSibling;
+                    }
+                } else if (parent) {
+                    (0, _jquery2.default)(parent).append((0, _jquery2.default)(nodes));
+                } else {
+                    var tempNode = element[element.length - 1];
+                    while (nodes.length--) {
+                        tempNode.nextSibling = nodes[nodes.length];
+                        tempNode = tempNode.nextSibling;
+                    }
+                }
+            },
+            leave: function leave(nodes) {
+                while (nodes.length--) {
+                    var tempNode = element[0];
+                    if (tempNode) {
+                        do {
+                            if (tempNode === nodes[nodes.length]) {
+                                if (tempNode.prevSibling) {
+                                    tempNode.prevSibling.nextSibling = tempNode.nextSibling;
+                                    break;
+                                } else if (tempNode.nextSibling) {
+                                    tempNode.nextSibling.prevSibling = undefined;
+                                    break;
+                                } else if (tempNode.paretNode) {
+                                    var index = tempNode.paretNode.childNodes.indexOf(tempNode);
+                                    if (index !== -1) {
+                                        tempNode.paretNode.childNodes.splice(index, 1);
+                                    }
+                                } else {
+                                    Array.prototype.splice.call(element, 0, element.length - 1);
+                                }
+                            }
+                        } while (tempNode = tempNode.nextSibling);
+                    }
+                }
             }
-            obj.data('compiled-directives').push(compiledDirective);
-            obj.data(elem.directive.name, compiledDirective);
-            if (angular.isFunction(elem.directive.attachToElement)) {
-                elem.directive.attachToElement(controllerService, obj, getTransclude(obj, elem.directive));
+        };
+    }
+
+    function compile(nodes, controllerService) {
+        if (!nodes || !nodes.length) {
+            return;
+        }
+        _jquery2.default.each(nodes, function () {
+            if (this.nodeName === '#text') {
+                return;
+            }
+            var self = this;
+            var compiledNode = (0, _jquery2.default)(self);
+            var length = self.attributes.length;
+            var toCompile = new sortedArray();
+            for (var ii = 0; ii < length; ii++) {
+                var directiveName = self.attributes[ii].name;
+                var expression = self.attributes[ii].value;
+                var directive = void 0;
+                if (directive = _directiveProvider2.default.$get(directiveName.toLowerCase())) {
+                    directive.priority = typeof directive.priority === 'number' ? directive.priority : 9999;
+                    toCompile.$push({
+                        exp: expression,
+                        directive: directive
+                    });
+                }
+            }
+
+            toCompile.forEach(function (elem) {
+                if (elem.directive.transclude) {
+                    elem.directive.transcludeFn = getTransclude(compiledNode, elem.directive);
+                }
+                var compiledDirective = elem.directive.compile(controllerService, elem.exp);
+                if (!compiledNode.data('compiled-directives')) {
+                    compiledNode.data('compiled-directives', []);
+                }
+                compiledNode.data('compiled-directives').push(compiledDirective);
+                compiledNode.data(elem.directive.name, compiledDirective);
+                if (angular.isFunction(elem.directive.attachToElement)) {
+                    elem.directive.attachToElement(controllerService, compiledNode, elem.directive.transcludeFn, getDomHandler(nodes));
+                }
+            });
+            if (self.childNodes && self.childNodes.length) {
+                compile(self.childNodes, controllerService);
             }
         });
-
-        var childrens = obj.children();
-        for (var _ii = 0; _ii < childrens.length; _ii++) {
-            compile((0, _jquery2.default)(childrens[_ii]), controllerService);
-        }
     }
 
     function control(controllerService, obj) {
@@ -154,6 +209,7 @@ var directiveHandler = function () {
             return current;
         }
         compile(current, controllerService);
+
         return current;
     }
 

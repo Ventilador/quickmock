@@ -1,6 +1,6 @@
 export function ngBindDirective() {
     return {
-        compile: function(controllerService, expression) {
+        compile: function (controllerService, expression) {
             const subscriptors = [];
             if (controllerService.create) {
                 controllerService.create();
@@ -12,13 +12,11 @@ export function ngBindDirective() {
                     fn(newValue);
                 });
             });
-            var toReturn = function() {
+            var toReturn = function () {
                 return lastValue;
             };
             controllerService.controllerScope.$on('$destroy', () => {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 watcher();
             });
             toReturn.changes = (callback) => {
@@ -33,7 +31,7 @@ export function ngBindDirective() {
             };
             return toReturn;
         },
-        attachToElement: function(controllerService, elem) {
+        attachToElement: function (controllerService, elem) {
             const model = elem.data('ng-bind');
             elem.$text(model());
             model.changes((newValue) => {

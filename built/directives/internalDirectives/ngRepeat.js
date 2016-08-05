@@ -25,6 +25,7 @@ function ngRepeatDirective($parse) {
     };
 
     return {
+        transclude: true,
         name: 'ngRepeat',
         priority: 0,
         compile: function compile(controllerService, expression) {
@@ -190,9 +191,7 @@ function ngRepeatDirective($parse) {
                 });
             });
             $scope.$on('$destroy', function () {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 watcher();
             });
             var toReturn = function toReturn() {

@@ -2,19 +2,19 @@ import directiveProvider from './directiveProvider.js';
 // import Attributes from './../controller/attribute.js';
 import $ from 'jquery';
 (
-    function(_$) {
+    function (_$) {
         const text = _$.fn.text,
             click = _$.fn.click,
             attr = _$.fn.attr;
         _$.fn.extend({
-            text: function() {
+            text: function () {
                 if (arguments.length) {
                     const text = this.data('ng-model') || text;
                     return text && text.apply(this, arguments) || '';
                 }
                 return text.apply(this, arguments) || '';
             },
-            click: function(locals) {
+            click: function (locals) {
                 if (this.length) {
                     for (var index = 0; index < this.length; index++) {
                         var element = this[index];
@@ -26,21 +26,21 @@ import $ from 'jquery';
                 }
                 return click.apply(this, arguments);
             },
-            if: function() {
+            if: function () {
                 if (this.length) {
                     const ngIf = this.data('ng-if');
                     return ngIf && ngIf.apply(undefined, arguments);
                 }
             },
             $text: text,
-            attrs: function() {
+            attrs: function () {
                 if (arguments.length === 0) {
                     if (this.length === 0) {
                         return;
                     }
 
                     var obj = {};
-                    $.each(this[0].attributes, function() {
+                    $.each(this[0].attributes, function () {
                         if (this.specified) {
                             obj[this.name] = this.value;
                         }
@@ -54,10 +54,10 @@ import $ from 'jquery';
         _$.fn.init.prototype = _$.fn;
     }
 )($);
-var directiveHandler = (function() {
-    const sortedArray = function() {};
+var directiveHandler = (function () {
+    const sortedArray = function () { };
     sortedArray.prototype = Array.prototype;
-    sortedArray.prototype.$push = function(directive) {
+    sortedArray.prototype.$push = function (directive) {
         let ii = 0;
         while (ii < this.length && this[ii].priority < directive.priority) {
             ii++;
@@ -71,7 +71,7 @@ var directiveHandler = (function() {
     };
 
     function getTransclude(obj, directive) {
-        const internalClon = obj.clone(true);
+        const internalClon = obj.clone().contents();
 
         if (directive && directive.removeOnTransclusion) {
             Object.keys(internalClon.attrs()).forEach((element) => {
@@ -98,41 +98,92 @@ var directiveHandler = (function() {
         };
     }
 
-    function compile(obj, controllerService) {
-        const length = obj[0].attributes.length;
-        const toCompile = new sortedArray();
-        for (let ii = 0; ii < length; ii++) {
-            if (!obj[0]) {
-                break;
-            }
-            const directiveName = obj[0].attributes[ii].name;
-            const expression = obj[0].attributes[ii].value;
-            let directive;
-            if (directive = directiveProvider.$get(directiveName)) {
-                directive.priority = directive.priority || 9999;
-                toCompile.$push({
-                    exp: expression,
-                    directive: directive
-                });
-            }
-        }
+    function getDomHandler(element) {
 
-        toCompile.forEach((elem) => {
-            const compiledDirective = elem.directive.compile(controllerService, elem.exp);
-            if (!obj.data('compiled-directives')) {
-                obj.data('compiled-directives', []);
+        return {
+            enter: function (nodes, parent) {
+                if (parent) {
+                    $(parent).append($(nodes));
+                } else {
+                    let tempNode = element[element.length - 1];
+                    while (nodes.length--) {
+                        Array.prototype.push.call(element, nodes[nodes.length])
+                    }
+                }
+            },
+            leave: function (nodes) {
+                while (nodes.length--) {
+                    let tempNode = element[0];
+                    if (tempNode) {
+                        do {
+                            if (tempNode === nodes[nodes.length]) {
+                                if (tempNode.prevSibling) {
+                                    tempNode.prevSibling.nextSibling = tempNode.nextSibling;
+                                    break;
+                                } else if (tempNode.nextSibling) {
+                                    tempNode.nextSibling.prevSibling = undefined;
+                                    break;
+                                } else if (tempNode.paretNode) {
+                                    const index = tempNode.paretNode.childNodes.indexOf(tempNode);
+                                    if (index !== -1) {
+                                        tempNode.paretNode.childNodes.splice(index, 1);
+                                    }
+                                } else {
+                                    Array.prototype.splice.call(element, 0, element.length - 1);
+                                }
+                            }
+                        } while (tempNode = tempNode.nextSibling);
+                    }
+                }
             }
-            obj.data('compiled-directives').push(compiledDirective);
-            obj.data(elem.directive.name, compiledDirective);
-            if (angular.isFunction(elem.directive.attachToElement)) {
-                elem.directive.attachToElement(controllerService, obj, getTransclude(obj, elem.directive));
+        };
+    }
+
+    function compile(nodes, controllerService) {
+        if (!nodes || !nodes.length) {
+            return;
+        }
+        $.each(nodes, function () {
+            if (this.nodeName === '#text') {
+                return;
+            }
+            const self = this;
+            const compiledNode = $(self);
+            const length = self.attributes.length;
+            const toCompile = new sortedArray();
+            for (let ii = 0; ii < length; ii++) {
+                const directiveName = self.attributes[ii].name;
+                const expression = self.attributes[ii].value;
+                let directive;
+                if (directive = directiveProvider.$get(directiveName.toLowerCase())) {
+                    directive.priority = typeof directive.priority === 'number' ? directive.priority : 9999;
+                    toCompile.$push({
+                        exp: expression,
+                        directive: directive
+                    });
+                }
+            }
+
+            toCompile.forEach((elem) => {
+                if (elem.directive.transclude) {
+                    elem.directive.transcludeFn = getTransclude(compiledNode, elem.directive);
+                }
+                const compiledDirective = elem.directive.compile(controllerService, elem.exp);
+                if (!compiledNode.data('compiled-directives')) {
+                    compiledNode.data('compiled-directives', []);
+                }
+                compiledNode.data('compiled-directives').push(compiledDirective);
+                compiledNode.data(elem.directive.name, compiledDirective);
+                if (angular.isFunction(elem.directive.attachToElement)) {
+                    elem.directive.attachToElement(controllerService, compiledNode, elem.directive.transcludeFn, getDomHandler(nodes));
+                }
+            });
+            if (self.childNodes && self.childNodes.length) {
+                compile(self.childNodes, controllerService);
             }
         });
 
-        const childrens = obj.children();
-        for (let ii = 0; ii < childrens.length; ii++) {
-            compile($(childrens[ii]), controllerService);
-        }
+
     }
 
     function control(controllerService, obj) {
@@ -141,6 +192,7 @@ var directiveHandler = (function() {
             return current;
         }
         compile(current, controllerService);
+
         return current;
     }
 

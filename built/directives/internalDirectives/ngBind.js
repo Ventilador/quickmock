@@ -22,9 +22,7 @@ function ngBindDirective() {
                 return lastValue;
             };
             controllerService.controllerScope.$on('$destroy', function () {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 watcher();
             });
             toReturn.changes = function (callback) {

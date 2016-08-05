@@ -22,7 +22,6 @@ function recurseObjects(object) {
 }
 function ngClickDirective($parse) {
     return {
-        regex: /ng-click="(.*)"/,
         compile: function compile(controllerService, expression) {
             if (angular.isString(expression)) {
                 expression = $parse(expression);

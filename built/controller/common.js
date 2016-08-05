@@ -28,6 +28,7 @@ exports.getFunctionName = getFunctionName;
 exports.sanitizeModules = sanitizeModules;
 exports.toCamelCase = toCamelCase;
 exports.toSnakeCase = toSnakeCase;
+exports.Tracker = Tracker;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -313,3 +314,25 @@ function toSnakeCase(value, key) {
         return key + $1.toLowerCase();
     });
 }
+
+function Tracker() {
+    this.value = 0;
+    this.lastvalue = this.value;
+    this.mutate = undefined;
+}
+Tracker.prototype = {
+    add: function add() {
+        this.value++;
+    },
+    sub: function sub() {
+        this.value--;
+    },
+    init: function init() {
+        this.lastvalue = this.value;
+        if (this.value > 0) {
+            this.mutate = this.sub;
+        } else {
+            this.mutate = this.add;
+        }
+    }
+};

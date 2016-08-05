@@ -28,7 +28,7 @@ export function getBlockNodes(nodes) {
 }
 
 var uid = 0;
-const nextUid = function() {
+const nextUid = function () {
     return ++uid;
 };
 
@@ -273,13 +273,35 @@ export function sanitizeModules() {
 const SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 export function toCamelCase(name) {
     return name.
-    replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
-        return offset ? letter.toUpperCase() : letter;
-    });
+        replace(SPECIAL_CHARS_REGEXP, function (_, separator, letter, offset) {
+            return offset ? letter.toUpperCase() : letter;
+        });
 }
 export function toSnakeCase(value, key) {
     key = key || '-';
-    return value.replace(/([A-Z])/g, function($1) {
+    return value.replace(/([A-Z])/g, function ($1) {
         return key + $1.toLowerCase();
     });
 }
+
+export function Tracker() {
+    this.value = 0;
+    this.lastvalue = this.value;
+    this.mutate = undefined;
+}
+Tracker.prototype = {
+    add: function () {
+        this.value++;
+    },
+    sub: function () {
+        this.value--;
+    },
+    init: function () {
+        this.lastvalue = this.value;
+        if (this.value > 0) {
+            this.mutate = this.sub;
+        } else {
+            this.mutate = this.add;
+        }
+    }
+};

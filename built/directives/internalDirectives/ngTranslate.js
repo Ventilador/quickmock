@@ -19,9 +19,7 @@ function ngTranslateDirective($translate, $parse) {
                 subscriptors = [];
             var watcher = void 0;
             controllerService.controllerScope.$on('$destroy', function () {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 if (angular.isFunction(watcher)) {
                     watcher();
                 }

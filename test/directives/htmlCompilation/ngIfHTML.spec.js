@@ -1,6 +1,6 @@
 import controllerHandler from './../../../src/controllerHandler/controllerHandler.js';
 import directiveHandler from './../../../src/directives/directiveHandler.js';
-describe('ngIf', function() {
+describe('ngIfHTML', function() {
     let controllerService, spy, controller;
     beforeEach(function() {
         spy = jasmine.createSpy('if');
@@ -57,11 +57,11 @@ describe('ngIf', function() {
         const handler = new directiveHandler(controllerService, '<div class="my-class" ng-if="ctrl.aBoolean"/>');
         controller.aBoolean = false;
         controllerService.$apply();
-        expect(handler.if()).toBe(undefined);
+        expect(handler.if()).toBe(false);
         expect(handler.length).toBe(0);
         controller.aBoolean = true;
         controllerService.$apply();
-        expect(handler.if()).toBe(true);
+        expect(handler.if()).toBe(false);
         expect(handler.length).toBe(1);
         expect(handler.hasClass('my-class')).toBe(true);
     });
