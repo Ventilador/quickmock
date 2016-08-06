@@ -6,7 +6,7 @@ import {
 export function ngTranslateDirective($translate, $parse) {
     let translateService = $translate;
     return {
-        compile: function(controllerService, expression) {
+        compile: function (controllerService, expression) {
             if (controllerService.create) {
                 controllerService.create();
             }
@@ -15,9 +15,7 @@ export function ngTranslateDirective($translate, $parse) {
                 subscriptors = [];
             let watcher;
             controllerService.controllerScope.$on('$destroy', () => {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 if (angular.isFunction(watcher)) {
                     watcher();
                 }
@@ -43,13 +41,13 @@ export function ngTranslateDirective($translate, $parse) {
                     });
                 });
             }
-            var toReturn = function() {
+            var toReturn = function () {
                 return value;
             };
 
-            toReturn.changeLanguage = function(newLanguage) {
+            toReturn.changeLanguage = function (newLanguage) {
                 translateService.use(newLanguage);
-                const tempWatcher = controllerService.watch(() => {}, () => {
+                const tempWatcher = controllerService.watch(() => { }, () => {
                     value = translateService.instant(key);
                     tempWatcher();
                     subscriptors.forEach((fn) => {
@@ -70,16 +68,16 @@ export function ngTranslateDirective($translate, $parse) {
             return toReturn;
 
         },
-        translate: function(text) {
+        translate: function (text) {
             return translateService.instant(text);
         },
-        changeLanguage: function(newLanguage) {
+        changeLanguage: function (newLanguage) {
             translateService.use(newLanguage);
         },
-        changeService: function(newService) {
+        changeService: function (newService) {
             translateService = newService;
         },
-        attachToElement: (controllerService, elem) => {
+        attachToElement: function (controllerService, elem) {
             const model = elem.data('ng-translate');
             elem.$text(model());
             model.changes((newValue) => {

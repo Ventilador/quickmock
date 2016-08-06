@@ -1,12 +1,11 @@
 import {
     createMap,
     isArrayLike,
-    //getBlockNodes,
     hashKey
 } from './../../controller/common.js';
 export function ngRepeatDirective($parse) {
     // const NG_REMOVED = '$$NG_REMOVED';
-    const updateScope = function(scope, index, valueIdentifier, value, keyIdentifier, key, arrayLength) {
+    const updateScope = function (scope, index, valueIdentifier, value, keyIdentifier, key, arrayLength) {
         // TODO(perf): generate setters to shave off ~40ms or 1-1.5%
         scope[valueIdentifier] = value;
         if (keyIdentifier) {
@@ -22,8 +21,10 @@ export function ngRepeatDirective($parse) {
     };
 
     return {
+        transclude: true,
         name: 'ngRepeat',
-        compile: function(controllerService, expression) {
+        priority: 0,
+        compile: function (controllerService, expression) {
             const subscriptors = [];
             if (angular.isFunction(controllerService.create)) {
                 controllerService.create();
@@ -45,7 +46,7 @@ export function ngRepeatDirective($parse) {
             const keyIdentifier = match[2];
 
             if (aliasAs && (!/^[$a-zA-Z_][$a-zA-Z0-9_]*$/.test(aliasAs) ||
-                    /^(null|undefined|this|\$index|\$first|\$middle|\$last|\$even|\$odd|\$parent|\$root|\$id)$/.test(aliasAs))) {
+                /^(null|undefined|this|\$index|\$first|\$middle|\$last|\$even|\$odd|\$parent|\$root|\$id)$/.test(aliasAs))) {
                 throw ["alias '", aliasAs, "' is invalid --- must be a valid JS identifier which is not a reserved name."].join('');
             }
             let trackByExpGetter, trackByIdExpFn, trackByIdArrayFn, trackByIdObjFn;
@@ -56,15 +57,15 @@ export function ngRepeatDirective($parse) {
             if (trackByExp) {
                 trackByExpGetter = $parse(trackByExp);
             } else {
-                trackByIdArrayFn = function(key, value) {
+                trackByIdArrayFn = function (key, value) {
                     return hashKey(value);
                 };
-                trackByIdObjFn = function(key) {
+                trackByIdObjFn = function (key) {
                     return key;
                 };
             }
             if (trackByExpGetter) {
-                trackByIdExpFn = function(key, value, index) {
+                trackByIdExpFn = function (key, value, index) {
                     // assign key, value, and $index to the locals so that they can be used in hash functions
                     if (keyIdentifier) {
                         hashFnLocals[keyIdentifier] = key;
@@ -77,7 +78,7 @@ export function ngRepeatDirective($parse) {
             let lastBlockMap = createMap();
             let differences = createMap();
             const myObjects = [];
-            const ngRepeatMinErr = () => {};
+            const ngRepeatMinErr = () => { };
             const watcher = $scope.$watchCollection(rhs, function ngRepeatAction(collection) {
                 differences = {
                     added: [],
@@ -129,7 +130,7 @@ export function ngRepeatDirective($parse) {
                         nextBlockOrder[index] = block;
                     } else if (nextBlockMap[trackById]) {
                         // if collision detected. restore lastBlockMap and throw an error
-                        angular.forEach(nextBlockOrder, function(block) {
+                        angular.forEach(nextBlockOrder, function (block) {
                             if (block && block.scope) {
                                 lastBlockMap[block.id] = block;
                             }
@@ -141,7 +142,8 @@ export function ngRepeatDirective($parse) {
                         // new never before seen block
                         nextBlockOrder[index] = {
                             id: trackById,
-                            scope: undefined
+                            scope: undefined,
+                            clone: undefined
                         };
                         nextBlockMap[trackById] = true;
                     }
@@ -154,6 +156,7 @@ export function ngRepeatDirective($parse) {
                     myObjects.splice(elementsToRemove, 1);
                     differences.removed.push(block);
                     block.scope.$destroy();
+
                 }
 
                 // we are not using forEach for perf reasons (trying to avoid #call)
@@ -169,6 +172,7 @@ export function ngRepeatDirective($parse) {
                     } else {
                         // new item which we don't know about
                         block.scope = $scope.$new();
+
                         myObjects.splice(index, 0, block);
                         differences.added.push(block);
                         nextBlockMap[block.id] = block;
@@ -176,15 +180,15 @@ export function ngRepeatDirective($parse) {
                     }
                     block.index = index;
                 }
+
                 lastBlockMap = nextBlockMap;
                 subscriptors.forEach((fn) => {
                     fn(myObjects, differences);
                 });
+
             });
             $scope.$on('$destroy', () => {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 watcher();
             });
             const toReturn = () => {
@@ -205,6 +209,76 @@ export function ngRepeatDirective($parse) {
                 throw 'Callback is not a function';
             };
             return toReturn;
-        }
+        },
+        attachToElement: (controllerService, elem, $transclude, $animate) => {
+            const directive = elem.data('ng-repeat');
+            function getPreviousNode(modifications, index) {
+                if (index) {
+                    while (index--) {
+                        if (modifications[index].action !== 'remove') {
+                            return index;
+                        }
+                    }
+                }
+                return -1;
+            }
+            directive.changes((objects, differences) => {
+
+                if (objects && differences) {
+                    const toModify = {
+                        length: objects.length
+                    };
+                    differences.removed.forEach((element) => {
+                        element.action = 'remove';
+                        toModify[element.index] = element;
+                    });
+                    differences.modified.forEach((element) => {
+                        element.action = 'same';
+                        toModify[element.index] = element;
+                    });
+                    differences.added.forEach((element) => {
+                        if (toModify[element.index] && toModify[element.index].action === 'remove') {
+                            toModify[element.index].action = 'replace';
+                            toModify[element.index].scope = element.scope;
+                        } else {
+                            element.action = 'add';
+                            toModify[element.index] = element;
+                        }
+                    });
+
+                    for (let ii = 0; ii < toModify.length; ii++) {
+                        if (toModify[ii]) {
+                            switch (toModify[ii].action) {
+                                case 'remove':
+                                    $animate.leave(toModify[ii].clone);
+                                    break;
+                                case 'add':
+                                    $transclude(toModify[ii].scope, (clone) => {
+                                        toModify[ii].clone = clone;
+                                        const index = getPreviousNode(toModify, ii);
+                                        if (index === -1) {
+                                            $animate.enter(clone);
+                                        } else {
+                                            $animate.enter(clone, toModify[index].clone);
+                                        }
+                                    });
+                                    break;
+                                case 'replace':
+                                    $transclude(toModify[ii].scope, (clone) => {
+                                        $animate.replace(toModify[ii].clone, toModify[ii].clone = clone);
+                                        toModify[ii].newClone = undefined;
+                                        delete toModify[ii].newClone;
+                                    });
+                                    break;
+                                default:
+                                    break;
+                            }
+                            delete toModify[ii].action;
+                        }
+                    }
+                }
+            });
+        },
+        removeOnTransclusion: ['ng-repeat']
     };
 }

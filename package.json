@@ -9,8 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rimraf ../Proteus/Proteus-GUI/node_modules/quickmock/built test/index.js src/index.js",
-    "build": "npm run clean && npm run buildProteus && npm run buildSelf && webpack",
-    "buildProteus": "babel src --presets babel-preset-es2015 --out-dir ../Proteus/Proteus-GUI/node_modules/quickmock/built",
+    "build": "npm run clean && npm run buildSelf && webpack && npm run buildProteus ",
+    "buildProteus": "cp -r built ../Proteus/Proteus-GUI/node_modules/quickmock/built",
     "buildSelf": "rimraf built && babel src --presets babel-preset-es2015 --out-dir built"
   },
   "repository": {
@@ -30,12 +30,14 @@
     "url": "https://github.com/tennisgent/QuickMock/issues"
   },
   "homepage": "https://github.com/tennisgent/QuickMock",
+  "dependencies": {
+    "jquery": "^3.1.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.10.1",
     "babel-core": "^6.10.4",
     "babel-loader": "^6.2.4",
     "babel-preset-es2015": "^6.9.0",
-    "jquery": "^3.1.0",
     "jshint": "^2.9.2",
     "jshint-loader": "^0.8.3"
   }

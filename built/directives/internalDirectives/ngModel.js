@@ -19,9 +19,7 @@ function ngModelDirective($parse) {
                 });
             });
             controllerService.controllerScope.$on('$destroy', function () {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 watcher();
                 watcher = undefined;
             });

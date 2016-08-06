@@ -39,7 +39,7 @@ var directiveProvider = function () {
         ngIf: (0, _ngIf.ngIfDirective)(),
         ngClick: (0, _ngClick.ngClickDirective)($parse),
         ngModel: (0, _ngModel.ngModelDirective)($parse),
-        ngDisabled: (0, _ngIf.ngIfDirective)(),
+        // ngDisabled: ngIfDirective(),
         translate: (0, _ngTranslate.ngTranslateDirective)($translate, $parse),
         ngBind: (0, _ngBind.ngBindDirective)(),
         ngClass: (0, _ngClass.ngClassDirective)($parse),

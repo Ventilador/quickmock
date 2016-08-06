@@ -43,7 +43,7 @@ var directiveProvider = (function() {
             ngIf: ngIfDirective(),
             ngClick: ngClickDirective($parse),
             ngModel: ngModelDirective($parse),
-            ngDisabled: ngIfDirective(),
+            // ngDisabled: ngIfDirective(),
             translate: ngTranslateDirective($translate, $parse),
             ngBind: ngBindDirective(),
             ngClass: ngClassDirective($parse),

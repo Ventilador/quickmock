@@ -1,13 +1,14 @@
+import {getBlockNodes} from './../../controller/common.js';
 export function ngIfDirective() {
     return {
-        regex: /ng-if="(.*)"/,
-        compile: (controllerService, expression) => {
+        transclude: true,
+        compile: function (controllerService, expression) {
             let lastValue;
             if (controllerService.create) {
                 controllerService.create();
             }
             const subscriptors = [];
-            const watcher = controllerService.watch(expression, function() {
+            const watcher = controllerService.watch(expression, function () {
                 lastValue = arguments[0];
                 for (let ii = 0; ii < subscriptors.length; ii++) {
                     subscriptors[ii].apply(controllerService.controllerScope, arguments);
@@ -15,11 +16,9 @@ export function ngIfDirective() {
             });
             controllerService.controllerScope.$on('$destroy', () => {
                 watcher();
-                while (subscriptors.length) {
-                    subscriptors.shift();
-                }
+                subscriptors.length = 0;
             });
-            const toReturn = function() {
+            const toReturn = function () {
                 return lastValue;
             };
             toReturn.changes = (callback) => {
@@ -36,31 +35,26 @@ export function ngIfDirective() {
             };
             return toReturn;
         },
-        attachToElement: (controllerService, $element) => {
-            let lastValue,
-                parent = $element.parent(),
+        attachToElement: function (controllerService, $element, transclude, $animate) {
+            let currentScope,
                 compiledDirective = $element.data('ng-if');
             compiledDirective.changes((newValue) => {
                 if (!newValue) {
-                    if (parent && parent.children().length === 0) {
-                        lastValue = Array.prototype.splice.call($element, 0, $element.length);
-                    } else {
-                        lastValue = $element;
-                        $element.detach();
+                    if (currentScope) {
+                        currentScope.$destroy();
                     }
+                    $animate.leave(getBlockNodes($element));
                 } else {
-                    if (parent) {
-                        if (Array.isArray(lastValue)) {
-                            Array.prototype.push.apply($element, lastValue);
-                        } else {
-                            parent.append(lastValue);
-                        }
-                        parent = undefined;
-                    }
+                    transclude(function (clone, newScope) {
+                        currentScope = newScope;
+                        $element = clone;
+                        $animate.enter(clone);
+                    });
+
                 }
             });
             controllerService.controllerScope.$on('$destroy', () => {
-                lastValue = parent = compiledDirective = undefined;
+                currentScope = compiledDirective = undefined;
             });
         },
         name: 'ng-if'

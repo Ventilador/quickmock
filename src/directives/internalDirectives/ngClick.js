@@ -12,8 +12,7 @@ function recurseObjects(object) {
 }
 export function ngClickDirective($parse) {
     return {
-        regex: /ng-click="(.*)"/,
-        compile: (controllerService, expression) => {
+        compile: function(controllerService, expression) {
             if (angular.isString(expression)) {
                 expression = $parse(expression);
             }
@@ -21,7 +20,7 @@ export function ngClickDirective($parse) {
                 controllerService.create();
             }
 
-            var click = (scope, locals) => {
+            var click = function(scope, locals) {
                 if (arguments.length === 1) {
                     locals = scope || {};
                     scope = controllerService.controllerScope;
@@ -35,11 +34,16 @@ export function ngClickDirective($parse) {
             };
             return click;
         },
-        attachToElement: (controllerService, $element) => {
+        attachToElement: function(controllerService, $element) {
             const clickData = $element.data('ng-click');
             const myArray = recurseObjects($element);
             for (var index = 0; index < myArray.length; index++) {
-                $(myArray[index]).data('ng-click', clickData);
+                try {
+                    $(myArray[index]).data('ng-click', clickData);
+                } catch (err) {
+                    console.log(err);
+                }
+
             }
 
         },

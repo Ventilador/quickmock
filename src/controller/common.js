@@ -28,9 +28,23 @@ export function getBlockNodes(nodes) {
 }
 
 var uid = 0;
-const nextUid = function() {
+const nextUid = function () {
     return ++uid;
 };
+
+export function isSameComment(node, supposedComment) {
+    return node && supposedComment &&
+        node.nodeName === '#comment' &&
+        supposedComment.length === 1 &&
+        supposedComment[0].nodeName === node.nodeName &&
+        node.nodeValue === supposedComment[0].nodeValue;
+}
+
+export function emptyObject(object) {
+    if (isArrayLike(object)) {
+        Array.prototype.splice.call(object, 0, object.length);
+    }
+}
 
 export function hashKey(obj, nextUidFn) {
     let key = obj && obj.$$hashKey;
@@ -150,6 +164,18 @@ export function createSpy(callback) {
     return toReturn;
 }
 
+export function shift(array) {
+    return Array.prototype.shift.call(array);
+}
+
+export function splice(array, start, count, newItems) {
+    if (newItems) {
+        Array.prototype.splice.call(array, start, count, newItems);
+    } else {
+        return Array.prototype.splice.call(array, start, count);
+    }
+}
+
 export function makeArray(item) {
     if (arguments.length > 1) {
         return makeArray(arguments);
@@ -261,13 +287,35 @@ export function sanitizeModules() {
 const SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 export function toCamelCase(name) {
     return name.
-    replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
-        return offset ? letter.toUpperCase() : letter;
-    });
+        replace(SPECIAL_CHARS_REGEXP, function (_, separator, letter, offset) {
+            return offset ? letter.toUpperCase() : letter;
+        });
 }
 export function toSnakeCase(value, key) {
     key = key || '-';
-    return value.replace(/([A-Z])/g, function($1) {
+    return value.replace(/([A-Z])/g, function ($1) {
         return key + $1.toLowerCase();
     });
 }
+
+export function Tracker() {
+    this.value = 0;
+    this.lastvalue = this.value;
+    this.mutate = undefined;
+}
+Tracker.prototype = {
+    add: function () {
+        this.value++;
+    },
+    sub: function () {
+        this.value--;
+    },
+    init: function () {
+        this.lastvalue = this.value;
+        if (this.value > 0) {
+            this.mutate = this.sub;
+        } else {
+            this.mutate = this.add;
+        }
+    }
+};

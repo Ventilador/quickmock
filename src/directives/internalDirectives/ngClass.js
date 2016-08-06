@@ -1,65 +1,64 @@
 import {
-    trim
+    trim,
+    makeArray,
+    Tracker
 } from './../../controller/common.js';
 export function ngClassDirective($parse) {
     return {
-        compile: (controllerService, expression) => {
+        compile: function (controllerService, expression) {
             if (angular.isFunction(controllerService.create)) {
                 controllerService.create();
             }
             const subscriptors = [];
-            let lastValue = {};
-            const getter = $parse(trim(expression));
+            let lastValue = Object.create(null);
+            let modifications = { add: [], remove: [] };
+            const tracker = new Tracker();
+            const getter = $parse(expression);
+            const scope = controllerService.controllerScope;
+            let newValue;
+            let index;
+            let currentValue;
             let watcher = controllerService.watch(() => {
-                let newValue = getter(controllerService.controllerScope);
-                let fireChange;
-                const toNotify = {};
+                tracker.init();
+                modifications.add.length = modifications.remove.length = 0;
+                newValue = getter(scope);
                 if (angular.isString(newValue)) {
-                    const classes = newValue.split(' ');
-                    newValue = {};
-                    classes.forEach((key) => {
-                        newValue[key] = true;
-                    });
-                } else if (angular.isUndefined(newValue)) {
-                    newValue = {};
+                    modifications.add = newValue.split(' ');
                 } else if (angular.isArray(newValue)) {
-                    const temp = newValue;
-                    newValue = {};
-                    temp.forEach((key) => {
-                        newValue[key] = true;
+                    makeArray(newValue).forEach((key) => {
+                        Array.prototype.push.call(modifications.add, key.split(' '));
                     });
+                } else if (angular.isObject(newValue)) {
+                    for (let key in newValue) {
+                        if (newValue.hasOwnProperty(key) && newValue[key]) {
+                            Array.prototype.push.call(modifications.add, key.split(' '));
+                        }
+                    }
                 }
-                for (let key in newValue) {
-                    if (newValue.hasOwnProperty(key) && newValue[key] !== lastValue[key]) {
-                        toNotify[key] = {
-                            old: !!lastValue[key],
-                            new: !!newValue[key]
-                        };
-                        fireChange = true;
+                index = modifications.add.length;
+                currentValue = Object.create(null);
+                while (index--) {
+                    currentValue[modifications.add[index]] = true;
+                    if (lastValue[modifications.add[index]]) {
+                        delete lastValue[modifications.add[index]];
+                    } else {
+                        tracker.mutate();
                     }
                 }
                 for (let key in lastValue) {
-                    if (!toNotify.hasOwnProperty(key) && lastValue.hasOwnProperty(key) && newValue[key] !== lastValue[key]) {
-                        toNotify[key] = {
-                            old: !!lastValue[key],
-                            new: !!newValue[key]
-                        };
-                        fireChange = true;
-                    }
+                    tracker.mutate();
+                    modifications.remove.push(key);
                 }
-                if (fireChange) {
-                    subscriptors.forEach((fn) => {
-                        fn(newValue, toNotify);
-                    });
-                    lastValue = newValue;
-                }
-                return lastValue;
+                lastValue = currentValue;
+                return tracker.value;
+            }, function () {
+                subscriptors.forEach((fn) => {
+                    fn(modifications);
+                });
             });
             controllerService.controllerScope.$on('$destroy', () => {
                 watcher();
-                while (subscriptors.length) {
-                    subscriptors.shift();
-                }
+                subscriptors.length = 0;
             });
             const toReturn = () => {
                 if (!lastValue) {
@@ -99,18 +98,14 @@ export function ngClassDirective($parse) {
             return toReturn;
         },
         name: 'ng-class',
-        attachToElement: (controllerService, element) => {
-
-            element.data('ng-class').changes((lastValue, newChanges) => {
-                for (let key in newChanges) {
-                    if (newChanges.hasOwnProperty(key)) {
-                        if (newChanges[key].new === true) {
-                            element.addClass(key);
-                        } else {
-                            element.removeClass(key);
-                        }
-                    }
-                }
+        attachToElement: function (controllerService, element) {
+            element.data('ng-class').changes((modifications) => {
+                modifications.remove.forEach((toRemove) => {
+                    element.removeClass(toRemove);
+                });
+                modifications.add.forEach((toRemove) => {
+                    element.addClass(toRemove);
+                });
             });
 
 

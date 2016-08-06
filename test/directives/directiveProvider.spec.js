@@ -19,7 +19,7 @@ describe('directiveProvider', function() {
         'ngIf',
         'ng-repeat',
         'ng-click',
-        'ng-disabled',
+        // 'ng-disabled',
         'ng-bind',
         'ng-model',
         'translate',

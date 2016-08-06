@@ -1,7 +1,5 @@
 import directiveProvider from './../directives/directiveProvider.js';
-import {
-    directiveHandler
-} from './../directives/directiveHandler.js';
+import directiveHandler from './../directives/directiveHandler.js';
 import controller from './../controller/controllerQM.js';
 import {
     extend,
@@ -26,10 +24,13 @@ export class $_CONTROLLER {
         this.usedModules = modules.slice();
         this.parentScope = pScope;
         this.controllerScope = this.parentScope.$new();
+        this.controllerScope.$on('$destroy', () => {
+            this.$destroy(true);
+        });
         this.bindings = bindings;
         this.locals = extend(cLocals || {}, {
-                $scope: this.controllerScope
-            },
+            $scope: this.controllerScope
+        },
             false);
         this.pendingWatchers = [];
         this.$rootScope = scopeHelper.$rootScope;
@@ -41,10 +42,14 @@ export class $_CONTROLLER {
     $apply() {
         this.$rootScope.$apply();
     }
-    $destroy() {
+    $destroy(fromScope) {
         this.$rootScope = undefined;
-        if (this.parentScope && angular.isFunction(this.parentScope.$destroy)) {
-            this.parentScope.$destroy();
+        if (!fromScope) {
+            if (this.controllerScope && this.controllerScope.$$destroyed === false && angular.isFunction(this.controllerScope.$destroy)) {
+                const tempScope = this.controllerScope;
+                this.controllerScope = undefined;
+                tempScope.$destroy();
+            }
         }
         clean(this);
     }
@@ -54,10 +59,10 @@ export class $_CONTROLLER {
 
         this.controllerConstructor =
             controller.$get(this.usedModules)
-            .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
+                .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
         this.controllerInstance = this.controllerConstructor();
 
-        let watcher, self = this;
+        let watcher;
         while (watcher = this.pendingWatchers.shift()) {
             this.watch.apply(this, watcher);
         }
@@ -68,8 +73,8 @@ export class $_CONTROLLER {
                     spyKey = [scopeKey, ':', key].join('');
                 if (result[1] === '=') {
 
-                    const destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), self.controllerInstance);
-                    const destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), self.parentScope);
+                    const destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), this.controllerInstance);
+                    const destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), this.parentScope);
                     this.parentScope.$on('$destroy', () => {
                         destroyer();
                         destroyer2();
@@ -98,5 +103,42 @@ export class $_CONTROLLER {
     }
     compileHTML(htmlText) {
         return new directiveHandler(this, htmlText);
+    }
+    $new(scope, isChildScope) {
+        const constructorFunction = function (parent, child) {
+            this.parentScope = parent;
+            this.controllerScope = child;
+        };
+        constructorFunction.prototype = this;
+        let parentScope, childScope;
+        if (scope) {
+            if (isChildScope) {
+                parentScope = this.controllerScope;
+                childScope = scope;
+            } else {
+                parentScope = scope;
+                childScope = scope.$new();
+            }
+        } else {
+            parentScope = this.controllerScope;
+            childScope = this.controllerScope.$new();
+        }
+
+        if (childScope.$parent === parentScope) {
+            const toReturn = new constructorFunction(parentScope, childScope);
+            childScope.$on('$destroy', () => {
+                toReturn.$destroy(true);
+            });
+            return toReturn;
+        }
+        throw 'Scope chain broken';
+    }
+    createShallowCopy(scope) {
+        const shallowConstructor = function () { };
+        shallowConstructor.prototype = this;
+        const toReturn = new shallowConstructor();
+        toReturn.parentScope = this.controllerScope;
+        toReturn.controllerScope = scope;
+        return toReturn;
     }
 }

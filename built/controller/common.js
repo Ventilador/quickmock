@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 exports.getBlockNodes = getBlockNodes;
+exports.isSameComment = isSameComment;
+exports.emptyObject = emptyObject;
 exports.hashKey = hashKey;
 exports.createMap = createMap;
 exports.shallowCopy = shallowCopy;
@@ -20,12 +22,15 @@ exports.assertNotDefined = assertNotDefined;
 exports.assert_$_CONTROLLER = assert_$_CONTROLLER;
 exports.clean = clean;
 exports.createSpy = createSpy;
+exports.shift = shift;
+exports.splice = splice;
 exports.makeArray = makeArray;
 exports.extend = extend;
 exports.getFunctionName = getFunctionName;
 exports.sanitizeModules = sanitizeModules;
 exports.toCamelCase = toCamelCase;
 exports.toSnakeCase = toSnakeCase;
+exports.Tracker = Tracker;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -61,6 +66,16 @@ var uid = 0;
 var nextUid = function nextUid() {
     return ++uid;
 };
+
+function isSameComment(node, supposedComment) {
+    return node && supposedComment && node.nodeName === '#comment' && supposedComment.length === 1 && supposedComment[0].nodeName === node.nodeName && node.nodeValue === supposedComment[0].nodeValue;
+}
+
+function emptyObject(object) {
+    if (isArrayLike(object)) {
+        Array.prototype.splice.call(object, 0, object.length);
+    }
+}
 
 function hashKey(obj, nextUidFn) {
     var key = obj && obj.$$hashKey;
@@ -168,6 +183,18 @@ function createSpy(callback) {
         return endTime - startTime;
     };
     return toReturn;
+}
+
+function shift(array) {
+    return Array.prototype.shift.call(array);
+}
+
+function splice(array, start, count, newItems) {
+    if (newItems) {
+        Array.prototype.splice.call(array, start, count, newItems);
+    } else {
+        return Array.prototype.splice.call(array, start, count);
+    }
 }
 
 function makeArray(item) {
@@ -299,3 +326,25 @@ function toSnakeCase(value, key) {
         return key + $1.toLowerCase();
     });
 }
+
+function Tracker() {
+    this.value = 0;
+    this.lastvalue = this.value;
+    this.mutate = undefined;
+}
+Tracker.prototype = {
+    add: function add() {
+        this.value++;
+    },
+    sub: function sub() {
+        this.value--;
+    },
+    init: function init() {
+        this.lastvalue = this.value;
+        if (this.value > 0) {
+            this.mutate = this.sub;
+        } else {
+            this.mutate = this.add;
+        }
+    }
+};

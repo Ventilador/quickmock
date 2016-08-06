@@ -6,7 +6,7 @@ import {
 
 export function ngModelDirective($parse) {
     return {
-        compile: (controllerService, expression) => {
+        compile: function (controllerService, expression) {
             const subscriptors = [];
             let lastValue;
             let watcher = controllerService.watch(expression, (newValue) => {
@@ -16,9 +16,7 @@ export function ngModelDirective($parse) {
                 });
             });
             controllerService.controllerScope.$on('$destroy', () => {
-                while (subscriptors.length) {
-                    (subscriptors.shift() || angular.noop)();
-                }
+                subscriptors.length = 0;
                 watcher();
                 watcher = undefined;
             });
@@ -27,7 +25,7 @@ export function ngModelDirective($parse) {
             }
             const getter = $parse(expression);
 
-            var toReturn = function(parameter) {
+            var toReturn = function (parameter) {
                 if (arguments.length === 0) {
                     return lastValue;
                 } else if (angular.isString(parameter)) {
@@ -59,7 +57,7 @@ export function ngModelDirective($parse) {
             };
             return toReturn;
         },
-        attachToElement: (controllerService, elem) => {
+        attachToElement: function (controllerService, elem) {
             const model = elem.data('ng-model');
             elem.$text(model());
             model.changes((newValue) => {
