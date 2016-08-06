@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.$_CONTROLLER = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _directiveProvider = require('./../directives/directiveProvider.js');
@@ -34,6 +36,8 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
     }]);
 
     function $_CONTROLLER(ctrlName, pScope, bindings, modules, cName, cLocals) {
+        var _this = this;
+
         _classCallCheck(this, $_CONTROLLER);
 
         this.providerName = ctrlName;
@@ -41,6 +45,9 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
         this.usedModules = modules.slice();
         this.parentScope = pScope;
         this.controllerScope = this.parentScope.$new();
+        this.controllerScope.$on('$destroy', function () {
+            _this.$destroy(true);
+        });
         this.bindings = bindings;
         this.locals = (0, _common.extend)(cLocals || {}, {
             $scope: this.controllerScope
@@ -60,17 +67,21 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
         }
     }, {
         key: '$destroy',
-        value: function $destroy() {
+        value: function $destroy(fromScope) {
             this.$rootScope = undefined;
-            if (this.parentScope && angular.isFunction(this.parentScope.$destroy)) {
-                this.parentScope.$destroy();
+            if (!fromScope) {
+                if (this.controllerScope && this.controllerScope.$$destroyed === false && angular.isFunction(this.controllerScope.$destroy)) {
+                    var tempScope = this.controllerScope;
+                    this.controllerScope = undefined;
+                    tempScope.$destroy();
+                }
             }
             (0, _common.clean)(this);
         }
     }, {
         key: 'create',
         value: function create(bindings) {
-            var _this = this;
+            var _this2 = this;
 
             this.bindings = angular.isDefined(bindings) && bindings !== null ? bindings : this.bindings;
             (0, _common.assert_$_CONTROLLER)(this);
@@ -78,8 +89,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
             this.controllerConstructor = _controllerQM2.default.$get(this.usedModules).create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
             this.controllerInstance = this.controllerConstructor();
 
-            var watcher = void 0,
-                self = this;
+            var watcher = void 0;
             while (watcher = this.pendingWatchers.shift()) {
                 this.watch.apply(this, watcher);
             }
@@ -91,9 +101,9 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
                     if (result[1] === '=') {
                         (function () {
 
-                            var destroyer = _this.watch(key, _this.InternalSpies.Scope[spyKey] = (0, _common.createSpy)(), self.controllerInstance);
-                            var destroyer2 = _this.watch(scopeKey, _this.InternalSpies.Controller[spyKey] = (0, _common.createSpy)(), self.parentScope);
-                            _this.parentScope.$on('$destroy', function () {
+                            var destroyer = _this2.watch(key, _this2.InternalSpies.Scope[spyKey] = (0, _common.createSpy)(), _this2.controllerInstance);
+                            var destroyer2 = _this2.watch(scopeKey, _this2.InternalSpies.Controller[spyKey] = (0, _common.createSpy)(), _this2.parentScope);
+                            _this2.parentScope.$on('$destroy', function () {
                                 destroyer();
                                 destroyer2();
                             });
@@ -130,6 +140,44 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
         key: 'compileHTML',
         value: function compileHTML(htmlText) {
             return new _directiveHandler2.default(this, htmlText);
+        }
+    }, {
+        key: '$new',
+        value: function $new(scope, isChildScope) {
+            var constructorFunction = function constructorFunction(parent, child) {
+                this.parentScope = parent;
+                this.controllerScope = child;
+            };
+            constructorFunction.prototype = this;
+            var parentScope = void 0,
+                childScope = void 0;
+            if (scope) {
+                if (isChildScope) {
+                    parentScope = this.controllerScope;
+                    childScope = scope;
+                } else {
+                    parentScope = scope;
+                    childScope = scope.$new();
+                }
+            } else {
+                parentScope = this.controllerScope;
+                childScope = this.controllerScope.$new();
+            }
+
+            if (childScope.$parent === parentScope) {
+                var _ret2 = function () {
+                    var toReturn = new constructorFunction(parentScope, childScope);
+                    childScope.$on('$destroy', function () {
+                        toReturn.$destroy(true);
+                    });
+                    return {
+                        v: toReturn
+                    };
+                }();
+
+                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+            }
+            throw 'Scope chain broken';
         }
     }, {
         key: 'createShallowCopy',

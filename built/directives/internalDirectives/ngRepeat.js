@@ -149,7 +149,8 @@ function ngRepeatDirective($parse) {
                         // new never before seen block
                         nextBlockOrder[index] = {
                             id: trackById,
-                            scope: undefined
+                            scope: undefined,
+                            clone: undefined
                         };
                         nextBlockMap[trackById] = true;
                     }
@@ -185,6 +186,7 @@ function ngRepeatDirective($parse) {
                     }
                     block.index = index;
                 }
+
                 lastBlockMap = nextBlockMap;
                 subscriptors.forEach(function (fn) {
                     fn(myObjects, differences);
@@ -213,92 +215,71 @@ function ngRepeatDirective($parse) {
             };
             return toReturn;
         },
-        attachToElement: function attachToElement(controllerService, elem, $transclude) {
-            var directive = elem.data('ng-repeat'),
-                parent = elem.parent(),
-                withParent = !!parent[0];
+        attachToElement: function attachToElement(controllerService, elem, $transclude, $animate) {
+            var directive = elem.data('ng-repeat');
+            function getPreviousNode(modifications, index) {
+                if (index) {
+                    while (index--) {
+                        if (modifications[index].action !== 'remove') {
+                            return index;
+                        }
+                    }
+                }
+                return -1;
+            }
             directive.changes(function (objects, differences) {
+
                 if (objects && differences) {
                     (function () {
-                        if (elem.data('ng-repeat')) {
-                            if (!withParent) {
-                                (0, _common.splice)(elem, 0, elem.length);
-                            } else {
-                                parent.empty();
-                            }
-                            elem.removeData('ng-repeat');
-                        }
                         var toModify = {
                             length: objects.length
                         };
                         differences.removed.forEach(function (element) {
-                            toModify[element.index] = {
-                                action: 'remove',
-                                old: element.scope
-                            };
+                            element.action = 'remove';
+                            toModify[element.index] = element;
                         });
                         differences.modified.forEach(function (element) {
-                            toModify[element.index] = {
-                                action: 'same',
-                                old: element.scope
-                            };
+                            element.action = 'same';
+                            toModify[element.index] = element;
                         });
                         differences.added.forEach(function (element) {
                             if (toModify[element.index] && toModify[element.index].action === 'remove') {
                                 toModify[element.index].action = 'replace';
-                                toModify[element.index].new = element.scope;
+                                toModify[element.index].scope = element.scope;
                             } else {
-                                toModify[element.index] = {
-                                    action: 'add',
-                                    new: element.scope
-                                };
+                                element.action = 'add';
+                                toModify[element.index] = element;
                             }
                         });
 
                         var _loop = function _loop(ii) {
-                            switch (toModify[ii].action) {
-                                case 'remove':
-                                    if (!withParent) {
-                                        (0, _common.splice)(elem, ii, 1);
-                                    } else {
-                                        parent.children().eq(ii).remove();
-                                    }
-                                    toModify[ii].old.$destroy();
-                                    break;
-                                case 'add':
-                                    if (!withParent) {
-                                        $transclude(function (clone, compile) {
-                                            (0, _common.splice)(elem, ii, 0, clone[0]);
-                                            compile(clone, controllerService.createShallowCopy(toModify[ii].new));
-                                        });
-                                    } else {
-                                        $transclude(function (clone, compile) {
-                                            if (parent.children().length < ii) {
-                                                parent.children().eq(ii).before(clone);
+                            if (toModify[ii]) {
+                                switch (toModify[ii].action) {
+                                    case 'remove':
+                                        $animate.leave(toModify[ii].clone);
+                                        break;
+                                    case 'add':
+                                        $transclude(toModify[ii].scope, function (clone) {
+                                            toModify[ii].clone = clone;
+                                            var index = getPreviousNode(toModify, ii);
+                                            if (index === -1) {
+                                                $animate.enter(clone);
                                             } else {
-                                                parent.append(clone);
+                                                $animate.enter(clone, toModify[index].clone);
                                             }
-                                            compile(parent.children().eq(ii), controllerService.createShallowCopy(toModify[ii].new));
                                         });
-                                    }
-                                    break;
-                                case 'replace':
-                                    if (!withParent) {
-                                        $transclude(function (clone, compile) {
-                                            (0, _common.splice)(elem, ii, 1, clone[0]);
-                                            compile(clone, controllerService.createShallowCopy(toModify[ii].new));
+                                        break;
+                                    case 'replace':
+                                        $transclude(toModify[ii].scope, function (clone) {
+                                            $animate.replace(toModify[ii].clone, toModify[ii].clone = clone);
+                                            toModify[ii].newClone = undefined;
+                                            delete toModify[ii].newClone;
                                         });
-                                    } else {
-                                        $transclude(function (clone, compile) {
-                                            parent.children().eq(ii).remove();
-                                            parent.children().eq(ii).before(clone);
-                                            compile(parent.children().eq(ii), controllerService.createShallowCopy(toModify[ii].new));
-                                        });
-                                    }
-                                    toModify[ii].old.$destroy();
-                                    break;
-                                default:
-                                    break;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                delete toModify[ii].action;
                             }
                         };
 
@@ -311,4 +292,4 @@ function ngRepeatDirective($parse) {
         },
         removeOnTransclusion: ['ng-repeat']
     };
-} //import $ from 'jquery';
+}

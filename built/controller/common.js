@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 exports.getBlockNodes = getBlockNodes;
+exports.isSameComment = isSameComment;
+exports.emptyObject = emptyObject;
 exports.hashKey = hashKey;
 exports.createMap = createMap;
 exports.shallowCopy = shallowCopy;
@@ -64,6 +66,16 @@ var uid = 0;
 var nextUid = function nextUid() {
     return ++uid;
 };
+
+function isSameComment(node, supposedComment) {
+    return node && supposedComment && node.nodeName === '#comment' && supposedComment.length === 1 && supposedComment[0].nodeName === node.nodeName && node.nodeValue === supposedComment[0].nodeValue;
+}
+
+function emptyObject(object) {
+    if (isArrayLike(object)) {
+        Array.prototype.splice.call(object, 0, object.length);
+    }
+}
 
 function hashKey(obj, nextUidFn) {
     var key = obj && obj.$$hashKey;

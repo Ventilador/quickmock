@@ -92,7 +92,6 @@ describe('controllerHandler', function() {
                 controller.boundProperty = 'lolo';
                 controllerObj.$apply();
                 expect(controllerObj.parentScope.boundProperty).toBe('lolo');
-                controllerObj.parentScope.$destroy();
             });
             it('should reflec changes on the scope into the controller', function() {
                 scope.boundProperty = 'lala';

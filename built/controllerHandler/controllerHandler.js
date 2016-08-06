@@ -27,8 +27,6 @@ var controllerHandler = function () {
         return $controllerHandler;
     }
 
-    var lastInstance = void 0;
-
     function $controllerHandler() {
 
         if (!ctrlName) {
@@ -43,11 +41,8 @@ var controllerHandler = function () {
                 cScope = tempScope;
             }
         }
-        if (lastInstance) {
-            lastInstance.$destroy();
-        }
+
         var toReturn = new _controllerHandlerExtensions.$_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
-        lastInstance = toReturn;
         clean();
         return toReturn;
     }

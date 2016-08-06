@@ -32,6 +32,20 @@ const nextUid = function () {
     return ++uid;
 };
 
+export function isSameComment(node, supposedComment) {
+    return node && supposedComment &&
+        node.nodeName === '#comment' &&
+        supposedComment.length === 1 &&
+        supposedComment[0].nodeName === node.nodeName &&
+        node.nodeValue === supposedComment[0].nodeValue;
+}
+
+export function emptyObject(object) {
+    if (isArrayLike(object)) {
+        Array.prototype.splice.call(object, 0, object.length);
+    }
+}
+
 export function hashKey(obj, nextUidFn) {
     let key = obj && obj.$$hashKey;
     if (key) {

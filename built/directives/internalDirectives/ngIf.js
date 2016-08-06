@@ -44,17 +44,24 @@ function ngIfDirective() {
             return toReturn;
         },
         attachToElement: function attachToElement(controllerService, $element, transclude, $animate) {
-            var lastValue = void 0,
+            var currentScope = void 0,
                 compiledDirective = $element.data('ng-if');
             compiledDirective.changes(function (newValue) {
                 if (!newValue) {
+                    if (currentScope) {
+                        currentScope.$destroy();
+                    }
                     $animate.leave((0, _common.getBlockNodes)($element));
                 } else {
-                    $animate.enter($element);
+                    transclude(function (clone, newScope) {
+                        currentScope = newScope;
+                        $element = clone;
+                        $animate.enter(clone);
+                    });
                 }
             });
             controllerService.controllerScope.$on('$destroy', function () {
-                lastValue = compiledDirective = undefined;
+                currentScope = compiledDirective = undefined;
             });
         },
         name: 'ng-if'

@@ -1,11 +1,26 @@
 import directiveProvider from './directiveProvider.js';
-// import Attributes from './../controller/attribute.js';
+// import {isSameComment} from './../controller/common.js';
+import 'perfnow';
 import $ from 'jquery';
 (
     function (_$) {
+        function newId() {
+            let uuid;
+            /* jshint ignore:start*/
+            let d = performance.now();
+            uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (arguments[0] == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            /* jshint ignore:end*/
+            return uuid;
+        }
         const text = _$.fn.text,
             click = _$.fn.click,
-            attr = _$.fn.attr;
+            attr = _$.fn.attr,
+            clone = _$.fn.clone;
+
         _$.fn.extend({
             text: function () {
                 if (arguments.length) {
@@ -26,12 +41,6 @@ import $ from 'jquery';
                 }
                 return click.apply(this, arguments);
             },
-            if: function () {
-                if (this.length) {
-                    const ngIf = this.data('ng-if');
-                    return ngIf && ngIf.apply(undefined, arguments);
-                }
-            },
             $text: text,
             attrs: function () {
                 if (arguments.length === 0) {
@@ -49,6 +58,28 @@ import $ from 'jquery';
                 }
 
                 return attr.apply(this, arguments);
+            },
+            trackerId: function () {
+                if (arguments.length === 1) {
+                    if (arguments[0] === true) {
+                        if (!$(this).attr('tracker-data')) {
+                            $(this).attr('tracker-data', newId());
+                        }
+                    } else {
+                        $(this).attr('tracker-data', arguments[0]);
+                    }
+                }
+                return $(this).attr('tracker-data');
+            },
+            clone: function (createId) {
+                const toReturn = clone.apply(this);
+                if (createId) {
+                    toReturn.trackerId(newId());
+                }
+                return toReturn;
+            },
+            isCloneOf: function (otherElement) {
+                return $(this).trackerId(true) === $(otherElement).trackerId(true);
             }
         });
         _$.fn.init.prototype = _$.fn;
@@ -70,116 +101,175 @@ var directiveHandler = (function () {
         }
     };
 
-    function getTransclude(obj, directive) {
-        const internalClon = obj.clone().contents();
-
-        if (directive && directive.removeOnTransclusion) {
-            Object.keys(internalClon.attrs()).forEach((element) => {
-                if (directive.removeOnTransclusion.indexOf(element) !== -1) {
-                    const oldVal = internalClon.attr(element);
-                    internalClon.removeAttr(element);
-                    internalClon.attr('omited-' + element, oldVal);
+    function getTransclude(obj, toCompile, controllerService, domHandler, comment) {
+        const internalClon = obj.clone();
+        let found;
+        let ii;
+        for (ii = 0; ii < toCompile.length; ii++) {
+            if (toCompile[ii].directive.transclude) {
+                if (found) {
+                    throw 'Cannot have two transclusions in the same element';
                 }
-            });
-        }
-        return (fn) => {
-            const data = internalClon.data('compiled-directive');
-            if (data) {
-                internalClon.removeData('compiled-directive');
-                while (data.length) {
-                    (data.shift().$destroy || angular.noop)();
-                }
+                found = true;
+                domHandler.replace(obj, comment);
+                break;
             }
-            const myClon = internalClon.clone();
+        }
+
+
+        return function (fn, scope) {
+            let newScope = fn;
+            if (typeof fn !== 'function') {
+                fn = scope;
+            } else {
+                newScope = undefined;
+            }
+            const myClon = internalClon.clone(newScope);
+            let currentScope = controllerService.$new(newScope, true);
+            if (found) {
+                toCompile.splice(ii, 1);
+                found = false;
+            }
+            domHandler.createComment();
             /* jshint -W069*/
             delete myClon['prevObject'];
             /* jshint +W069*/
-            fn(myClon, compile);
+            collectAndCompileNodes(myClon, currentScope, toCompile);
+            fn(myClon, currentScope);
         };
     }
 
-    function getDomHandler(element) {
-
+    function getDomHandler(container, parent, after) {
         return {
-            enter: function (nodes, parent) {
-                if (parent) {
-                    $(parent).append($(nodes));
-                } else {
-                    let tempNode = element[element.length - 1];
-                    while (nodes.length--) {
-                        Array.prototype.push.call(element, nodes[nodes.length])
+            createComment: function () {
+                if (!$(container[0]).isCloneOf(after)) {
+                    Array.prototype.splice.apply(container, Array.prototype.concat.apply([0, 0], after));
+                }
+            },
+            enter: function (nodes, internalAfter) {
+                if (parent && parent.length) {
+                    if (parent.find(internalAfter).length) {
+                        internalAfter.after(nodes);
+                    } else if (parent.find(after).length) {
+                        after.after(nodes);
+                    } else {
+                        $(parent.children().last()).after(nodes);
                     }
+                } else if (container.length) {
+                    let ii;
+                    internalAfter = internalAfter || after;
+                    if (internalAfter) {
+                        for (ii = 0; ii < container.length; ii++) {
+                            if ($(container[ii]).isCloneOf(internalAfter)) {
+                                break;
+                            }
+                        }
+                    }
+                    Array.prototype.splice.apply(container, Array.prototype.concat.apply([ii + 1, 0], nodes));
+                } else {
+                    Array.prototype.push.apply(container, nodes);
                 }
             },
             leave: function (nodes) {
-                while (nodes.length--) {
-                    let tempNode = element[0];
-                    if (tempNode) {
-                        do {
-                            if (tempNode === nodes[nodes.length]) {
-                                if (tempNode.prevSibling) {
-                                    tempNode.prevSibling.nextSibling = tempNode.nextSibling;
-                                    break;
-                                } else if (tempNode.nextSibling) {
-                                    tempNode.nextSibling.prevSibling = undefined;
-                                    break;
-                                } else if (tempNode.paretNode) {
-                                    const index = tempNode.paretNode.childNodes.indexOf(tempNode);
-                                    if (index !== -1) {
-                                        tempNode.paretNode.childNodes.splice(index, 1);
-                                    }
-                                } else {
-                                    Array.prototype.splice.call(element, 0, element.length - 1);
-                                }
+                if (container.parent().length) {
+                    nodes.remove();
+                } else {
+                    let node;
+                    while (nodes.length) {
+                        nodes.length--;
+                        node = nodes[nodes.length];
+                        let notFound = true;
+                        for (let index = 0; index < container.length; index++) {
+                            if ($(container[index]).isCloneOf(node)) {
+                                Array.prototype.splice.call(container, index, 1);
+                                notFound = false;
+                                break;
                             }
-                        } while (tempNode = tempNode.nextSibling);
+                        }
+                        if (notFound) {
+                            console.log('could not find the node');
+                        }
+                    }
+                }
+            },
+            replace: function (oldNodes, newNodes) {
+                if (parent && parent.length) {
+                    parent.find(oldNodes).replaceWith(newNodes);
+                } else {
+                    let from = -1, to = 0;
+                    for (var index = 0; index < container.length; index++) {
+                        if ($(container[index]).isCloneOf(oldNodes[to++])) {
+                            if (from === -1) {
+                                from = index;
+                            }
+                        }
+                    }
+                    if (from === -1) {
+                        Array.prototype.push.apply(container, newNodes);
+                    } else {
+                        Array.prototype.splice.apply(container, Array.prototype.concat.apply([from, to], newNodes));
                     }
                 }
             }
         };
     }
+    function collectDirectives(node) {
+        const toReturn = new sortedArray();
+        let length = (node.attributes && node.attributes.length) || 0;
+        for (let ii = 0; ii < length; ii++) {
+            const directiveName = node.attributes[ii].name;
+            const expression = node.attributes[ii].value;
+            let directive;
+            if (directive = directiveProvider.$get(directiveName.toLowerCase())) {
+                directive.priority = typeof directive.priority === 'number' ? directive.priority : 9999;
+                toReturn.$push({
+                    exp: expression,
+                    directive: directive
+                });
+            }
+        }
+        return toReturn;
+    }
 
-    function compile(nodes, controllerService) {
+    function applyDirectivesToNode(compiledNode, transcludeFn, controllerService, domHandler, toCompile) {
+        toCompile.forEach((elem) => {
+            if (!compiledNode.data('compiled-directives')) {
+                compiledNode.data('compiled-directives', []);
+            }
+            const compiledDirective = elem.directive.compile(controllerService, elem.exp);
+            compiledNode.data('compiled-directives').push(compiledDirective);
+            compiledNode.data(elem.directive.name, compiledDirective);
+            if (angular.isFunction(elem.directive.attachToElement)) {
+                elem.directive.attachToElement(controllerService, compiledNode, transcludeFn, domHandler);
+            }
+        });
+    }
+    function createComment() {
+        return $('<!-- DOM-' + counter++ + '-->');
+    }
+    function compile(node, nodes, toCompile, comment, controllerService) {
+        if (node.nodeName === '#text') {
+            return;
+        }
+        const compiledNode = $(node);
+        const domHandler = getDomHandler(nodes, nodes.parent(), comment);
+        const transcludeFn = getTransclude($(node), toCompile, controllerService, domHandler, comment, nodes);
+        applyDirectivesToNode(compiledNode, transcludeFn, controllerService, domHandler, toCompile);
+
+    }
+    let counter;
+    function collectAndCompileNodes(nodes, controllerService, toCompile) {
         if (!nodes || !nodes.length) {
             return;
         }
         $.each(nodes, function () {
-            if (this.nodeName === '#text') {
-                return;
+            const comment = createComment();
+            const toCompilePrivate = toCompile || collectDirectives(this);
+            if (toCompilePrivate.length) {
+                compile(this, nodes, toCompilePrivate, comment, controllerService);
             }
-            const self = this;
-            const compiledNode = $(self);
-            const length = self.attributes.length;
-            const toCompile = new sortedArray();
-            for (let ii = 0; ii < length; ii++) {
-                const directiveName = self.attributes[ii].name;
-                const expression = self.attributes[ii].value;
-                let directive;
-                if (directive = directiveProvider.$get(directiveName.toLowerCase())) {
-                    directive.priority = typeof directive.priority === 'number' ? directive.priority : 9999;
-                    toCompile.$push({
-                        exp: expression,
-                        directive: directive
-                    });
-                }
-            }
-
-            toCompile.forEach((elem) => {
-                if (elem.directive.transclude) {
-                    elem.directive.transcludeFn = getTransclude(compiledNode, elem.directive);
-                }
-                const compiledDirective = elem.directive.compile(controllerService, elem.exp);
-                if (!compiledNode.data('compiled-directives')) {
-                    compiledNode.data('compiled-directives', []);
-                }
-                compiledNode.data('compiled-directives').push(compiledDirective);
-                compiledNode.data(elem.directive.name, compiledDirective);
-                if (angular.isFunction(elem.directive.attachToElement)) {
-                    elem.directive.attachToElement(controllerService, compiledNode, elem.directive.transcludeFn, getDomHandler(nodes));
-                }
-            });
-            if (self.childNodes && self.childNodes.length) {
-                compile(self.childNodes, controllerService);
+            if (this.childNodes && this.childNodes.length) {
+                collectAndCompileNodes($(this.childNodes), controllerService);
             }
         });
 
@@ -187,12 +277,12 @@ var directiveHandler = (function () {
     }
 
     function control(controllerService, obj) {
+        counter = 0;
         let current = $(obj || '');
         if (!current || !controllerService) {
             return current;
         }
-        compile(current, controllerService);
-
+        collectAndCompileNodes(current, controllerService);
         return current;
     }
 
