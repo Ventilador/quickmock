@@ -118,10 +118,10 @@ describe('ngRepeatHTML', function () {
         expect(handler.find('.first-div').length).toBe(1);
         expect(handler.find('.last-div').length).toBe(1);
         handler.find('li').click();
-        for (var index = 0; index < controller.anArray.length; index++) {
+        for (let ii = 0; ii < controller.anArray.length; ii++) {
             //each scope has its own value but share the same controller
             //so the spy gets called 3 times, with the same value, one of each scope
-            expect(spy.calls.argsFor(index)).toEqual([1]); 
+            expect(spy.calls.argsFor(ii)).toEqual([1]); 
         }
         expect(handler.find('.first-div').length).toBe(1);
         expect(handler.find('.last-div').length).toBe(1);
@@ -134,11 +134,11 @@ describe('ngRepeatHTML', function () {
         expect(handler.find('.first-div').length).toBe(1);
         expect(handler.find('.last-div').length).toBe(1);
         expect(spy.calls.count()).toBe(6);
-        for (var index = 0; index < controller.anArray.length; index++) {
-            if (index === 1) {
-                expect(spy.calls.argsFor(index + 3)).toEqual([101]);
+        for (let ii = 0; ii < controller.anArray.length; ii++) {
+            if (ii === 1) {
+                expect(spy.calls.argsFor(ii + 3)).toEqual([101]);
             } else {
-                expect(spy.calls.argsFor(index + 3)).toEqual([2]);
+                expect(spy.calls.argsFor(ii + 3)).toEqual([2]);
             }
         }
     });
