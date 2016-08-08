@@ -92,9 +92,6 @@ export class $_CONTROLLER {
         }
         return this.controllerScope.$watch(expression, callback);
     }
-    ngClick(expression) {
-        return this.createDirective('ng-click', expression);
-    }
     createDirective() {
         const args = makeArray(arguments);
         const directive = directiveProvider.$get(arguments[0]);

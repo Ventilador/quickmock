@@ -26,12 +26,12 @@ export function ngClassDirective($parse) {
                     modifications.add = newValue.split(' ');
                 } else if (angular.isArray(newValue)) {
                     makeArray(newValue).forEach((key) => {
-                        Array.prototype.push.call(modifications.add, key.split(' '));
+                        Array.prototype.push.apply(modifications.add, key.split(' '));
                     });
                 } else if (angular.isObject(newValue)) {
                     for (let key in newValue) {
                         if (newValue.hasOwnProperty(key) && newValue[key]) {
-                            Array.prototype.push.call(modifications.add, key.split(' '));
+                            Array.prototype.push.apply(modifications.add, key.split(' '));
                         }
                     }
                 }

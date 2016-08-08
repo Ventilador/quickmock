@@ -23,7 +23,7 @@ import {
 import {
     ngRepeatDirective
 } from './internalDirectives/ngRepeat.js';
-var directiveProvider = (function() {
+var directiveProvider = (function () {
     let $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate');
     const directives = new Map(),
         toReturn = {},
@@ -48,6 +48,7 @@ var directiveProvider = (function() {
             ngBind: ngBindDirective(),
             ngClass: ngClassDirective($parse),
             ngRepeat: ngRepeatDirective($parse, $animate, $transclude),
+            infiniteScroll: ngClickDirective($parse),
             translateValue: {
 
             }
@@ -55,7 +56,7 @@ var directiveProvider = (function() {
     internals.ngTranslate = internals.translate;
 
 
-    toReturn.$get = function(directiveName) {
+    toReturn.$get = function (directiveName) {
         if (angular.isString(directiveName)) {
             directiveName = toCamelCase(directiveName);
             if (internals[directiveName]) {
@@ -64,7 +65,7 @@ var directiveProvider = (function() {
         }
         return directives.get(directiveName);
     };
-    toReturn.$put = function(directiveName, directiveConstructor) {
+    toReturn.$put = function (directiveName, directiveConstructor) {
         if (!angular.isFunction(directiveConstructor)) {
             throw 'directiveConstructor is not a function';
         }
@@ -81,7 +82,7 @@ var directiveProvider = (function() {
         }
         directives.set(directiveName, directiveConstructor());
     };
-    toReturn.$clean = function() {
+    toReturn.$clean = function () {
         directives.clear();
     };
     toReturn.useModule = (moduleName) => {

@@ -44,6 +44,7 @@ var directiveProvider = function () {
         ngBind: (0, _ngBind.ngBindDirective)(),
         ngClass: (0, _ngClass.ngClassDirective)($parse),
         ngRepeat: (0, _ngRepeat.ngRepeatDirective)($parse, $animate, $transclude),
+        infiniteScroll: (0, _ngClick.ngClickDirective)($parse),
         translateValue: {}
     };
     internals.ngTranslate = internals.translate;
