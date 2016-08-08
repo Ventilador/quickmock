@@ -94,7 +94,7 @@ var directiveHandler = (function () {
             ii++;
         }
         if (ii < this.length && this[ii].priority === directive.priority) {
-            console.debug('same priority found keeping pushing order');
+            // console.debug('same priority found keeping pushing order');
             Array.prototype.splice.call(this, ii + 1, 0, directive);
         } else {
             Array.prototype.splice.call(this, ii, 0, directive);

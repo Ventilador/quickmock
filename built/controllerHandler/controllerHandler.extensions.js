@@ -124,11 +124,6 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
             return this.controllerScope.$watch(expression, callback);
         }
     }, {
-        key: 'ngClick',
-        value: function ngClick(expression) {
-            return this.createDirective('ng-click', expression);
-        }
-    }, {
         key: 'createDirective',
         value: function createDirective() {
             var args = (0, _common.makeArray)(arguments);
