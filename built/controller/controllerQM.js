@@ -174,33 +174,26 @@ var controller = function () {
             function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
                 scope = _common.scopeHelper.create(scope);
                 scopeControllerName = scopeControllerName || 'controller';
-                var locals = (0, _common.extend)(extendedLocals || {}, {
+                extendedLocals = extendedLocals || {
                     $scope: _common.scopeHelper.create(scope).$new()
-                }, false);
-
+                };
+                // let locals = extendedLocals || {};
+                // locals.$scope = /*locals.$scope ||*/ scopeHelper.create(scope).$new();
+                // let locals2 = extend(extendedLocals || {}, {
+                //     $scope: scopeHelper.create(scope).$new()
+                // }, false);
+                // console.log(locals2);
                 var constructor = function constructor() {
                     if (lastScope) {
                         lastScope.$destroy();
                     }
                     lastScope = scope;
-                    var constructor = $controller(controllerName, locals, true, scopeControllerName);
+                    var constructor = $controller(controllerName, extendedLocals, true, scopeControllerName);
                     (0, _common.extend)(constructor.instance, controller.getValues(scope, bindings));
                     var toReturn = constructor();
-                    controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
+                    controller.parseBindings(bindings, scope, extendedLocals.$scope, scopeControllerName);
                     return toReturn;
                 };
-                constructor.provideBindings = function (b) {
-                    bindings = b || bindings;
-                    // locals = myLocals || locals;
-                    // b = b || bindings;
-
-                    // controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
-                    //extend(constructor.instance, extendedLocals);
-                    return constructor;
-                };
-                if (bindings) {
-                    constructor.provideBindings();
-                }
                 return constructor;
             }
             return {

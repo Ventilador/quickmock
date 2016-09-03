@@ -31,8 +31,7 @@
   },
   "homepage": "https://github.com/tennisgent/QuickMock",
   "dependencies": {
-    "jquery": "^3.1.0",
-    "perfnow": "^0.2.0"
+    "jquery": "^3.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.10.1",

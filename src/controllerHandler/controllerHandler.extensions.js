@@ -2,7 +2,6 @@ import directiveProvider from './../directives/directiveProvider.js';
 import directiveHandler from './../directives/directiveHandler.js';
 import controller from './../controller/controllerQM.js';
 import {
-    extend,
     PARSE_BINDING_REGEX,
     createSpy,
     makeArray,
@@ -28,10 +27,8 @@ export class $_CONTROLLER {
             this.$destroy(true);
         });
         this.bindings = bindings;
-        this.locals = extend(cLocals || {}, {
-            $scope: this.controllerScope
-        },
-            false);
+        this.locals = cLocals || {};
+        this.locals.$scope = this.controllerScope;
         this.pendingWatchers = [];
         this.$rootScope = scopeHelper.$rootScope;
         this.InternalSpies = {

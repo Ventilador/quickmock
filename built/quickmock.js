@@ -150,6 +150,9 @@ var mocker = function (angular) {
         }
 
         function getMockForProvider(depName, currProviderDeps, i) {
+            if (depName === '$scope') {
+                return;
+            }
             var depType = getProviderType(depName, invokeQueue),
                 mockServiceName = depName;
             if (opts.mocks[mockServiceName] && opts.mocks[mockServiceName] !== quickmock.USE_ACTUAL) {

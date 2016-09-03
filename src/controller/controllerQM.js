@@ -154,33 +154,26 @@ class controller {
         function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
             scope = scopeHelper.create(scope);
             scopeControllerName = scopeControllerName || 'controller';
-            let locals = extend(extendedLocals || {}, {
+            extendedLocals = extendedLocals || {
                 $scope: scopeHelper.create(scope).$new()
-            }, false);
-
+            };
+            // let locals = extendedLocals || {};
+            // locals.$scope = /*locals.$scope ||*/ scopeHelper.create(scope).$new();
+            // let locals2 = extend(extendedLocals || {}, {
+            //     $scope: scopeHelper.create(scope).$new()
+            // }, false);
+            // console.log(locals2);
             const constructor = () => {
                 if (lastScope) {
                     lastScope.$destroy();
                 }
                 lastScope = scope;
-                const constructor = $controller(controllerName, locals, true, scopeControllerName);
+                const constructor = $controller(controllerName, extendedLocals, true, scopeControllerName);
                 extend(constructor.instance, controller.getValues(scope, bindings));
                 const toReturn = constructor();
-                controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
+                controller.parseBindings(bindings, scope, extendedLocals.$scope, scopeControllerName);
                 return toReturn;
             };
-            constructor.provideBindings = (b) => {
-                bindings = b || bindings;
-                // locals = myLocals || locals;
-                // b = b || bindings;
-
-                // controller.parseBindings(bindings, scope, locals.$scope, scopeControllerName);
-                //extend(constructor.instance, extendedLocals);
-                return constructor;
-            };
-            if (bindings) {
-                constructor.provideBindings();
-            }
             return constructor;
         }
         return {

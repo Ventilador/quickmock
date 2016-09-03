@@ -4,9 +4,9 @@ import {
 } from './controller/common.js';
 import controllerHandler from './controllerHandler/controllerHandler.js';
 
-var mocker = (function(angular) {
+var mocker = (function (angular) {
     var opts, mockPrefix;
-    var controllerDefaults = function(flag) {
+    var controllerDefaults = function (flag) {
         return {
             bindToController: true,
             parentScope: {},
@@ -34,7 +34,7 @@ var mocker = (function(angular) {
             providerType = getProviderType(opts.providerName, invokeQueue),
             mocks = {},
             provider = {};
-        angular.forEach(allModules || [], function(modName) {
+        angular.forEach(allModules || [], function (modName) {
             invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
         });
 
@@ -45,7 +45,7 @@ var mocker = (function(angular) {
         if (providerType) {
             // Loop through invokeQueue, find this provider's dependencies and prefix
             // them so Angular will inject the mocked versions
-            angular.forEach(invokeQueue, function(providerData) {
+            angular.forEach(invokeQueue, function (providerData) {
                 var currProviderName = providerData[2][0];
                 if (currProviderName === opts.providerName) {
                     var currProviderDeps = providerData[2][1];
@@ -70,7 +70,7 @@ var mocker = (function(angular) {
             }
         }
 
-        angular.forEach(invokeQueue, function(providerData) {
+        angular.forEach(invokeQueue, function (providerData) {
             // Remove any prefixed dependencies that persisted from a previous call,
             // and check for any non-annotated services
             sanitizeProvider(providerData, injector);
@@ -146,6 +146,7 @@ var mocker = (function(angular) {
         }
 
         function getMockForProvider(depName, currProviderDeps, i) {
+            if (depName === '$scope') { return; }
             var depType = getProviderType(depName, invokeQueue),
                 mockServiceName = depName;
             if (opts.mocks[mockServiceName] && opts.mocks[mockServiceName] !== quickmock.USE_ACTUAL) {
@@ -213,7 +214,7 @@ var mocker = (function(angular) {
     }
 
     function spyOnProviderMethods(provider) {
-        angular.forEach(provider, function(property, propertyName) {
+        angular.forEach(provider, function (property, propertyName) {
             if (angular.isFunction(property)) {
                 if (window.jasmine && window.spyOn && !property.calls) {
                     var spy = spyOn(provider, propertyName);
@@ -251,7 +252,7 @@ var mocker = (function(angular) {
     }
 
     function prefixProviderDependencies(providerName, invokeQueue, unprefix) {
-        angular.forEach(invokeQueue, function(providerData) {
+        angular.forEach(invokeQueue, function (providerData) {
             if (providerData[2][0] === providerName && providerData[2][0].indexOf(mockPrefix) === -1) {
                 var currProviderDeps = providerData[2][1];
                 if (angular.isArray(currProviderDeps)) {
@@ -275,7 +276,7 @@ var mocker = (function(angular) {
             tagName = htmlAttrs.$tag,
             htmlContent = htmlAttrs.$content;
         html = '<' + tagName + ' ';
-        angular.forEach(htmlAttrs, function(val, attr) {
+        angular.forEach(htmlAttrs, function (val, attr) {
             if (attr !== '$content' && attr !== '$tag') {
                 html += snake_case(attr) + (val ? ('="' + val + '" ') : ' ');
             }
@@ -295,7 +296,7 @@ var mocker = (function(angular) {
 
     function snake_case(name, separator) {
         separator = separator || '-';
-        return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+        return name.replace(SNAKE_CASE_REGEXP, function (letter, pos) {
             return (pos ? separator : '') + letter.toLowerCase();
         });
     }

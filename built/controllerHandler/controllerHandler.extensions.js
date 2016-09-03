@@ -49,9 +49,8 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
             _this.$destroy(true);
         });
         this.bindings = bindings;
-        this.locals = (0, _common.extend)(cLocals || {}, {
-            $scope: this.controllerScope
-        }, false);
+        this.locals = cLocals || {};
+        this.locals.$scope = this.controllerScope;
         this.pendingWatchers = [];
         this.$rootScope = _common.scopeHelper.$rootScope;
         this.InternalSpies = {
