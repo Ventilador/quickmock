@@ -11,6 +11,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports.getBlockNodes = getBlockNodes;
 exports.isSameComment = isSameComment;
 exports.emptyObject = emptyObject;
+exports.annotate = annotate;
+exports.compile = compile;
 exports.hashKey = hashKey;
 exports.createMap = createMap;
 exports.shallowCopy = shallowCopy;
@@ -34,7 +36,7 @@ exports.Tracker = Tracker;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var PARSE_BINDING_REGEX = exports.PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
+var PARSE_BINDING_REGEX = exports.PARSE_BINDING_REGEX = /^([\=\@\&<])(\?)?(.*)?$/;
 var EXPRESSION_REGEX = exports.EXPRESSION_REGEX = /^{{.*}}$/;
 /* Should return true 
  * for objects that wouldn't fail doing
@@ -75,6 +77,67 @@ function emptyObject(object) {
     if (isArrayLike(object)) {
         Array.prototype.splice.call(object, 0, object.length);
     }
+}
+
+function getArgs(func) {
+    // First match everything inside the function argument parens.
+    var args = func.toString().match(/(?:function)?(?:\s[^(]*)?\(([^)]*)\)/)[1];
+
+    // Split the arguments string into an array comma delimited.
+    return args.split(',').map(function (arg) {
+        // Ensure no inline comments are parsed and trim the whitespace.
+        return arg.replace(/\/\*.*\*\//, '').trim();
+    }).filter(function (arg) {
+        // Ensure no undefined values are added.
+        return arg;
+    });
+}
+
+function annotate(fn) {
+    var args = getArgs(fn);
+    var inj = {};
+    for (var ii = 0; ii < args.length; ii++) {
+        inj[args[ii]] = args[ii];
+    }
+    return {
+        injections: inj,
+        fn: fn
+    };
+}
+
+function compile(fnObj, $parse) {
+    var injections = [];
+    var fn = void 0;
+    if (Array.isArray(fnObj)) {
+        fn = fnObj.shift();
+        if (typeof fn !== 'function') {
+            throw 'fn is not a function';
+        }
+        while (fnObj.length) {
+            var tempInjection = fnObj.shift();
+            if (typeof tempInjection !== 'string') {
+                throw 'injection is not string';
+            }
+            injections.unshift(tempInjection);
+        }
+    } else if ((typeof fnObj === 'undefined' ? 'undefined' : _typeof(fnObj)) === 'object') {
+        var args = getArgs(fn = fnObj.fn);
+        for (var ii = 0; ii < args.length; ii++) {
+            injections.push(fnObj.injections[args[ii]]);
+            if (typeof args[ii] !== 'string') {
+                throw 'injection is not string';
+            }
+        }
+    }
+
+    var argsGetter = $parse(['[', injections.join(', '), ']'].join(''));
+    var constructedFn = void 0;
+    /* jshint ignore:start */
+    constructedFn = Function('s', 'l', 'a', 'fn', ['var args = a(s,l);', 'return fn.apply(s, args);'].join('\r\n'));
+    /* jshint ignore:end */
+    return function (scope, locals) {
+        return constructedFn(scope, locals, argsGetter, fn);
+    };
 }
 
 function hashKey(obj, nextUidFn) {

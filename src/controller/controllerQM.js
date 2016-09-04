@@ -4,9 +4,12 @@ import {
     makeArray,
     PARSE_BINDING_REGEX,
     isExpression,
-    expressionSanitizer
+    expressionSanitizer,
+    annotate,
+    compile
 } from './common.js';
-
+var a = { n: angular.nopp };
+var d = {};
 const $parse = angular.injector(['ng']).get('$parse');
 
 class controller {
@@ -31,25 +34,43 @@ class controller {
             if (bindings.hasOwnProperty(key)) {
                 const result = PARSE_BINDING_REGEX.exec(bindings[key]);
                 const mode = result[1];
-                const parentKey = result[2] || key;
+                const optional = result[2];
+                const parentKey = result[3] || key;
                 const parentGet = $parse(parentKey);
+                let tempValue;
                 switch (mode) {
+                    case '<':
                     case '=':
+                        tempValue = parentGet(scope);
+                        if (optional && (tempValue === undefined || tempValue === null)) {
+                            break;
+                        }
                         toReturn[key] = parentGet(scope);
                         break;
                     case '&':
-                        const fn = $parse(parentGet(scope));
-                        toReturn[key] = (locals) => {
-                            return fn(scope, locals);
-                        };
+                        let parentValue = parentGet(scope);
+                        let fn;
+                        if ((parentValue === undefined || parentValue === null) && !optional) {
+                            fn = function (s, l) { return a.n(s, l, d); };
+                        } else if (typeof parentValue === 'function') {
+                            parentValue = annotate(parentValue);
+                        }
+                        if (typeof parentValue === 'object') {
+                            fn = compile(parentValue, $parse);
+                        } else if (typeof parentValue === 'string') {
+                            fn = $parse(parentValue);
+                        }
+                        if (typeof fn === 'function') {
+                            toReturn[key] = (locals) => {
+                                return fn(scope, locals);
+                            };
+                        }
                         break;
                     case '@':
                         let exp = parentGet(scope);
-                        const isExp = isExpression(exp);
-                        if (isExp) {
-                            toReturn[key] = $parse(expressionSanitizer(exp))(scope);
-                        } else {
-                            toReturn[key] = parentGet(scope);
+                        const notExp = !isExpression(exp);
+                        if (notExp && (exp || !optional)) {
+                            toReturn[key] = exp;
                         }
                         break;
                     default:
@@ -64,26 +85,23 @@ class controller {
             mode = mode || '=';
             const result = PARSE_BINDING_REGEX.exec(mode);
             mode = result[1];
-            const parentKey = result[2] || key;
+            const parentKey = result[3] || key;
             const childKey = controllerAs + '.' + key;
             let parentGet = $parse(parentKey);
             const childGet = $parse(childKey);
             switch (mode) {
                 case '=':
                     let lastValue = parentGet(scope);
-                    const parentValueWatch = () => {
+                    destination.$watch(() => {
                         let parentValue = parentGet(scope);
                         if (parentValue !== lastValue) {
                             childGet.assign(destination, parentValue);
-                        } else {
-                            parentValue = childGet(destination);
+                        } else if (parentValue !== (parentValue = childGet(destination))) {
                             parentGet.assign(scope, parentValue);
                         }
                         lastValue = parentValue;
                         return lastValue;
-                    };
-                    var unwatch = scope.$watch(parentValueWatch);
-                    destination.$on('$destroy', unwatch);
+                    });
                     break;
                 case '&':
                     break;
@@ -92,18 +110,30 @@ class controller {
                     if (isExp) {
                         let exp = parentGet(scope);
                         parentGet = $parse(expressionSanitizer(exp));
-                        let parentValue = parentGet(scope);
-                        let lastValue = parentValue;
-                        const parentValueWatch = () => {
-                            parentValue = parentGet(scope, isolateScope);
-                            if (parentValue !== lastValue) {
-                                childGet.assign(destination, lastValue = parentValue);
+                        let lastValue = function () { };
+                        destination.$watch(() => {
+                            if (lastValue !== (lastValue = parentGet(scope))) {
+                                childGet.assign(destination, lastValue);
+                            } else if (lastValue !== childGet(destination)) {
+                                childGet.assign(destination, lastValue);
+
                             }
                             return lastValue;
-                        };
-                        const unwatch = scope.$watch(parentValueWatch);
-                        destination.$on('$destroy', unwatch);
+                        });
                     }
+                    break;
+                case '<':
+                    let lastParentValue = parentGet(scope);
+                    let lastChildValue = lastParentValue;
+                    let watcher = destination.$watch(() => {
+                        let lastValue = parentGet(scope);
+                        if (lastValue !== lastParentValue) {
+                            childGet.assign(destination, lastChildValue = lastParentValue = lastValue);
+                        } else if (lastChildValue !== (lastChildValue = childGet(destination))) {
+                            watcher = watcher();
+                        }
+                        return lastValue;
+                    });
                     break;
                 default:
                     throw 'Could not apply bindings';
@@ -135,14 +165,6 @@ class controller {
     static $get(moduleNames) {
         let $controller;
         const array = makeArray(moduleNames);
-        // const indexMock = array.indexOf('ngMock');
-        // const indexNg = array.indexOf('ng');
-        // if (indexMock !== -1) {
-        //     array[indexMock] = 'ng';
-        // }
-        // if (indexNg === -1) {
-        //     array.push('ng');
-        // }
         angular.injector(array).invoke(
             ['$controller',
                 (controller) => {
@@ -157,12 +179,6 @@ class controller {
             extendedLocals = extendedLocals || {
                 $scope: scopeHelper.create(scope).$new()
             };
-            // let locals = extendedLocals || {};
-            // locals.$scope = /*locals.$scope ||*/ scopeHelper.create(scope).$new();
-            // let locals2 = extend(extendedLocals || {}, {
-            //     $scope: scopeHelper.create(scope).$new()
-            // }, false);
-            // console.log(locals2);
             const constructor = () => {
                 if (lastScope) {
                     lastScope.$destroy();

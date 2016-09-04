@@ -1,4 +1,4 @@
-export var PARSE_BINDING_REGEX = /^([\=\@\&])(.*)?$/;
+export var PARSE_BINDING_REGEX = /^([\=\@\&<])(\?)?(.*)?$/;
 export var EXPRESSION_REGEX = /^{{.*}}$/;
 /* Should return true 
  * for objects that wouldn't fail doing
@@ -44,6 +44,71 @@ export function emptyObject(object) {
     if (isArrayLike(object)) {
         Array.prototype.splice.call(object, 0, object.length);
     }
+}
+
+function getArgs(func) {
+    // First match everything inside the function argument parens.
+    var args = func.toString().match(/(?:function)?(?:\s[^(]*)?\(([^)]*)\)/)[1];
+
+    // Split the arguments string into an array comma delimited.
+    return args.split(',').map(function (arg) {
+        // Ensure no inline comments are parsed and trim the whitespace.
+        return arg.replace(/\/\*.*\*\//, '').trim();
+    }).filter(function (arg) {
+        // Ensure no undefined values are added.
+        return arg;
+    });
+}
+
+export function annotate(fn) {
+    const args = getArgs(fn);
+    const inj = {};
+    for (var ii = 0; ii < args.length; ii++) {
+        inj[args[ii]] = args[ii];
+    }
+    return {
+        injections: inj,
+        fn: fn
+    };
+}
+
+export function compile(fnObj, $parse) {
+    const injections = [];
+    let fn;
+    if (Array.isArray(fnObj)) {
+        fn = fnObj.shift();
+        if (typeof fn !== 'function') {
+            throw 'fn is not a function';
+        }
+        while (fnObj.length) {
+            const tempInjection = fnObj.shift();
+            if (typeof tempInjection !== 'string') {
+                throw 'injection is not string';
+            }
+            injections.unshift(tempInjection);
+        }
+    } else if (typeof fnObj === 'object') {
+        const args = getArgs(fn = fnObj.fn);
+        for (let ii = 0; ii < args.length; ii++) {
+            injections.push(fnObj.injections[args[ii]]);
+            if (typeof args[ii] !== 'string') {
+                throw 'injection is not string';
+            }
+        }
+    }
+
+    const argsGetter = $parse(['[', injections.join(', '), ']'].join(''));
+    let constructedFn;
+    /* jshint ignore:start */
+    constructedFn = Function('s', 'l', 'a', 'fn', [
+        'var args = a(s,l);',
+        'return fn.apply(s, args);'
+    ].join('\r\n')
+    );
+    /* jshint ignore:end */
+    return function (scope, locals) {
+        return constructedFn(scope, locals, argsGetter, fn);
+    };
 }
 
 export function hashKey(obj, nextUidFn) {
@@ -167,6 +232,7 @@ export function createSpy(callback) {
 export function shift(array) {
     return Array.prototype.shift.call(array);
 }
+
 
 export function splice(array, start, count, newItems) {
     if (newItems) {
