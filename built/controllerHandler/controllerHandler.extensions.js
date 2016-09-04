@@ -53,10 +53,6 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
         this.locals.$scope = this.controllerScope;
         this.pendingWatchers = [];
         this.$rootScope = _common.scopeHelper.$rootScope;
-        this.InternalSpies = {
-            Scope: {},
-            Controller: {}
-        };
     }
 
     _createClass($_CONTROLLER, [{
@@ -80,8 +76,6 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
     }, {
         key: 'create',
         value: function create(bindings) {
-            var _this2 = this;
-
             this.bindings = angular.isDefined(bindings) && bindings !== null ? bindings : this.bindings;
             (0, _common.assert_$_CONTROLLER)(this);
 
@@ -91,24 +85,6 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
             var watcher = void 0;
             while (watcher = this.pendingWatchers.shift()) {
                 this.watch.apply(this, watcher);
-            }
-            for (var key in this.bindings) {
-                if (this.bindings.hasOwnProperty(key)) {
-                    var result = _common.PARSE_BINDING_REGEX.exec(this.bindings[key]),
-                        scopeKey = result[2] || key,
-                        spyKey = [scopeKey, ':', key].join('');
-                    if (result[1] === '=') {
-                        (function () {
-
-                            var destroyer = _this2.watch(key, _this2.InternalSpies.Scope[spyKey] = (0, _common.createSpy)(), _this2.controllerInstance);
-                            var destroyer2 = _this2.watch(scopeKey, _this2.InternalSpies.Controller[spyKey] = (0, _common.createSpy)(), _this2.parentScope);
-                            _this2.parentScope.$on('$destroy', function () {
-                                destroyer();
-                                destroyer2();
-                            });
-                        })();
-                    }
-                }
             }
             this.create = undefined;
             return this.controllerInstance;
@@ -159,7 +135,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
             }
 
             if (childScope.$parent === parentScope) {
-                var _ret2 = function () {
+                var _ret = function () {
                     var toReturn = new constructorFunction(parentScope, childScope);
                     childScope.$on('$destroy', function () {
                         toReturn.$destroy(true);
@@ -169,7 +145,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
                     };
                 }();
 
-                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
             }
             throw 'Scope chain broken';
         }

@@ -2,8 +2,6 @@ import directiveProvider from './../directives/directiveProvider.js';
 import directiveHandler from './../directives/directiveHandler.js';
 import controller from './../controller/controllerQM.js';
 import {
-    PARSE_BINDING_REGEX,
-    createSpy,
     makeArray,
     scopeHelper,
     assert_$_CONTROLLER,
@@ -31,10 +29,6 @@ export class $_CONTROLLER {
         this.locals.$scope = this.controllerScope;
         this.pendingWatchers = [];
         this.$rootScope = scopeHelper.$rootScope;
-        this.InternalSpies = {
-            Scope: {},
-            Controller: {}
-        };
     }
     $apply() {
         this.$rootScope.$apply();
@@ -62,22 +56,6 @@ export class $_CONTROLLER {
         let watcher;
         while (watcher = this.pendingWatchers.shift()) {
             this.watch.apply(this, watcher);
-        }
-        for (var key in this.bindings) {
-            if (this.bindings.hasOwnProperty(key)) {
-                let result = PARSE_BINDING_REGEX.exec(this.bindings[key]),
-                    scopeKey = result[2] || key,
-                    spyKey = [scopeKey, ':', key].join('');
-                if (result[1] === '=') {
-
-                    const destroyer = this.watch(key, this.InternalSpies.Scope[spyKey] = createSpy(), this.controllerInstance);
-                    const destroyer2 = this.watch(scopeKey, this.InternalSpies.Controller[spyKey] = createSpy(), this.parentScope);
-                    this.parentScope.$on('$destroy', () => {
-                        destroyer();
-                        destroyer2();
-                    });
-                }
-            }
         }
         this.create = undefined;
         return this.controllerInstance;
