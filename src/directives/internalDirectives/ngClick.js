@@ -1,18 +1,12 @@
 import $ from 'jquery';
 import {
-    makeArray
-} from './../../../built/controller/common.js';
+    recurseObjects
+} from './../../controller/common.js';
 
-function recurseObjects(object) {
-    let toReturn = makeArray(object);
-    for (let ii = 0; ii < object.children().length; ii++) {
-        toReturn = toReturn.concat(recurseObjects(angular.element(object.children()[ii])));
-    }
-    return toReturn;
-}
+
 export function ngClickDirective($parse) {
     return {
-        compile: function(controllerService, expression) {
+        compile: function (controllerService, expression) {
             if (angular.isString(expression)) {
                 expression = $parse(expression);
             }
@@ -20,7 +14,7 @@ export function ngClickDirective($parse) {
                 controllerService.create();
             }
 
-            var click = function(scope, locals) {
+            var click = function (scope, locals) {
                 if (arguments.length === 1) {
                     locals = scope || {};
                     scope = controllerService.controllerScope;
@@ -34,18 +28,9 @@ export function ngClickDirective($parse) {
             };
             return click;
         },
-        attachToElement: function(controllerService, $element) {
+        attachToElement: function (controllerService, $element) {
             const clickData = $element.data('ng-click');
-            const myArray = recurseObjects($element);
-            for (var index = 0; index < myArray.length; index++) {
-                try {
-                    $(myArray[index]).data('ng-click', clickData);
-                } catch (err) {
-                    console.log(err);
-                }
-
-            }
-
+            $(recurseObjects($element)).data('ng-click', clickData);
         },
         name: 'ng-click'
     };

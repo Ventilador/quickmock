@@ -8,6 +8,8 @@ var _directiveProvider = require('./directiveProvider.js');
 
 var _directiveProvider2 = _interopRequireDefault(_directiveProvider);
 
+var _common = require('./../controller/common.js');
+
 require('perfnow');
 
 var _jquery = require('jquery');
@@ -15,8 +17,6 @@ var _jquery = require('jquery');
 var _jquery2 = _interopRequireDefault(_jquery);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// import {isSameComment} from './../controller/common.js';
 
 (function (_$) {
     function newId() {
@@ -38,19 +38,22 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
     _$.fn.extend({
         text: function text() {
-            if (arguments.length) {
-                var text = this.data('ng-model') || text;
-                return text && text.apply(this, arguments) || '';
+            for (var index = 0; index < this.length; index++) {
+                var element = (0, _jquery2.default)(this[index]);
+                if (!element.prop('disabled')) {
+                    var textFn = element.data('ng-model') || _text;
+                    textFn.apply(this, arguments);
+                }
             }
-            return _text.apply(this, arguments) || '';
+            return _text.apply(this) || '';
         },
         click: function click(locals) {
-            if (this.length) {
-                for (var index = 0; index < this.length; index++) {
-                    var element = this[index];
-                    var click = (0, _jquery2.default)(element).data('ng-click');
-                    if (click) {
-                        click(locals);
+            for (var index = 0; index < this.length; index++) {
+                var element = (0, _jquery2.default)(this[index]);
+                if (!element.prop('disabled')) {
+                    var ngClick = element.data('ng-click');
+                    if (ngClick) {
+                        ngClick(locals);
                     }
                 }
             }
@@ -71,7 +74,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
                 });
                 return obj;
             }
-
             return attr.apply(this, arguments);
         },
         trackerId: function trackerId() {
@@ -95,6 +97,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
         },
         isCloneOf: function isCloneOf(otherElement) {
             return (0, _jquery2.default)(this).trackerId(true) === (0, _jquery2.default)(otherElement).trackerId(true);
+        },
+        getValue: function getValue(directiveName) {
+            directiveName = (0, _common.toCamelCase)(directiveName);
+            var data = this.data(directiveName);
+            return data && data.get();
+        },
+        setValue: function setValue(directiveName, newValue) {
+            directiveName = (0, _common.toCamelCase)(directiveName);
+            var data = this.data(directiveName);
+            if (data) {
+                data.set(newValue);
+            }
         }
     });
     _$.fn.init.prototype = _$.fn;
@@ -238,7 +252,8 @@ var directiveHandler = function () {
                 directive.priority = typeof directive.priority === 'number' ? directive.priority : 9999;
                 toReturn.$push({
                     exp: expression,
-                    directive: directive
+                    directive: directive,
+                    name: directive.name || directiveName
                 });
             }
         }
@@ -252,9 +267,15 @@ var directiveHandler = function () {
             }
             var compiledDirective = elem.directive.compile(controllerService, elem.exp);
             compiledNode.data('compiled-directives').push(compiledDirective);
-            compiledNode.data(elem.directive.name, compiledDirective);
+            compiledNode.data(elem.name, compiledDirective);
             if (angular.isFunction(elem.directive.attachToElement)) {
+                if (!elem.directive.name) {
+                    controllerService.$$directiveName = (0, _common.toCamelCase)(elem.name);
+                }
                 elem.directive.attachToElement(controllerService, compiledNode, transcludeFn, domHandler);
+                if (!elem.directive.name) {
+                    delete controllerService.$$directiveName;
+                }
             }
         });
     }
@@ -287,8 +308,11 @@ var directiveHandler = function () {
         });
     }
 
-    function control(controllerService, obj) {
+    function control(controllerService, obj, config) {
         counter = 0;
+        if (config) {
+            _directiveProvider2.default.config(config);
+        }
         var current = (0, _jquery2.default)(obj || '');
         if (!current || !controllerService) {
             return current;

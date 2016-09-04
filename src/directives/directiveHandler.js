@@ -1,5 +1,5 @@
 import directiveProvider from './directiveProvider.js';
-// import {isSameComment} from './../controller/common.js';
+import {toCamelCase} from './../controller/common.js';
 import 'perfnow';
 import $ from 'jquery';
 (
@@ -23,19 +23,22 @@ import $ from 'jquery';
 
         _$.fn.extend({
             text: function () {
-                if (arguments.length) {
-                    const text = this.data('ng-model') || text;
-                    return text && text.apply(this, arguments) || '';
+                for (var index = 0; index < this.length; index++) {
+                    var element = $(this[index]);
+                    if (!element.prop('disabled')) {
+                        const textFn = element.data('ng-model') || text;
+                        textFn.apply(this, arguments);
+                    }
                 }
-                return text.apply(this, arguments) || '';
+                return text.apply(this) || '';
             },
             click: function (locals) {
-                if (this.length) {
-                    for (var index = 0; index < this.length; index++) {
-                        var element = this[index];
-                        const click = $(element).data('ng-click');
-                        if (click) {
-                            click(locals);
+                for (var index = 0; index < this.length; index++) {
+                    var element = $(this[index]);
+                    if (!element.prop('disabled')) {
+                        const ngClick = element.data('ng-click');
+                        if (ngClick) {
+                            ngClick(locals);
                         }
                     }
                 }
@@ -56,7 +59,6 @@ import $ from 'jquery';
                     });
                     return obj;
                 }
-
                 return attr.apply(this, arguments);
             },
             trackerId: function () {
@@ -80,6 +82,19 @@ import $ from 'jquery';
             },
             isCloneOf: function (otherElement) {
                 return $(this).trackerId(true) === $(otherElement).trackerId(true);
+            },
+            getValue: function (directiveName) {
+                directiveName = toCamelCase(directiveName);
+                const data = this.data(directiveName);
+                return data && data.get();
+
+            },
+            setValue: function (directiveName, newValue) {
+                directiveName = toCamelCase(directiveName);
+                const data = this.data(directiveName);
+                if (data) {
+                    data.set(newValue);
+                }
             }
         });
         _$.fn.init.prototype = _$.fn;
@@ -224,7 +239,8 @@ var directiveHandler = (function () {
                 directive.priority = typeof directive.priority === 'number' ? directive.priority : 9999;
                 toReturn.$push({
                     exp: expression,
-                    directive: directive
+                    directive: directive,
+                    name: directive.name || directiveName
                 });
             }
         }
@@ -238,9 +254,15 @@ var directiveHandler = (function () {
             }
             const compiledDirective = elem.directive.compile(controllerService, elem.exp);
             compiledNode.data('compiled-directives').push(compiledDirective);
-            compiledNode.data(elem.directive.name, compiledDirective);
+            compiledNode.data(elem.name, compiledDirective);
             if (angular.isFunction(elem.directive.attachToElement)) {
+                if (!elem.directive.name) {
+                    controllerService.$$directiveName = toCamelCase(elem.name);
+                }
                 elem.directive.attachToElement(controllerService, compiledNode, transcludeFn, domHandler);
+                if (!elem.directive.name) {
+                    delete controllerService.$$directiveName;
+                }
             }
         });
     }
@@ -276,8 +298,11 @@ var directiveHandler = (function () {
 
     }
 
-    function control(controllerService, obj) {
+    function control(controllerService, obj, config) {
         counter = 0;
+        if (config) {
+            directiveProvider.config(config);
+        }
         let current = $(obj || '');
         if (!current || !controllerService) {
             return current;

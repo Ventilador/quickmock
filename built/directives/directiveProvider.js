@@ -16,9 +16,13 @@ var _ngBind = require('./internalDirectives/ngBind.js');
 
 var _ngClass = require('./internalDirectives/ngClass.js');
 
+var _ngDisabled = require('./internalDirectives/ngDisabled.js');
+
 var _common = require('./../controller/common.js');
 
 var _ngRepeat = require('./internalDirectives/ngRepeat.js');
+
+var _qmEq = require('./internalDirectives/bindingMockers/qmEq.js');
 
 var directiveProvider = function () {
     var $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate');
@@ -39,12 +43,13 @@ var directiveProvider = function () {
         ngIf: (0, _ngIf.ngIfDirective)(),
         ngClick: (0, _ngClick.ngClickDirective)($parse),
         ngModel: (0, _ngModel.ngModelDirective)($parse),
-        // ngDisabled: ngIfDirective(),
+        ngDisabled: (0, _ngDisabled.ngDisabledDirective)($parse),
         translate: (0, _ngTranslate.ngTranslateDirective)($translate, $parse),
         ngBind: (0, _ngBind.ngBindDirective)(),
         ngClass: (0, _ngClass.ngClassDirective)($parse),
         ngRepeat: (0, _ngRepeat.ngRepeatDirective)($parse, $animate, $transclude),
         infiniteScroll: (0, _ngClick.ngClickDirective)($parse),
+        qmEq: (0, _qmEq.qmEqDirective)($parse),
         translateValue: {}
     };
     internals.ngTranslate = internals.translate;
@@ -78,6 +83,18 @@ var directiveProvider = function () {
     toReturn.$clean = function () {
         directives.clear();
     };
+
+    toReturn.config = function (configObject, dontClean) {
+        if (!dontClean) {
+            toReturn.$clean();
+        }
+        for (var key in configObject) {
+            if (configObject.hasOwnProperty(key)) {
+                directives.set((0, _common.toCamelCase)(key), toReturn.$get(configObject[key]));
+            }
+        }
+    };
+
     toReturn.useModule = function (moduleName) {
         $translate = angular.injector(['ng', 'pascalprecht.translate'].concat(moduleName)).get('$translate');
         internals.translate.changeService($translate);

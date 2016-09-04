@@ -132,6 +132,15 @@ export function createMap() {
     return Object.create(null);
 }
 
+
+export function recurseObjects(object) {
+    let toReturn = makeArray(object);
+    for (let ii = 0; ii < object.children().length; ii++) {
+        toReturn = toReturn.concat(recurseObjects(angular.element(object.children()[ii])));
+    }
+    return toReturn;
+}
+
 export function shallowCopy(src, dst) {
     if (angular.isArray(src)) {
         dst = dst || [];

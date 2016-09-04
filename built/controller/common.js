@@ -15,6 +15,7 @@ exports.annotate = annotate;
 exports.compile = compile;
 exports.hashKey = hashKey;
 exports.createMap = createMap;
+exports.recurseObjects = recurseObjects;
 exports.shallowCopy = shallowCopy;
 exports.isArrayLike = isArrayLike;
 exports.trim = trim;
@@ -159,6 +160,14 @@ function hashKey(obj, nextUidFn) {
 
 function createMap() {
     return Object.create(null);
+}
+
+function recurseObjects(object) {
+    var toReturn = makeArray(object);
+    for (var ii = 0; ii < object.children().length; ii++) {
+        toReturn = toReturn.concat(recurseObjects(angular.element(object.children()[ii])));
+    }
+    return toReturn;
 }
 
 function shallowCopy(src, dst) {

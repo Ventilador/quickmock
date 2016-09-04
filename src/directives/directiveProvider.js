@@ -17,12 +17,18 @@ import {
     ngClassDirective
 } from './internalDirectives/ngClass.js';
 import {
+    ngDisabledDirective
+} from './internalDirectives/ngDisabled.js';
+import {
     toCamelCase,
     scopeHelper
 } from './../controller/common.js';
 import {
     ngRepeatDirective
 } from './internalDirectives/ngRepeat.js';
+import {
+    qmEqDirective
+} from './internalDirectives/bindingMockers/qmEq.js';
 var directiveProvider = (function () {
     let $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate');
     const directives = new Map(),
@@ -43,12 +49,13 @@ var directiveProvider = (function () {
             ngIf: ngIfDirective(),
             ngClick: ngClickDirective($parse),
             ngModel: ngModelDirective($parse),
-            // ngDisabled: ngIfDirective(),
+            ngDisabled: ngDisabledDirective($parse),
             translate: ngTranslateDirective($translate, $parse),
             ngBind: ngBindDirective(),
             ngClass: ngClassDirective($parse),
             ngRepeat: ngRepeatDirective($parse, $animate, $transclude),
             infiniteScroll: ngClickDirective($parse),
+            qmEq: qmEqDirective($parse),
             translateValue: {
 
             }
@@ -85,6 +92,18 @@ var directiveProvider = (function () {
     toReturn.$clean = function () {
         directives.clear();
     };
+
+    toReturn.config = function (configObject, dontClean) {
+        if (!dontClean) {
+            toReturn.$clean();
+        }
+        for (let key in configObject) {
+            if (configObject.hasOwnProperty(key)) {
+                directives.set(toCamelCase(key), toReturn.$get(configObject[key]));
+            }
+        }
+    };
+
     toReturn.useModule = (moduleName) => {
         $translate = angular.injector(['ng', 'pascalprecht.translate'].concat(moduleName)).get('$translate');
         internals.translate.changeService($translate);
