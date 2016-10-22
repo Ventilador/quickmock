@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -14,7 +14,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var a = { n: angular.nopp };
 var d = {};
-var $parse = angular.injector(['ng']).get('$parse');
+
+var $parse;
 
 var controller = function () {
     function controller() {
@@ -102,24 +103,27 @@ var controller = function () {
                 mode = mode || '=';
                 var result = _common.PARSE_BINDING_REGEX.exec(mode);
                 mode = result[1];
+                var optional = result[2];
                 var parentKey = result[3] || key;
-                var childKey = controllerAs + '.' + key;
                 var parentGet = $parse(parentKey);
-                var childGet = $parse(childKey);
+                var child = destination[controllerAs];
 
                 (function () {
                     switch (mode) {
                         case '=':
-                            var lastValue = parentGet(scope);
+                            var lastValue = parentGet(scope),
+                                parentValue = null;
+                            if (!optional || lastValue) {
+                                child[key] = lastValue;
+                            }
                             destination.$watch(function () {
-                                var parentValue = parentGet(scope);
+                                parentValue = parentGet(scope);
                                 if (parentValue !== lastValue) {
-                                    childGet.assign(destination, parentValue);
-                                } else if (parentValue !== (parentValue = childGet(destination))) {
-                                    parentGet.assign(scope, parentValue);
+                                    child[key] = parentValue;
+                                } else if (parentValue !== child[key]) {
+                                    parentGet.assign(scope, child[key]);
                                 }
-                                lastValue = parentValue;
-                                return lastValue;
+                                return lastValue = child[key];
                             });
                             break;
                         case '&':
@@ -133,9 +137,9 @@ var controller = function () {
                                     var lastValue = function lastValue() {};
                                     destination.$watch(function () {
                                         if (lastValue !== (lastValue = parentGet(scope))) {
-                                            childGet.assign(destination, lastValue);
-                                        } else if (lastValue !== childGet(destination)) {
-                                            childGet.assign(destination, lastValue);
+                                            child[key] = lastValue;
+                                        } else if (lastValue !== child[key]) {
+                                            child[key] = lastValue;
                                         }
                                         return lastValue;
                                     });
@@ -148,8 +152,8 @@ var controller = function () {
                             var watcher = destination.$watch(function () {
                                 var lastValue = parentGet(scope);
                                 if (lastValue !== lastParentValue) {
-                                    childGet.assign(destination, lastChildValue = lastParentValue = lastValue);
-                                } else if (lastChildValue !== (lastChildValue = childGet(destination))) {
+                                    child[key] = lastChildValue = lastParentValue = lastValue;
+                                } else if (lastChildValue !== (lastChildValue = child[key])) {
                                     watcher = watcher();
                                 }
                                 return lastValue;
@@ -163,7 +167,7 @@ var controller = function () {
                 return destination;
             };
 
-            var destination = _common.scopeHelper.create(isolateScope || scope.$new());
+            var destination = _common.QMAngular.create(isolateScope || scope.$new());
             if (!bindings) {
                 return {};
             } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
@@ -185,19 +189,21 @@ var controller = function () {
         }
     }, {
         key: '$get',
-        value: function $get(moduleNames) {
+        value: function $get() {
+            if (!$parse) {
+                $parse = _common.QMAngular.injector.get('$parse');
+            }
             var $controller = void 0;
-            var array = (0, _common.makeArray)(moduleNames);
-            angular.injector(array).invoke(['$controller', function (controller) {
+            _common.QMAngular.invoke(['$controller', function (controller) {
                 $controller = controller;
             }]);
             var lastScope = void 0;
 
             function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
-                scope = _common.scopeHelper.create(scope);
+                scope = _common.QMAngular.create(scope);
                 scopeControllerName = scopeControllerName || 'controller';
                 extendedLocals = extendedLocals || {
-                    $scope: _common.scopeHelper.create(scope).$new()
+                    $scope: _common.QMAngular.create(scope).$new()
                 };
                 var constructor = function constructor() {
                     if (lastScope) {
@@ -206,9 +212,8 @@ var controller = function () {
                     lastScope = scope;
                     var constructor = $controller(controllerName, extendedLocals, true, scopeControllerName);
                     (0, _common.extend)(constructor.instance, controller.getValues(scope, bindings));
-                    var toReturn = constructor();
                     controller.parseBindings(bindings, scope, extendedLocals.$scope, scopeControllerName);
-                    return toReturn;
+                    return constructor();
                 };
                 return constructor;
             }

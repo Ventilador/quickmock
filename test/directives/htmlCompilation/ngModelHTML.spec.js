@@ -4,7 +4,7 @@ describe('ngModelHTML', function() {
     let controllerService, spy, controller;
     beforeEach(function() {
         spy = jasmine.createSpy('click');
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             aString: 'aValue',
             aFunction: spy,
             aKey: 'HELLO',

@@ -5,13 +5,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.$_CONTROLLER = undefined;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _directiveProvider = require('./../directives/directiveProvider.js');
-
-var _directiveProvider2 = _interopRequireDefault(_directiveProvider);
 
 var _directiveHandler = require('./../directives/directiveHandler.js');
 
@@ -35,14 +33,13 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
         }
     }]);
 
-    function $_CONTROLLER(ctrlName, pScope, bindings, modules, cName, cLocals) {
+    function $_CONTROLLER(ctrlName, pScope, bindings, cName, cLocals) {
         var _this = this;
 
         _classCallCheck(this, $_CONTROLLER);
 
         this.providerName = ctrlName;
         this.scopeControllerName = cName || 'controller';
-        this.usedModules = modules.slice();
         this.parentScope = pScope;
         this.controllerScope = this.parentScope.$new();
         this.controllerScope.$on('$destroy', function () {
@@ -52,7 +49,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
         this.locals = cLocals || {};
         this.locals.$scope = this.controllerScope;
         this.pendingWatchers = [];
-        this.$rootScope = _common.scopeHelper.$rootScope;
+        this.$rootScope = _common.QMAngular.$rootScope;
     }
 
     _createClass($_CONTROLLER, [{
@@ -79,7 +76,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
             this.bindings = angular.isDefined(bindings) && bindings !== null ? bindings : this.bindings;
             (0, _common.assert_$_CONTROLLER)(this);
 
-            this.controllerConstructor = _controllerQM2.default.$get(this.usedModules).create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
+            this.controllerConstructor = _controllerQM2.default.$get().create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
             this.controllerInstance = this.controllerConstructor();
 
             var watcher = void 0;
@@ -102,7 +99,7 @@ var $_CONTROLLER = exports.$_CONTROLLER = function () {
         key: 'createDirective',
         value: function createDirective() {
             var args = (0, _common.makeArray)(arguments);
-            var directive = _directiveProvider2.default.$get(arguments[0]);
+            var directive = _directiveProvider.directiveProvider.$get(arguments[0]);
             args[0] = this;
             return directive.compile.apply(undefined, args);
         }

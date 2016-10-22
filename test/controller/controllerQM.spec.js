@@ -1,6 +1,6 @@
 import controller from './../../src/controller/controllerQM.js';
 import {
-    scopeHelper
+    QMAngular
 } from './../../src/controller/common.js';
 describe('controller', function () {
     it('should be defined', function () {
@@ -30,12 +30,12 @@ describe('controller', function () {
             expect(controller).toBeDefined();
         });
         it('should set a property in the scope for the controller', function () {
-            const scope = scopeHelper.$rootScope.$new();
+            const scope = QMAngular.$rootScope.$new();
             const controller1 = controllerCreator.create('withBindings', scope, false)();
             expect(scope.$$childHead.controller).toBe(controller1);
         });
         it('should set a property in the scope for the controller with the given name', function () {
-            const scope = scopeHelper.$rootScope.$new();
+            const scope = QMAngular.$rootScope.$new();
             const controller1 = controllerCreator.create('withBindings', scope, false, 'myController')();
             expect(scope.$$childHead.myController).toBe(controller1);
         });

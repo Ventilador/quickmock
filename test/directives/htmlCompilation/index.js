@@ -5,3 +5,6 @@ require('./ngBindHTML.spec');
 require('./ngTranslateHTML.spec');
 require('./ngClassHTML.spec');
 require('./ngRepeatHTML.spec');
+require('./transformDirective.spec');
+require('./ngDisabledHTML.spec');
+require('./bindingMockers');

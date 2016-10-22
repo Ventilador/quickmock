@@ -3,6 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.directiveProvider = undefined;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _ngModel = require('./internalDirectives/ngModel.js');
 
@@ -16,35 +19,57 @@ var _ngBind = require('./internalDirectives/ngBind.js');
 
 var _ngClass = require('./internalDirectives/ngClass.js');
 
+var _ngDisabled = require('./internalDirectives/ngDisabled.js');
+
 var _common = require('./../controller/common.js');
 
 var _ngRepeat = require('./internalDirectives/ngRepeat.js');
 
-var directiveProvider = function () {
-    var $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate');
+var _qmEq = require('./internalDirectives/bindingMockers/qmEq.js');
+
+var directiveProvider = exports.directiveProvider = function () {
     var directives = new Map(),
         toReturn = {},
-        $parse = angular.injector(['ng']).get('$parse'),
-        $animate = angular.injector(['ng']).get('$animate'),
         $transclude = function controllersBoundTransclude(scope, cloneAttachFn, futureParentElement) {
 
         // No scope passed in:
-        if (!_common.scopeHelper.isScope(scope)) {
+        if (!_common.QMAngular.isScope(scope)) {
             futureParentElement = cloneAttachFn;
             cloneAttachFn = scope;
             scope = undefined;
         }
     },
         internals = {
-        ngIf: (0, _ngIf.ngIfDirective)(),
-        ngClick: (0, _ngClick.ngClickDirective)($parse),
-        ngModel: (0, _ngModel.ngModelDirective)($parse),
-        // ngDisabled: ngIfDirective(),
-        translate: (0, _ngTranslate.ngTranslateDirective)($translate, $parse),
-        ngBind: (0, _ngBind.ngBindDirective)(),
-        ngClass: (0, _ngClass.ngClassDirective)($parse),
-        ngRepeat: (0, _ngRepeat.ngRepeatDirective)($parse, $animate, $transclude),
-        infiniteScroll: (0, _ngClick.ngClickDirective)($parse),
+        ngIf: function ngIf() {
+            return (0, _ngIf.ngIfDirective)();
+        },
+        ngClick: function ngClick() {
+            return (0, _ngClick.ngClickDirective)(_common.QMAngular.injector.get('$parse'));
+        },
+        ngModel: function ngModel() {
+            return (0, _ngModel.ngModelDirective)(_common.QMAngular.injector.get('$parse'));
+        },
+        ngDisabled: function ngDisabled() {
+            return (0, _ngDisabled.ngDisabledDirective)(_common.QMAngular.injector.get('$parse'));
+        },
+        translate: function translate() {
+            return (0, _ngTranslate.ngTranslateDirective)(_common.QMAngular.injector.get('$translate'), _common.QMAngular.injector.get('$parse'));
+        },
+        ngBind: function ngBind() {
+            return (0, _ngBind.ngBindDirective)();
+        },
+        ngClass: function ngClass() {
+            return (0, _ngClass.ngClassDirective)(_common.QMAngular.injector.get('$parse'));
+        },
+        ngRepeat: function ngRepeat() {
+            return (0, _ngRepeat.ngRepeatDirective)(_common.QMAngular.injector.get('$parse'), _common.QMAngular.injector.get('$animate'), $transclude);
+        },
+        infiniteScroll: function infiniteScroll() {
+            return (0, _ngClick.ngClickDirective)(_common.QMAngular.injector.get('$parse'));
+        },
+        qmEq: function qmEq() {
+            return (0, _qmEq.qmEqDirective)(_common.QMAngular.injector.get('$parse'));
+        },
         translateValue: {}
     };
     internals.ngTranslate = internals.translate;
@@ -52,7 +77,7 @@ var directiveProvider = function () {
     toReturn.$get = function (directiveName) {
         if (angular.isString(directiveName)) {
             directiveName = (0, _common.toCamelCase)(directiveName);
-            if (internals[directiveName]) {
+            if (internals[directiveName] && (_typeof(internals[directiveName]) === 'object' || (internals[directiveName] = internals[directiveName]()))) {
                 return internals[directiveName];
             }
         }
@@ -78,10 +103,17 @@ var directiveProvider = function () {
     toReturn.$clean = function () {
         directives.clear();
     };
-    toReturn.useModule = function (moduleName) {
-        $translate = angular.injector(['ng', 'pascalprecht.translate'].concat(moduleName)).get('$translate');
-        internals.translate.changeService($translate);
+
+    toReturn.config = function (configObject, dontClean) {
+        if (!dontClean) {
+            toReturn.$clean();
+        }
+        for (var key in configObject) {
+            if (configObject.hasOwnProperty(key)) {
+                directives.set((0, _common.toCamelCase)(key), toReturn.$get(configObject[key]));
+            }
+        }
     };
+
     return toReturn;
 }();
-exports.default = directiveProvider;

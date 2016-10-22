@@ -4,7 +4,7 @@ describe('ngIfHTML', function () {
     let controllerService, spy, controller;
     beforeEach(function () {
         spy = jasmine.createSpy('if');
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             aString: 'aValue',
             aFunction: spy,
             aKey: 'HELLO',

@@ -9,17 +9,10 @@ var _jquery = require('jquery');
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _common = require('./../../../built/controller/common.js');
+var _common = require('./../../controller/common.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function recurseObjects(object) {
-    var toReturn = (0, _common.makeArray)(object);
-    for (var ii = 0; ii < object.children().length; ii++) {
-        toReturn = toReturn.concat(recurseObjects(angular.element(object.children()[ii])));
-    }
-    return toReturn;
-}
 function ngClickDirective($parse) {
     return {
         compile: function compile(controllerService, expression) {
@@ -46,14 +39,7 @@ function ngClickDirective($parse) {
         },
         attachToElement: function attachToElement(controllerService, $element) {
             var clickData = $element.data('ng-click');
-            var myArray = recurseObjects($element);
-            for (var index = 0; index < myArray.length; index++) {
-                try {
-                    (0, _jquery2.default)(myArray[index]).data('ng-click', clickData);
-                } catch (err) {
-                    console.log(err);
-                }
-            }
+            (0, _jquery2.default)((0, _common.recurseObjects)($element)).data('ng-click', clickData);
         },
         name: 'ng-click'
     };

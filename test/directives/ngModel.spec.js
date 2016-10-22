@@ -1,12 +1,12 @@
 import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
-import directiveProvider from './../../src/directives/directiveProvider.js';
+import {directiveProvider }from './../../src/directives/directiveProvider.js';
 describe('ngModel', function() {
     let controllerService, myModel, spy, controller;
     const ngModel = directiveProvider.$get('ngModel');
     const expression = 'ctrl.myStringParameter';
     beforeEach(function() {
         spy = jasmine.createSpy('click');
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {}, true);
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {}, true);
         controllerService.create();
         controller = controllerService.controllerInstance;
         myModel = ngModel.compile(controllerService, expression);

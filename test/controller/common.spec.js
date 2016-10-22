@@ -2,17 +2,12 @@ import {
     $_CONTROLLER
 } from './../../src/controllerHandler/controllerHandler.extensions.js';
 import {
-    scopeHelper,
+    QMAngular,
     isArrayLike,
     sanitizeModules
 } from './../../src/controller/common.js';
 import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
-var injections = (function() {
-    var toReturn = {
-        $rootScope: scopeHelper.$rootScope
-    };
-    return toReturn;
-})();
+
 describe('Util logic', function() {
     describe('array-like', function() {
         it('should return true for array-like objects', function() {
@@ -79,17 +74,17 @@ describe('Util logic', function() {
             expect(result2.length).toBe(3);
         });
     });
-    describe('scopeHelper', function() {
+    describe('QMAngular', function() {
         it('should return a scope when no arguments where given', function() {
-            expect(scopeHelper.create().$root).toBe(injections.$rootScope);
+            expect(QMAngular.create().$root).toBe(QMAngular.$rootScope);
         });
         it('should return the same scope reference when it receive a scope', function() {
-            const scope = injections.$rootScope.$new();
-            expect(scopeHelper.create(scope)).toBe(scope);
+            const scope = QMAngular.$rootScope.$new();
+            expect(QMAngular.create(scope)).toBe(scope);
         });
         it('should return the same scope reference when it receives an isolated scope', function() {
-            const scope = injections.$rootScope.$new(true);
-            expect(scopeHelper.create(scope)).toBe(scope);
+            const scope = QMAngular.$rootScope.$new(true);
+            expect(QMAngular.create(scope)).toBe(scope);
         });
         it('should return an scope with the properties of a passed object', function() {
             const toPass = {
@@ -98,7 +93,7 @@ describe('Util logic', function() {
             };
             let returnedScope;
             expect(function() {
-                returnedScope = scopeHelper.create(toPass);
+                returnedScope = QMAngular.create(toPass);
             }).not.toThrow();
             expect(returnedScope.a).toBe(toPass.a);
             expect(returnedScope.b).toBe(toPass.b);

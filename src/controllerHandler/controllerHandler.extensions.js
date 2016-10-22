@@ -1,9 +1,9 @@
-import directiveProvider from './../directives/directiveProvider.js';
+import {directiveProvider }from './../directives/directiveProvider.js';
 import directiveHandler from './../directives/directiveHandler.js';
 import controller from './../controller/controllerQM.js';
 import {
     makeArray,
-    scopeHelper,
+    QMAngular,
     assert_$_CONTROLLER,
     clean
 } from './../controller/common.js';
@@ -15,10 +15,9 @@ export class $_CONTROLLER {
     static isController(object) {
         return object instanceof $_CONTROLLER;
     }
-    constructor(ctrlName, pScope, bindings, modules, cName, cLocals) {
+    constructor(ctrlName, pScope, bindings, cName, cLocals) {
         this.providerName = ctrlName;
         this.scopeControllerName = cName || 'controller';
-        this.usedModules = modules.slice();
         this.parentScope = pScope;
         this.controllerScope = this.parentScope.$new();
         this.controllerScope.$on('$destroy', () => {
@@ -28,7 +27,7 @@ export class $_CONTROLLER {
         this.locals = cLocals || {};
         this.locals.$scope = this.controllerScope;
         this.pendingWatchers = [];
-        this.$rootScope = scopeHelper.$rootScope;
+        this.$rootScope = QMAngular.$rootScope;
     }
     $apply() {
         this.$rootScope.$apply();
@@ -49,7 +48,7 @@ export class $_CONTROLLER {
         assert_$_CONTROLLER(this);
 
         this.controllerConstructor =
-            controller.$get(this.usedModules)
+            controller.$get()
                 .create(this.providerName, this.parentScope, this.bindings, this.scopeControllerName, this.locals);
         this.controllerInstance = this.controllerConstructor();
 
