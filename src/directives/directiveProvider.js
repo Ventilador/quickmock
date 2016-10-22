@@ -21,7 +21,7 @@ import {
 } from './internalDirectives/ngDisabled.js';
 import {
     toCamelCase,
-    scopeHelper
+    QMAngular
 } from './../controller/common.js';
 import {
     ngRepeatDirective
@@ -29,16 +29,13 @@ import {
 import {
     qmEqDirective
 } from './internalDirectives/bindingMockers/qmEq.js';
-var directiveProvider = (function () {
-    let $translate = angular.injector(['ng', 'pascalprecht.translate']).get('$translate');
+export var directiveProvider = (function () {
     const directives = new Map(),
         toReturn = {},
-        $parse = angular.injector(['ng']).get('$parse'),
-        $animate = angular.injector(['ng']).get('$animate'),
         $transclude = function controllersBoundTransclude(scope, cloneAttachFn, futureParentElement) {
 
             // No scope passed in:
-            if (!scopeHelper.isScope(scope)) {
+            if (!QMAngular.isScope(scope)) {
                 futureParentElement = cloneAttachFn;
                 cloneAttachFn = scope;
                 scope = undefined;
@@ -46,16 +43,16 @@ var directiveProvider = (function () {
 
         },
         internals = {
-            ngIf: ngIfDirective(),
-            ngClick: ngClickDirective($parse),
-            ngModel: ngModelDirective($parse),
-            ngDisabled: ngDisabledDirective($parse),
-            translate: ngTranslateDirective($translate, $parse),
-            ngBind: ngBindDirective(),
-            ngClass: ngClassDirective($parse),
-            ngRepeat: ngRepeatDirective($parse, $animate, $transclude),
-            infiniteScroll: ngClickDirective($parse),
-            qmEq: qmEqDirective($parse),
+            ngIf: () => ngIfDirective(),
+            ngClick: () => ngClickDirective(QMAngular.injector.get('$parse')),
+            ngModel: () => ngModelDirective(QMAngular.injector.get('$parse')),
+            ngDisabled: () => ngDisabledDirective(QMAngular.injector.get('$parse')),
+            translate: () => ngTranslateDirective(QMAngular.injector.get('$translate'), QMAngular.injector.get('$parse')),
+            ngBind: () => ngBindDirective(),
+            ngClass: () => ngClassDirective(QMAngular.injector.get('$parse')),
+            ngRepeat: () => ngRepeatDirective(QMAngular.injector.get('$parse'), QMAngular.injector.get('$animate'), $transclude),
+            infiniteScroll: () => ngClickDirective(QMAngular.injector.get('$parse')),
+            qmEq: () => qmEqDirective(QMAngular.injector.get('$parse')),
             translateValue: {
 
             }
@@ -66,7 +63,8 @@ var directiveProvider = (function () {
     toReturn.$get = function (directiveName) {
         if (angular.isString(directiveName)) {
             directiveName = toCamelCase(directiveName);
-            if (internals[directiveName]) {
+            if (internals[directiveName] &&
+                (typeof internals[directiveName] === 'object' || (internals[directiveName] = internals[directiveName]()))) {
                 return internals[directiveName];
             }
         }
@@ -104,10 +102,5 @@ var directiveProvider = (function () {
         }
     };
 
-    toReturn.useModule = (moduleName) => {
-        $translate = angular.injector(['ng', 'pascalprecht.translate'].concat(moduleName)).get('$translate');
-        internals.translate.changeService($translate);
-    };
     return toReturn;
 })();
-export default directiveProvider;

@@ -7,18 +7,8 @@ describe('controllerHandler', function () {
     it('should be defined', function () {
         expect(controllerHandler).toBeDefined();
     });
-    it('should allow adding modules', function () {
-        expect(function () {
-            controllerHandler.addModules('myModule');
-        }).not.toThrow();
-    });
-    it('should return the controllerHandler when adding modules', function () {
-        expect(controllerHandler.addModules('myModule')).toBe(controllerHandler);
-    });
     describe('creating a controller', function () {
-        beforeEach(function () {
-            controllerHandler.addModules('test');
-        });
+        
         it('should allow creating a controller', function () {
             let controllerObj;
             expect(function () {
@@ -29,7 +19,6 @@ describe('controllerHandler', function () {
             expect(controllerObj.controllerScope).toBeDefined();
             expect(controllerObj.controllerScope.$parent).toBe(controllerObj.parentScope);
             expect(controllerObj.controllerInstance).toBeUndefined();
-            expect(controllerObj.usedModules).toEqual(['test']);
         });
         it('should allow creating a controller with bindings', function () {
             const controllerObj = controllerHandler.setScope({
@@ -122,7 +111,6 @@ describe('controllerHandler', function () {
         let controllerObj;
         beforeEach(function () {
             controllerHandler.clean();
-            controllerHandler.addModules('test');
         });
         it('should allow destroying the object', function () {
             expect(function () {
@@ -137,7 +125,6 @@ describe('controllerHandler', function () {
         beforeEach(function () {
             controllerService = controllerHandler
                 .clean()
-                .addModules('test')
                 .setScope({
                     boundProperty: ref
                 })

@@ -10,8 +10,7 @@ var _controllerHandlerExtensions = require('./controllerHandler.extensions.js');
 
 var controllerHandler = function () {
     var internal = false;
-    var myModules = void 0,
-        ctrlName = void 0,
+    var ctrlName = void 0,
         cLocals = void 0,
         pScope = void 0,
         cScope = void 0,
@@ -19,30 +18,28 @@ var controllerHandler = function () {
         bindToController = void 0;
 
     function clean(root) {
-        myModules = [];
         ctrlName = pScope = cLocals = cScope = bindToController = undefined;
         if (root) {
-            $controllerHandler.$rootScope = _common.scopeHelper.$rootScope = root;
+            $controllerHandler.$rootScope = _common.QMAngular.$rootScope = root;
         }
         return $controllerHandler;
     }
 
     function $controllerHandler() {
-
         if (!ctrlName) {
             throw 'Please provide the controller\'s name';
         }
-        pScope = _common.scopeHelper.create(pScope || {});
+        pScope = _common.QMAngular.create(pScope || {});
         if (!cScope) {
             cScope = pScope.$new();
-        }{
-            var tempScope = _common.scopeHelper.isScope(cScope);
+        } else {
+            var tempScope = _common.QMAngular.isScope(cScope);
             if (tempScope !== false) {
                 cScope = tempScope;
             }
         }
 
-        var toReturn = new _controllerHandlerExtensions.$_CONTROLLER(ctrlName, pScope, bindToController, myModules, cName, cLocals);
+        var toReturn = new _controllerHandlerExtensions.$_CONTROLLER(ctrlName, pScope, bindToController, cName, cLocals);
         clean();
         return toReturn;
     }
@@ -61,23 +58,12 @@ var controllerHandler = function () {
         return $controllerHandler;
     };
 
-    $controllerHandler.$rootScope = _common.scopeHelper.$rootScope;
+    Object.defineProperty($controllerHandler, '$rootScope', {
+        get: function get() {
+            return _common.QMAngular.$rootScope;
+        }
+    });
 
-    $controllerHandler.addModules = function (modules) {
-        function pushArray(array) {
-            Array.prototype.push.apply(myModules, array);
-        }
-        if (angular.isString(modules)) {
-            if (arguments.length > 1) {
-                pushArray((0, _common.makeArray)(arguments));
-            } else {
-                pushArray([modules]);
-            }
-        } else if ((0, _common.isArrayLike)(modules)) {
-            pushArray((0, _common.makeArray)(modules));
-        }
-        return $controllerHandler;
-    };
     $controllerHandler.isInternal = function (flag) {
         if (angular.isUndefined(flag)) {
             return internal;
@@ -90,12 +76,12 @@ var controllerHandler = function () {
     $controllerHandler.new = function (controllerName, scopeControllersName, parentScope, childScope) {
         ctrlName = controllerName;
         if (scopeControllersName && !angular.isString(scopeControllersName)) {
-            pScope = _common.scopeHelper.isScope(scopeControllersName);
-            cScope = _common.scopeHelper.isScope(parentScope) || cScope;
+            pScope = _common.QMAngular.isScope(scopeControllersName);
+            cScope = _common.QMAngular.isScope(parentScope) || cScope;
             cName = 'controller';
         } else {
-            pScope = _common.scopeHelper.create(parentScope || pScope);
-            cScope = _common.scopeHelper.create(childScope || pScope.$new());
+            pScope = _common.QMAngular.create(parentScope || pScope);
+            cScope = _common.QMAngular.create(childScope || pScope.$new());
             cName = scopeControllersName;
         }
         return $controllerHandler();

@@ -230,7 +230,7 @@ Attributes.prototype = {
             listeners = $$observers[key] || ($$observers[key] = []);
 
         listeners.push(fn);
-        _common.scopeHelper.$rootScope.$evalAsync(function () {
+        _common.QMAngular.$rootScope.$evalAsync(function () {
             if (!listeners.$$inter && attrs.hasOwnProperty(key) && !angular.isUndefined(attrs[key])) {
                 // no one registered attribute interpolation function, so lets call it manually
                 fn(attrs[key]);

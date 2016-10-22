@@ -6,8 +6,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var _directiveProvider = require('./directiveProvider.js');
 
-var _directiveProvider2 = _interopRequireDefault(_directiveProvider);
-
 var _common = require('./../controller/common.js');
 
 require('perfnow');
@@ -248,7 +246,7 @@ var directiveHandler = function () {
             var directiveName = node.attributes[ii].name;
             var expression = node.attributes[ii].value;
             var directive = void 0;
-            if (directive = _directiveProvider2.default.$get(directiveName.toLowerCase())) {
+            if (directive = _directiveProvider.directiveProvider.$get(directiveName.toLowerCase())) {
                 directive.priority = typeof directive.priority === 'number' ? directive.priority : 9999;
                 toReturn.$push({
                     exp: expression,
@@ -311,7 +309,7 @@ var directiveHandler = function () {
     function control(controllerService, obj, config) {
         counter = 0;
         if (config) {
-            _directiveProvider2.default.config(config);
+            _directiveProvider.directiveProvider.config(config);
         }
         var current = (0, _jquery2.default)(obj || '');
         if (!current || !controllerService) {

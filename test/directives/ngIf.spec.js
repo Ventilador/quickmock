@@ -1,10 +1,10 @@
 import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
-import directiveProvider from './../../src/directives/directiveProvider.js';
+import {directiveProvider }from './../../src/directives/directiveProvider.js';
 describe('ngIf', function() {
     let controllerService, myIf;
     const ngIf = directiveProvider.$get('ng-if');
     beforeEach(function() {
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             myBoolean: true
         }, true);
         controllerService.create();

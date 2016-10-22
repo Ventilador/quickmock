@@ -4,7 +4,7 @@ describe('qmEqHTML', function () {
     let controllerService, spy, controller;
     beforeEach(function () {
         spy = jasmine.createSpy('qmEq');
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             aProperty: 'aValue'
         }, {
                 aProperty: '='

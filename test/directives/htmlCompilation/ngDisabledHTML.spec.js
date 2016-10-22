@@ -4,7 +4,7 @@ describe('ngDisabledHTML', function () {
     let controllerService, spy, controller;
     beforeEach(function () {
         spy = jasmine.createSpy('disabled');
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             anArray: [],
             aFunction: spy
         }, {

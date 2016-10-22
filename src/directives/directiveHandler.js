@@ -1,4 +1,4 @@
-import directiveProvider from './directiveProvider.js';
+import {directiveProvider }from './directiveProvider.js';
 import {toCamelCase} from './../controller/common.js';
 import 'perfnow';
 import $ from 'jquery';

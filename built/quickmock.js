@@ -29,24 +29,35 @@ var mocker = function (angular) {
     quickmock.MOCK_PREFIX = mockPrefix = quickmock.MOCK_PREFIX || '___';
     quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
     quickmock.MUTE_LOGS = false;
-    var rootScope = void 0;
 
-    function quickmock(options, root) {
-        rootScope = root;
+    function quickmock(options) {
         opts = assertRequiredOptions(options);
         return mockProvider();
     }
 
+    Object.defineProperty(quickmock, '$rootScope', {
+        get: function get() {
+            return _common.QMAngular.$rootScope;
+        }
+    });
+
+    quickmock.invoke = function invoke(fn) {
+        return _common.QMAngular.invoke(fn);
+    };
+
+    var SNAKE_CASE_REGEXP = /[A-Z]/g;
+    return quickmock;
     function mockProvider() {
-        var allModules = opts.mockModules.concat(['ngMock']),
-            injector = angular.injector(allModules.concat([opts.moduleName])),
-            modObj = angular.module(opts.moduleName),
+        // var allModules = opts.mockModules.concat(['ngMock']),
+        var injector = _common.QMAngular.injector,
+            // angular.injector(allModules.concat([opts.moduleName])),
+        modObj = angular.module(opts.moduleName),
             invokeQueue = modObj._invokeQueue || [],
             providerType = getProviderType(opts.providerName, invokeQueue),
             mocks = {},
             provider = {};
-        angular.forEach(allModules || [], function (modName) {
-            invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
+        angular.forEach(_common.QMAngular.usedModules, function (modName) {
+            invokeQueue.push.apply(angular.module(modName)._invokeQueue);
         });
 
         if (opts.inject) {
@@ -101,7 +112,7 @@ var mocker = function (angular) {
         function initProvider() {
             switch (providerType) {
                 case 'controller':
-                    var toReturn = _controllerHandler2.default.clean(rootScope).addModules(allModules.concat(opts.moduleName)).bindWith(opts.controller.bindToController).setScope(opts.controller.parentScope).setLocals(mocks).new(opts.providerName, opts.controller.controllerAs);
+                    var toReturn = _controllerHandler2.default.clean().bindWith(opts.controller.bindToController).setScope(opts.controller.parentScope).setLocals(mocks).new(opts.providerName, opts.controller.controllerAs);
                     toReturn.create();
                     for (var key in mocks) {
                         if (mocks.hasOwnProperty(key) && toReturn.controllerInstance[key]) {
@@ -298,16 +309,13 @@ var mocker = function (angular) {
         }
     }
 
-    var SNAKE_CASE_REGEXP = /[A-Z]/g;
-
     function snake_case(name, separator) {
         separator = separator || '-';
         return name.replace(SNAKE_CASE_REGEXP, function (letter, pos) {
             return (pos ? separator : '') + letter.toLowerCase();
         });
     }
-
-    return quickmock;
 }(angular);
 (0, _quickmockMockHelper2.default)(mocker);
+
 exports.default = mocker;

@@ -4,7 +4,7 @@ describe('ngClassHTML', function () {
     let controllerService, spy, controller;
     beforeEach(function () {
         spy = jasmine.createSpy('class');
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             asString: 'my-class my-other-class',
             first: true,
             second: true

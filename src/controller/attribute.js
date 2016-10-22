@@ -1,5 +1,5 @@
 import {
-    scopeHelper,
+    QMAngular,
     toCamelCase,
     toSnakeCase,
     trim
@@ -232,7 +232,7 @@ Attributes.prototype = {
             listeners = ($$observers[key] || ($$observers[key] = []));
 
         listeners.push(fn);
-        scopeHelper.$rootScope.$evalAsync(function() {
+        QMAngular.$rootScope.$evalAsync(function() {
             if (!listeners.$$inter && attrs.hasOwnProperty(key) && !angular.isUndefined(attrs[key])) {
                 // no one registered attribute interpolation function, so lets call it manually
                 fn(attrs[key]);

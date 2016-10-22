@@ -1,11 +1,11 @@
-import directiveProvide from './../../src/directives/directiveProvider.js';
+import { directiveProvider } from './../../src/directives/directiveProvider.js';
 import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
 describe('ngClass', () => {
-    const ngClass = directiveProvide.$get('ng-class');
+    const ngClass = directiveProvider.$get('ng-class');
 
     let controller, controllerService, myClassText, myClassExpression;
     beforeEach(() => {
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             myStringParameter: 'my-class',
             class1: true,
             class2: false

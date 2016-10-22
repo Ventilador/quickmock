@@ -7,7 +7,7 @@ export var EXPRESSION_REGEX = /^{{.*}}$/;
  * Probably needs more specs
  */
 
-
+const defaultModules = ['ng', 'pascalprecht.translate'];
 const slice = [].slice;
 export function getBlockNodes(nodes) {
     // TODO(perf): update `nodes` instead of creating a new object?
@@ -287,7 +287,6 @@ export function extend() {
 
 
 
-const rootScope = angular.injector(['ng']).get('$rootScope');
 
 function getRootFromScope(scope) {
     if (scope.$root) {
@@ -303,18 +302,33 @@ function getRootFromScope(scope) {
     return parent;
 }
 
-export class scopeHelper {
-    static decorateScopeCounter(scope) {
-        scope.$$digestCount = 0;
-        scope.$$postDigest(() => {
-            scope.$$digestCount++;
-        });
-        return scope;
+export class QMAngular {
+    static loadModules() {
+        let modules;
+        if (arguments.length === 1 && isArrayLike(arguments[0])) {
+            modules = slice.call(arguments[0]);
+        } else {
+            modules = slice.call(arguments);
+        }
+        QMAngular.injector = angular.injector(QMAngular.usedModules = defaultModules.concat(modules));
+        if (QMAngular.$rootScope) {
+            QMAngular.$rootScope.$destroy();
+        }
+        QMAngular.$rootScope = QMAngular.injector.get('$rootScope');
+    }
+    static getService(name) {
+        return QMAngular.injector.get(name);
+    }
+    static invoke(fn) {
+        if (typeof fn === 'function') {
+            fn = QMAngular.injector.annotate(fn);
+        }
+        return QMAngular.injector.invoke(fn);
     }
     static create(scope) {
         scope = scope || {};
         if (this.isScope(scope)) {
-            return scopeHelper.decorateScopeCounter(scope);
+            return scope;
         }
         for (var key in scope) {
             if (scope.hasOwnProperty(key) && key.startsWith('$')) {
@@ -323,19 +337,19 @@ export class scopeHelper {
         }
 
         if (angular.isObject(scope)) {
-            return scopeHelper.decorateScopeCounter(extend(scopeHelper.$rootScope.$new(true), scope));
+            return extend(QMAngular.$rootScope.$new(true), scope);
         }
         if (isArrayLike(scope)) {
             scope = makeArray(scope);
-            return scopeHelper.decorateScopeCounter(extend.apply(undefined, [scopeHelper.$rootScope.$new(true)].concat(scope)));
+            return extend.apply(undefined, [QMAngular.$rootScope.$new(true)].concat(scope));
         }
 
     }
     static isScope(object) {
-        return object && getRootFromScope(object) === getRootFromScope(scopeHelper.$rootScope) && object;
+        return object && getRootFromScope(object) === getRootFromScope(QMAngular.$rootScope) && object;
     }
 }
-scopeHelper.$rootScope = rootScope;
+// QMAngular.injector = angular.injector(defaultModules);
 
 export function getFunctionName(myFunction) {
     const toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];

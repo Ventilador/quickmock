@@ -1,11 +1,11 @@
 import controllerHandler from './../../src/controllerHandler/controllerHandler.js';
-import directiveProvider from './../../src/directives/directiveProvider.js';
+import {directiveProvider }from './../../src/directives/directiveProvider.js';
 describe('ngRepeat', function() {
     let controllerService, myRepeat, spy, controller;
     const ngRepeat = directiveProvider.$get('ngRepeat');
     beforeEach(function() {
         spy = jasmine.createSpy('click');
-        controllerService = controllerHandler.clean().addModules('test').newService('emptyController', 'ctrl', {
+        controllerService = controllerHandler.clean().newService('emptyController', 'ctrl', {
             myArray: [{
                 a: 'a'
             }, {

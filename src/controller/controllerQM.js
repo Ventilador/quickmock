@@ -1,7 +1,6 @@
 import {
     extend,
-    scopeHelper,
-    makeArray,
+    QMAngular,
     PARSE_BINDING_REGEX,
     isExpression,
     expressionSanitizer,
@@ -10,8 +9,8 @@ import {
 } from './common.js';
 var a = { n: angular.nopp };
 var d = {};
-const $parse = angular.injector(['ng']).get('$parse');
 
+var $parse;
 class controller {
     static getValues(scope, bindings) {
         const toReturn = {};
@@ -85,22 +84,25 @@ class controller {
             mode = mode || '=';
             const result = PARSE_BINDING_REGEX.exec(mode);
             mode = result[1];
+            const optional = result[2];
             const parentKey = result[3] || key;
-            const childKey = controllerAs + '.' + key;
             let parentGet = $parse(parentKey);
-            const childGet = $parse(childKey);
+            const child = destination[controllerAs];
             switch (mode) {
                 case '=':
-                    let lastValue = parentGet(scope);
+                    let lastValue = parentGet(scope),
+                        parentValue = null;
+                    if (!optional || lastValue) {
+                        child[key] = lastValue;
+                    }
                     destination.$watch(() => {
-                        let parentValue = parentGet(scope);
+                        parentValue = parentGet(scope);
                         if (parentValue !== lastValue) {
-                            childGet.assign(destination, parentValue);
-                        } else if (parentValue !== (parentValue = childGet(destination))) {
-                            parentGet.assign(scope, parentValue);
+                            child[key] = parentValue;
+                        } else if (parentValue !== child[key]) {
+                            parentGet.assign(scope, child[key]);
                         }
-                        lastValue = parentValue;
-                        return lastValue;
+                        return lastValue = child[key];
                     });
                     break;
                 case '&':
@@ -113,10 +115,9 @@ class controller {
                         let lastValue = function () { };
                         destination.$watch(() => {
                             if (lastValue !== (lastValue = parentGet(scope))) {
-                                childGet.assign(destination, lastValue);
-                            } else if (lastValue !== childGet(destination)) {
-                                childGet.assign(destination, lastValue);
-
+                                child[key] = lastValue;
+                            } else if (lastValue !== child[key]) {
+                                child[key] = lastValue;
                             }
                             return lastValue;
                         });
@@ -128,8 +129,8 @@ class controller {
                     let watcher = destination.$watch(() => {
                         let lastValue = parentGet(scope);
                         if (lastValue !== lastParentValue) {
-                            childGet.assign(destination, lastChildValue = lastParentValue = lastValue);
-                        } else if (lastChildValue !== (lastChildValue = childGet(destination))) {
+                            child[key] = lastChildValue = lastParentValue = lastValue;
+                        } else if (lastChildValue !== (lastChildValue = child[key])) {
                             watcher = watcher();
                         }
                         return lastValue;
@@ -141,7 +142,7 @@ class controller {
             return destination;
         };
 
-        const destination = scopeHelper.create(isolateScope || scope.$new());
+        const destination = QMAngular.create(isolateScope || scope.$new());
         if (!bindings) {
             return {};
         } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
@@ -162,10 +163,12 @@ class controller {
         throw 'Could not parse bindings';
     }
 
-    static $get(moduleNames) {
+    static $get() {
+        if (!$parse) {
+            $parse = QMAngular.injector.get('$parse');
+        }
         let $controller;
-        const array = makeArray(moduleNames);
-        angular.injector(array).invoke(
+        QMAngular.invoke(
             ['$controller',
                 (controller) => {
                     $controller = controller;
@@ -174,10 +177,10 @@ class controller {
         let lastScope;
 
         function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
-            scope = scopeHelper.create(scope);
+            scope = QMAngular.create(scope);
             scopeControllerName = scopeControllerName || 'controller';
             extendedLocals = extendedLocals || {
-                $scope: scopeHelper.create(scope).$new()
+                $scope: QMAngular.create(scope).$new()
             };
             const constructor = () => {
                 if (lastScope) {
@@ -186,9 +189,8 @@ class controller {
                 lastScope = scope;
                 const constructor = $controller(controllerName, extendedLocals, true, scopeControllerName);
                 extend(constructor.instance, controller.getValues(scope, bindings));
-                const toReturn = constructor();
                 controller.parseBindings(bindings, scope, extendedLocals.$scope, scopeControllerName);
-                return toReturn;
+                return constructor();
             };
             return constructor;
         }

@@ -1,6 +1,7 @@
 import helper from './quickmock.mockHelper.js';
 import {
-    extend
+    extend,
+    QMAngular
 } from './controller/common.js';
 import controllerHandler from './controllerHandler/controllerHandler.js';
 
@@ -17,25 +18,34 @@ var mocker = (function (angular) {
     quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
     quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
     quickmock.MUTE_LOGS = false;
-    let rootScope;
 
-    function quickmock(options, root) {
-        rootScope = root;
+    function quickmock(options) {
         opts = assertRequiredOptions(options);
         return mockProvider();
     }
 
+    Object.defineProperty(quickmock, '$rootScope', {
+        get: function () {
+            return QMAngular.$rootScope;
+        }
+    });
 
+    quickmock.invoke = function invoke(fn) {
+        return QMAngular.invoke(fn);
+    };
+
+    var SNAKE_CASE_REGEXP = /[A-Z]/g;
+    return quickmock;
     function mockProvider() {
-        var allModules = opts.mockModules.concat(['ngMock']),
-            injector = angular.injector(allModules.concat([opts.moduleName])),
+        // var allModules = opts.mockModules.concat(['ngMock']),
+        var injector = QMAngular.injector, // angular.injector(allModules.concat([opts.moduleName])),
             modObj = angular.module(opts.moduleName),
             invokeQueue = modObj._invokeQueue || [],
             providerType = getProviderType(opts.providerName, invokeQueue),
             mocks = {},
             provider = {};
-        angular.forEach(allModules || [], function (modName) {
-            invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
+        angular.forEach(QMAngular.usedModules, function (modName) {
+            invokeQueue.push.apply(angular.module(modName)._invokeQueue);
         });
 
         if (opts.inject) {
@@ -92,8 +102,7 @@ var mocker = (function (angular) {
             switch (providerType) {
                 case 'controller':
                     const toReturn = controllerHandler
-                        .clean(rootScope)
-                        .addModules(allModules.concat(opts.moduleName))
+                        .clean()
                         .bindWith(opts.controller.bindToController)
                         .setScope(opts.controller.parentScope)
                         .setLocals(mocks)
@@ -292,7 +301,6 @@ var mocker = (function (angular) {
         }
     }
 
-    var SNAKE_CASE_REGEXP = /[A-Z]/g;
 
     function snake_case(name, separator) {
         separator = separator || '-';
@@ -301,8 +309,9 @@ var mocker = (function (angular) {
         });
     }
 
-    return quickmock;
+
 
 })(angular);
 helper(mocker);
+
 export default mocker;
