@@ -30,7 +30,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
         return uuid;
     }
     var _text = _$.fn.text,
-        _click = _$.fn.click,
         attr = _$.fn.attr,
         _clone = _$.fn.clone;
 
@@ -44,18 +43,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
                 }
             }
             return _text.apply(this) || '';
-        },
-        click: function click(locals) {
-            for (var index = 0; index < this.length; index++) {
-                var element = (0, _jquery2.default)(this[index]);
-                if (!element.prop('disabled')) {
-                    var ngClick = element.data('ng-click');
-                    if (ngClick) {
-                        ngClick(locals);
-                    }
-                }
-            }
-            return _click.apply(this, arguments);
         },
         $text: _text,
         attrs: function attrs() {

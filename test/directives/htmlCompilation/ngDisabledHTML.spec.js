@@ -36,7 +36,7 @@ describe('ngDisabledHTML', function () {
         expect(handler.find('input').prop('disabled')).toBe(false);
     });
     it('should prevent events like click', function () {
-        const handler = new directiveHandler(controllerService, '<div><div ng-disabled="!ctrl.anArray.length"><input type="button" ng-click="ctrl.aFunction(10)"/></div></div>');
+        const handler = new directiveHandler(controllerService, '<div><a ng-disabled="!ctrl.anArray.length"><input type="button" ng-click="ctrl.aFunction(10)"/></a></div>');
         controllerService.$apply();
         expect(handler.find('input').prop('disabled')).toBe(true);
         handler.find('input').click();

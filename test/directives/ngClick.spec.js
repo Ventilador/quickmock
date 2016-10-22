@@ -25,14 +25,4 @@ describe('ngClick', function () {
         myClick();
         expect(spy).toHaveBeenCalled();
     });
-    it('should support locals', function () {
-        const object1 = function () { };
-        const object2 = function () { };
-        const locals = {
-            param1: object1,
-            param2: object2
-        };
-        myClick(locals);
-        expect(spy).toHaveBeenCalledWith(object1, object2);
-    });
 });

@@ -1,9 +1,3 @@
-import $ from 'jquery';
-import {
-    recurseObjects
-} from './../../controller/common.js';
-
-
 export function ngClickDirective($parse) {
     return {
         compile: function (controllerService, expression) {
@@ -14,23 +8,21 @@ export function ngClickDirective($parse) {
                 controllerService.create();
             }
 
-            var click = function (scope, locals) {
-                if (arguments.length === 1) {
-                    locals = scope || {};
-                    scope = controllerService.controllerScope;
-                } else {
-                    scope = scope || controllerService.controllerScope;
-                    locals = locals || {};
+            var click = function (event) {
+                if (!event || (!event.currentTarget.disabled && !event.isPropagationStopped() && !event.isDefaultPrevented())) {
+                    expression(controllerService.controllerScope);
+                    controllerService.$apply();
                 }
-                const result = expression(scope, locals);
-                controllerService.$apply();
-                return result;
+            };
+            click.onDestroy = function (fn) {
+                controllerService.controllerScope.$on('$destroy', fn);
             };
             return click;
         },
         attachToElement: function (controllerService, $element) {
             const clickData = $element.data('ng-click');
-            $(recurseObjects($element)).data('ng-click', clickData);
+            $element.bind('click', clickData);
+            clickData.onDestroy(() => $element.unbind());
         },
         name: 'ng-click'
     };

@@ -182,15 +182,10 @@ describe('quickmock', function () {
                 expect(controllerService.controllerInstance.textReference).toBe('something');
             });
             describe('expression bindings', function () {
-                it('should not assign the value before an $apply', function () {
-                    expect(controllerService.controllerInstance.expressionTextReference).toBeUndefined();
-                });
-                it('should assign the value after an $apply', function () {
-                    controllerService.$apply();
+                it('should assign the value at start', function () {
                     expect(controllerService.controllerInstance.expressionTextReference).toBe('something');
                 });
                 it('should change the value if the parent changes', function () {
-                    controllerService.$apply();
                     expect(controllerService.controllerInstance.expressionTextReference).toBe('something');
                     controllerService.parentScope.textReference = 'somethingElse';
                     controllerService.$apply();
@@ -221,21 +216,15 @@ describe('quickmock', function () {
                 expect(controllerService.controllerInstance.oneWayBinding).not.toBe(ref);
                 expect(controllerService.controllerInstance.oneWayBinding).toBe(controllerService.parentScope.oneWayBinding);
             });
-            it('should not change the parent if the child changes', () => {
-                controllerService.controllerInstance.oneWayBinding = {};
+            it('should not change the parent if the child changes, it should re override the child if the parent changes', () => {
+                const newRef = controllerService.controllerInstance.oneWayBinding = 'newRef';
                 controllerService.$apply();
                 expect(controllerService.parentScope.oneWayBinding).not.toBe(controllerService.controllerInstance.oneWayBinding);
-                expect(controllerService.parentScope.oneWayBinding).toBe(ref);
-            });
-            it('should remove the watcher when the child changes', () => {
-                const newRef = controllerService.controllerInstance.oneWayBinding = { newRef: true };
+                expect(controllerService.controllerInstance.oneWayBinding).toBe(newRef);
+                const otherRef = controllerService.parentScope.oneWayBinding = 'otherRef';
                 controllerService.$apply();
-                expect(controllerService.controllerInstance.oneWayBinding).toBe(newRef, 'child new ref');
-                expect(controllerService.parentScope.oneWayBinding).toBe(ref, 'parent old ref');
-                const anotherNewRef = controllerService.parentScope.oneWayBinding = { anotherNewRef: true };
-                controllerService.$apply();
-                expect(controllerService.controllerInstance.oneWayBinding).toBe(newRef, 'child new ref');
-                expect(controllerService.parentScope.oneWayBinding).toBe(anotherNewRef, 'parent new ref');
+                expect(controllerService.parentScope.oneWayBinding).toBe(controllerService.controllerInstance.oneWayBinding);
+                expect(controllerService.controllerInstance.oneWayBinding).toBe(otherRef);
             });
         });
         describe('optionals', function () {

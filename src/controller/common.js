@@ -285,23 +285,6 @@ export function extend() {
     return destination;
 }
 
-
-
-
-function getRootFromScope(scope) {
-    if (scope.$root) {
-        return scope.$root;
-    }
-
-    let parent;
-    while (parent = scope.$parent) {
-        if (parent.$root) {
-            return parent.$root;
-        }
-    }
-    return parent;
-}
-
 export class QMAngular {
     static loadModules() {
         let modules;
@@ -326,18 +309,18 @@ export class QMAngular {
         return QMAngular.injector.invoke(fn);
     }
     static create(scope) {
+        const isolated = scope;
         scope = scope || {};
         if (this.isScope(scope)) {
             return scope;
         }
         for (var key in scope) {
-            if (scope.hasOwnProperty(key) && key.startsWith('$')) {
+            if (scope.hasOwnProperty(key) && QMAngular.$rootScope.hasOwnProperty(key)) {
                 delete scope[key];
             }
         }
-
         if (angular.isObject(scope)) {
-            return extend(QMAngular.$rootScope.$new(true), scope);
+            return extend(QMAngular.$rootScope.$new(isolated), scope);
         }
         if (isArrayLike(scope)) {
             scope = makeArray(scope);
@@ -346,10 +329,10 @@ export class QMAngular {
 
     }
     static isScope(object) {
-        return object && getRootFromScope(object) === getRootFromScope(QMAngular.$rootScope) && object;
+        return object.constructor === QMAngular.$rootScope.constructor || object instanceof QMAngular.$rootScope.constructor ||
+            (object.prototype && QMAngular.$rootScope.prototype && object.prototype === QMAngular.$rootScope.prototype);
     }
 }
-// QMAngular.injector = angular.injector(defaultModules);
 
 export function getFunctionName(myFunction) {
     const toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];

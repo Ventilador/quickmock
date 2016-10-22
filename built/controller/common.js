@@ -304,20 +304,6 @@ function extend() {
     return destination;
 }
 
-function getRootFromScope(scope) {
-    if (scope.$root) {
-        return scope.$root;
-    }
-
-    var parent = void 0;
-    while (parent = scope.$parent) {
-        if (parent.$root) {
-            return parent.$root;
-        }
-    }
-    return parent;
-}
-
 var QMAngular = exports.QMAngular = function () {
     function QMAngular() {
         _classCallCheck(this, QMAngular);
@@ -354,18 +340,18 @@ var QMAngular = exports.QMAngular = function () {
     }, {
         key: 'create',
         value: function create(scope) {
+            var isolated = scope;
             scope = scope || {};
             if (this.isScope(scope)) {
                 return scope;
             }
             for (var key in scope) {
-                if (scope.hasOwnProperty(key) && key.startsWith('$')) {
+                if (scope.hasOwnProperty(key) && QMAngular.$rootScope.hasOwnProperty(key)) {
                     delete scope[key];
                 }
             }
-
             if (angular.isObject(scope)) {
-                return extend(QMAngular.$rootScope.$new(true), scope);
+                return extend(QMAngular.$rootScope.$new(isolated), scope);
             }
             if (isArrayLike(scope)) {
                 scope = makeArray(scope);
@@ -375,13 +361,12 @@ var QMAngular = exports.QMAngular = function () {
     }, {
         key: 'isScope',
         value: function isScope(object) {
-            return object && getRootFromScope(object) === getRootFromScope(QMAngular.$rootScope) && object;
+            return object.constructor === QMAngular.$rootScope.constructor || object instanceof QMAngular.$rootScope.constructor || object.prototype && QMAngular.$rootScope.prototype && object.prototype === QMAngular.$rootScope.prototype;
         }
     }]);
 
     return QMAngular;
 }();
-// QMAngular.injector = angular.injector(defaultModules);
 
 function getFunctionName(myFunction) {
     var toReturn = /^function\s+([\w\$]+)\s*\(/.exec(myFunction.toString())[1];

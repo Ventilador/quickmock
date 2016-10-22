@@ -17,7 +17,6 @@ import $ from 'jquery';
             return uuid;
         }
         const text = _$.fn.text,
-            click = _$.fn.click,
             attr = _$.fn.attr,
             clone = _$.fn.clone;
 
@@ -31,18 +30,6 @@ import $ from 'jquery';
                     }
                 }
                 return text.apply(this) || '';
-            },
-            click: function (locals) {
-                for (var index = 0; index < this.length; index++) {
-                    var element = $(this[index]);
-                    if (!element.prop('disabled')) {
-                        const ngClick = element.data('ng-click');
-                        if (ngClick) {
-                            ngClick(locals);
-                        }
-                    }
-                }
-                return click.apply(this, arguments);
             },
             $text: text,
             attrs: function () {

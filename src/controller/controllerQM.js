@@ -1,171 +1,117 @@
 import {
-    extend,
+    // extend,
     QMAngular,
     PARSE_BINDING_REGEX,
-    isExpression,
-    expressionSanitizer,
+    // isExpression,
+    // expressionSanitizer,
     annotate,
     compile
 } from './common.js';
 var a = { n: angular.nopp };
 var d = {};
 
-var $parse;
+var $parse, $interpolate;
 class controller {
-    static getValues(scope, bindings) {
-        const toReturn = {};
+    static assignBindings(destination, bindings, parentScope) {
+        const watchRemoveArray = [];
         if (!angular.isObject(bindings)) {
             if (bindings === true || bindings === '=') {
                 bindings = (() => {
                     const toReturn = {};
-                    for (var key in scope) {
-                        if (scope.hasOwnProperty(key) && !key.startsWith('$')) {
+                    for (var key in parentScope) {
+                        if (parentScope.hasOwnProperty(key) && !QMAngular.$rootScope[key] && !QMAngular.$rootScope.hasOwnProperty(key)) {
                             toReturn[key] = '=';
                         }
                     }
                     return toReturn;
                 })();
             } else if (bindings === false) {
-                return toReturn;
+                return angular.noop;
             }
         }
+        let result;
         for (var key in bindings) {
-            if (bindings.hasOwnProperty(key)) {
-                const result = PARSE_BINDING_REGEX.exec(bindings[key]);
+            if (bindings.hasOwnProperty(key) && (result = PARSE_BINDING_REGEX.exec(bindings[key]))) {
                 const mode = result[1];
                 const optional = result[2];
                 const parentKey = result[3] || key;
+                const childKey = key;
                 const parentGet = $parse(parentKey);
-                let tempValue;
                 switch (mode) {
-                    case '<':
                     case '=':
-                        tempValue = parentGet(scope);
-                        if (optional && (tempValue === undefined || tempValue === null)) {
-                            break;
+                        let lastValue = parentGet(parentScope);
+                        let parentValue = null;
+                        if (!optional || lastValue) {
+                            destination[childKey] = lastValue;
                         }
-                        toReturn[key] = parentGet(scope);
+                        watchRemoveArray.push(parentScope.$watch(() => {
+                            parentValue = parentGet(parentScope);
+                            if (parentValue !== lastValue) {
+                                destination[childKey] = lastValue = parentValue;
+                            } else if (lastValue !== destination[childKey]) {
+                                parentGet.assign(parentScope, lastValue = destination[childKey]);
+                            }
+                            return lastValue;
+                        }));
                         break;
                     case '&':
-                        let parentValue = parentGet(scope);
-                        let fn;
-                        if ((parentValue === undefined || parentValue === null) && !optional) {
+                        let fn = parentGet(parentScope);
+                        if ((fn === undefined || fn === null) && !optional) {
                             fn = function (s, l) { return a.n(s, l, d); };
-                        } else if (typeof parentValue === 'function') {
-                            parentValue = annotate(parentValue);
+                        } else if (typeof fn === 'function') {
+                            fn = annotate(fn);
                         }
-                        if (typeof parentValue === 'object') {
-                            fn = compile(parentValue, $parse);
-                        } else if (typeof parentValue === 'string') {
-                            fn = $parse(parentValue);
+                        if (typeof fn === 'object') {
+                            fn = compile(fn, $parse);
+                        } else if (typeof fn === 'string') {
+                            fn = $parse(fn);
                         }
                         if (typeof fn === 'function') {
-                            toReturn[key] = (locals) => {
-                                return fn(scope, locals);
+                            destination[childKey] = (locals) => {
+                                return fn(parentScope, locals);
                             };
                         }
                         break;
                     case '@':
-                        let exp = parentGet(scope);
-                        const notExp = !isExpression(exp);
-                        if (notExp && (exp || !optional)) {
-                            toReturn[key] = exp;
+                        let expression = $interpolate(parentGet(parentScope));
+                        watchRemoveArray.push(parentScope.$watch(expression, function (newValue) {
+                            destination[childKey] = newValue;
+                        }));
+                        const initialVal = expression(parentScope);
+                        if (initialVal || !optional) {
+                            destination[childKey] = initialVal;
                         }
+                        break;
+                    case '<':
+                        let lastParentValue = parentGet(parentScope), currentValue;
+                        if (!optional || lastParentValue) {
+                            destination[childKey] = lastParentValue;
+                        }
+                        watchRemoveArray.push(parentScope.$watch(() => {
+                            currentValue = parentGet(parentScope);
+                            if (lastParentValue !== currentValue) {
+                                destination[childKey] = lastParentValue = currentValue;
+                            }
+                            return currentValue;
+                        }));
                         break;
                     default:
                         throw 'Could not apply bindings';
                 }
             }
         }
-        return toReturn;
-    }
-    static parseBindings(bindings, scope, isolateScope, controllerAs) {
-        const assignBindings = (destination, scope, key, mode) => {
-            mode = mode || '=';
-            const result = PARSE_BINDING_REGEX.exec(mode);
-            mode = result[1];
-            const optional = result[2];
-            const parentKey = result[3] || key;
-            let parentGet = $parse(parentKey);
-            const child = destination[controllerAs];
-            switch (mode) {
-                case '=':
-                    let lastValue = parentGet(scope),
-                        parentValue = null;
-                    if (!optional || lastValue) {
-                        child[key] = lastValue;
-                    }
-                    destination.$watch(() => {
-                        parentValue = parentGet(scope);
-                        if (parentValue !== lastValue) {
-                            child[key] = parentValue;
-                        } else if (parentValue !== child[key]) {
-                            parentGet.assign(scope, child[key]);
-                        }
-                        return lastValue = child[key];
-                    });
-                    break;
-                case '&':
-                    break;
-                case '@':
-                    let isExp = isExpression(scope[parentKey]);
-                    if (isExp) {
-                        let exp = parentGet(scope);
-                        parentGet = $parse(expressionSanitizer(exp));
-                        let lastValue = function () { };
-                        destination.$watch(() => {
-                            if (lastValue !== (lastValue = parentGet(scope))) {
-                                child[key] = lastValue;
-                            } else if (lastValue !== child[key]) {
-                                child[key] = lastValue;
-                            }
-                            return lastValue;
-                        });
-                    }
-                    break;
-                case '<':
-                    let lastParentValue = parentGet(scope);
-                    let lastChildValue = lastParentValue;
-                    let watcher = destination.$watch(() => {
-                        let lastValue = parentGet(scope);
-                        if (lastValue !== lastParentValue) {
-                            child[key] = lastChildValue = lastParentValue = lastValue;
-                        } else if (lastChildValue !== (lastChildValue = child[key])) {
-                            watcher = watcher();
-                        }
-                        return lastValue;
-                    });
-                    break;
-                default:
-                    throw 'Could not apply bindings';
+        return function () {
+            while (watchRemoveArray.length) {
+                watchRemoveArray.shift()();
             }
-            return destination;
         };
-
-        const destination = QMAngular.create(isolateScope || scope.$new());
-        if (!bindings) {
-            return {};
-        } else if (bindings === true || angular.isString(bindings) && bindings === '=') {
-            for (var key in scope) {
-                if (scope.hasOwnProperty(key) && !key.startsWith('$') && key !== controllerAs) {
-                    assignBindings(destination, scope, key);
-                }
-            }
-            return destination;
-        } else if (angular.isObject(bindings)) {
-            for (let key in bindings) {
-                if (bindings.hasOwnProperty(key)) {
-                    assignBindings(destination, scope, key, bindings[key]);
-                }
-            }
-            return destination;
-        }
-        throw 'Could not parse bindings';
     }
-
     static $get() {
         if (!$parse) {
             $parse = QMAngular.injector.get('$parse');
+        }
+        if (!$interpolate) {
+            $interpolate = QMAngular.injector.get('$interpolate');
         }
         let $controller;
         QMAngular.invoke(
@@ -174,22 +120,23 @@ class controller {
                     $controller = controller;
                 }
             ]);
-        let lastScope;
 
         function createController(controllerName, scope, bindings, scopeControllerName, extendedLocals) {
             scope = QMAngular.create(scope);
             scopeControllerName = scopeControllerName || 'controller';
             extendedLocals = extendedLocals || {
-                $scope: QMAngular.create(scope).$new()
+                $scope: scope.$new()
             };
             const constructor = () => {
-                if (lastScope) {
-                    lastScope.$destroy();
+                while (QMAngular.$rootScope.$$childHead && QMAngular.$rootScope.$$childHead !== scope) {
+                    QMAngular.$rootScope.$$childHead.$destroy();
                 }
-                lastScope = scope;
+                while (QMAngular.$rootScope.$$childTail && QMAngular.$rootScope.$$childTail !== scope) {
+                    QMAngular.$rootScope.$$childTail.$destroy();
+                }
+
                 const constructor = $controller(controllerName, extendedLocals, true, scopeControllerName);
-                extend(constructor.instance, controller.getValues(scope, bindings));
-                controller.parseBindings(bindings, scope, extendedLocals.$scope, scopeControllerName);
+                extendedLocals.$scope.$on('$destroy', controller.assignBindings(constructor.instance, bindings, scope));
                 return constructor();
             };
             return constructor;
